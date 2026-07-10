@@ -555,7 +555,7 @@ const VALIDATORS: Record<
  * @param type - The data type name (e.g., "Task", "Bug", "Goal")
  * @returns A ValidationResult containing all errors, warnings, and counts
  */
-export function validateDataIntegrity<T>(
+export function validateDataIntegrity<T,>(
   data: T[],
   type: DataTypeName
 ): ValidationResult {

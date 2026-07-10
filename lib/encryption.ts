@@ -73,7 +73,7 @@ export const generateKey = async (): Promise<CryptoKey> => {
  * @param data - Serializable data to encrypt
  * @returns Promise resolving to base64-encoded encrypted string
  */
-export const encryptData = async <T>(data: T): Promise<string | null> => {
+export const encryptData = async <T,>(data: T): Promise<string | null> => {
   try {
     const key = await generateKey();
     // Generate random 12-byte initialization vector (IV)
@@ -103,7 +103,7 @@ export const encryptData = async <T>(data: T): Promise<string | null> => {
  * @param data - Base64-encoded encrypted string
  * @returns Promise resolving to decrypted data or null if decryption fails
  */
-export const decryptData = async <T>(data: string): Promise<T | null> => {
+export const decryptData = async <T,>(data: string): Promise<T | null> => {
   try {
     const key = await generateKey();
     const decoded = base64ToUint8Array(data);
