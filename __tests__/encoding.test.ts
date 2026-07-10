@@ -13,14 +13,15 @@ describe("utf8Encode", () => {
     it("应该正确编码英文字符串", () => {
       const result = utf8Encode("hello");
       expect(result.length).toBe(5);
-      expect(result[0]).toBe(0x68);
-      expect(result[1]).toBe(0x65);
-      expect(result[2]).toBe(0x6c);
-      expect(result[3]).toBe(0x6c);
-      expect(result[4]).toBe(0x6f);
+      expect(result[0]).toBe(0x68); // 'h'
+      expect(result[1]).toBe(0x65); // 'e'
+      expect(result[2]).toBe(0x6c); // 'l'
+      expect(result[3]).toBe(0x6c); // 'l'
+      expect(result[4]).toBe(0x6f); // 'o'
     });
 
     it("应该把 ASCII 范围外的字符当作多字节处理", () => {
+      // DEL (0x7F) 是最后一个 ASCII 字符
       const result = utf8Encode("\x7F");
       expect(result.length).toBe(1);
       expect(result[0]).toBe(0x7f);
@@ -89,6 +90,7 @@ describe("utf8Encode", () => {
   describe("混合字符串", () => {
     it("应该正确编码 ASCII + 中文 + Emoji 混合", () => {
       const result = utf8Encode("hello中国😀");
+      // hello(5) + 中国(3+3) + 😀(4) = 15
       expect(result.length).toBe(15);
     });
   });
@@ -136,19 +138,19 @@ describe("utf8Decode", () => {
 
   describe("不完整序列", () => {
     it("应该对不完整的 2 字节序列返回 null", () => {
-      const bytes = new Uint8Array([0xc3]);
+      const bytes = new Uint8Array([0xc3]); // 缺少第二个字节
       const result = utf8Decode(bytes);
       expect(result).toBeNull();
     });
 
     it("应该对不完整的 3 字节序列返回 null", () => {
-      const bytes = new Uint8Array([0xe4, 0xb8]);
+      const bytes = new Uint8Array([0xe4, 0xb8]); // 缺少第三个字节
       const result = utf8Decode(bytes);
       expect(result).toBeNull();
     });
 
     it("应该对不完整的 4 字节序列返回 null", () => {
-      const bytes = new Uint8Array([0xf0, 0x9f, 0x98]);
+      const bytes = new Uint8Array([0xf0, 0x9f, 0x98]); // 缺少第四个字节
       const result = utf8Decode(bytes);
       expect(result).toBeNull();
     });
