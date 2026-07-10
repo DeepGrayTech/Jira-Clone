@@ -77,12 +77,19 @@ next-env.d.ts
 ehthumbs.db
 Thumbs.db
 
-# Optional: Trae-specific local files
+# Trae-specific local files
+/.trae/
 /.trae-cn/
 /memory/
 *.local
+push-files.js
+push_files_payload.json
+_push_files_temp.json
+_timeline_content.json
+read_files.js
+test-results.txt
 
-# Optional: Temporary files
+# Temporary files
 *.tmp
 *.temp
 .cache/
