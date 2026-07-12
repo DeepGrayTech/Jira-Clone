@@ -17,6 +17,81 @@ import type {
   AuditLogEntry,
 } from "../types";
 
+function formatTime(date: Date): string {
+  return date.toLocaleString("zh-CN", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  });
+}
+
+async function saveWithLog<T>(
+  data: T[],
+  storageKey: string,
+  dataName: string
+): Promise<void> {
+  const startTime = Date.now();
+  const startTimeFormatted = formatTime(new Date(startTime));
+  const itemCount = data.length;
+  const rawSize = new Blob([JSON.stringify(data)]).size;
+
+  console.log(`[usePersistence] 开始保存 ${dataName}`, {
+    timestamp: startTimeFormatted,
+    startTime: startTime,
+    itemCount: itemCount,
+    rawSizeBytes: rawSize,
+    rawSizeKB: (rawSize / 1024).toFixed(2),
+    storageKey: storageKey,
+  });
+
+  try {
+    const encrypted = await encryptData(data);
+    const endTime = Date.now();
+    const durationMs = endTime - startTime;
+
+    if (encrypted !== null) {
+      localStorage.setItem(storageKey, encrypted);
+      const encryptedSize = encrypted.length;
+
+      console.log(`[usePersistence] ${dataName} 保存成功`, {
+        timestamp: formatTime(new Date(endTime)),
+        endTime: endTime,
+        durationMs: durationMs,
+        durationSec: (durationMs / 1000).toFixed(2),
+        itemCount: itemCount,
+        rawSizeBytes: rawSize,
+        rawSizeKB: (rawSize / 1024).toFixed(2),
+        encryptedSizeBytes: encryptedSize,
+        encryptedSizeKB: (encryptedSize / 1024).toFixed(2),
+        compressionRatio: ((encryptedSize / rawSize) * 100).toFixed(1) + "%",
+        storageKey: storageKey,
+      });
+    } else {
+      console.warn(`[usePersistence] ${dataName} 加密失败，跳过保存`, {
+        timestamp: formatTime(new Date(endTime)),
+        endTime: endTime,
+        durationMs: durationMs,
+        itemCount: itemCount,
+        storageKey: storageKey,
+      });
+    }
+  } catch (error) {
+    const endTime = Date.now();
+    console.error(`[usePersistence] ${dataName} 保存异常`, {
+      timestamp: formatTime(new Date(endTime)),
+      endTime: endTime,
+      durationMs: endTime - startTime,
+      itemCount: itemCount,
+      storageKey: storageKey,
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
+}
+
 /**
  * Persistence hook.
  * Auto-saves all data to localStorage with encryption on change.
@@ -40,98 +115,62 @@ export function usePersistence(
 ) {
   useEffect(() => {
     if (!isInitialized) return;
-    encryptData(tasks).then((encrypted) => {
-      if (encrypted !== null)
-        localStorage.setItem(STORAGE_KEYS.TASKS, encrypted);
-    });
+    saveWithLog(tasks, STORAGE_KEYS.TASKS, "tasks");
   }, [tasks, isInitialized]);
 
   useEffect(() => {
     if (!isInitialized) return;
-    encryptData(requirements).then((encrypted) => {
-      if (encrypted !== null)
-        localStorage.setItem(STORAGE_KEYS.REQUIREMENTS, encrypted);
-    });
+    saveWithLog(requirements, STORAGE_KEYS.REQUIREMENTS, "requirements");
   }, [requirements, isInitialized]);
 
   useEffect(() => {
     if (!isInitialized) return;
-    encryptData(testCases).then((encrypted) => {
-      if (encrypted !== null)
-        localStorage.setItem(STORAGE_KEYS.TEST_CASES, encrypted);
-    });
+    saveWithLog(testCases, STORAGE_KEYS.TEST_CASES, "testCases");
   }, [testCases, isInitialized]);
 
   useEffect(() => {
     if (!isInitialized) return;
-    encryptData(bugs).then((encrypted) => {
-      if (encrypted !== null)
-        localStorage.setItem(STORAGE_KEYS.BUGS, encrypted);
-    });
+    saveWithLog(bugs, STORAGE_KEYS.BUGS, "bugs");
   }, [bugs, isInitialized]);
 
   useEffect(() => {
     if (!isInitialized) return;
-    encryptData(goals).then((encrypted) => {
-      if (encrypted !== null)
-        localStorage.setItem(STORAGE_KEYS.GOALS, encrypted);
-    });
+    saveWithLog(goals, STORAGE_KEYS.GOALS, "goals");
   }, [goals, isInitialized]);
 
   useEffect(() => {
     if (!isInitialized) return;
-    encryptData(milestones).then((encrypted) => {
-      if (encrypted !== null)
-        localStorage.setItem(STORAGE_KEYS.MILESTONES, encrypted);
-    });
+    saveWithLog(milestones, STORAGE_KEYS.MILESTONES, "milestones");
   }, [milestones, isInitialized]);
 
   useEffect(() => {
     if (!isInitialized) return;
-    encryptData(keyResults).then((encrypted) => {
-      if (encrypted !== null)
-        localStorage.setItem(STORAGE_KEYS.KEY_RESULTS, encrypted);
-    });
+    saveWithLog(keyResults, STORAGE_KEYS.KEY_RESULTS, "keyResults");
   }, [keyResults, isInitialized]);
 
   useEffect(() => {
     if (!isInitialized) return;
-    encryptData(tagHistory).then((encrypted) => {
-      if (encrypted !== null)
-        localStorage.setItem(STORAGE_KEYS.TAG_HISTORY, encrypted);
-    });
+    saveWithLog(tagHistory, STORAGE_KEYS.TAG_HISTORY, "tagHistory");
   }, [tagHistory, isInitialized]);
 
   useEffect(() => {
     if (!isInitialized) return;
-    encryptData(comments).then((encrypted) => {
-      if (encrypted !== null)
-        localStorage.setItem(STORAGE_KEYS.COMMENTS, encrypted);
-    });
+    saveWithLog(comments, STORAGE_KEYS.COMMENTS, "comments");
   }, [comments, isInitialized]);
 
   useEffect(() => {
     if (!isInitialized) return;
-    encryptData(agents).then((encrypted) => {
-      if (encrypted !== null)
-        localStorage.setItem(STORAGE_KEYS.AGENTS, encrypted);
-    });
+    saveWithLog(agents, STORAGE_KEYS.AGENTS, "agents");
   }, [agents, isInitialized]);
 
   useEffect(() => {
     if (!isInitialized) return;
-    encryptData(agentAssignments).then((encrypted) => {
-      if (encrypted !== null)
-        localStorage.setItem(STORAGE_KEYS.AGENT_ASSIGNMENTS, encrypted);
-    });
+    saveWithLog(agentAssignments, STORAGE_KEYS.AGENT_ASSIGNMENTS, "agentAssignments");
   }, [agentAssignments, isInitialized]);
 
   useEffect(() => {
     if (!isInitialized) return;
-    encryptData(auditLogs).then((encrypted) => {
-      if (encrypted !== null)
-        localStorage.setItem(STORAGE_KEYS.AUDIT_LOGS, encrypted);
-    });
+    saveWithLog(auditLogs, STORAGE_KEYS.AUDIT_LOGS, "auditLogs");
   }, [auditLogs, isInitialized]);
 
   /**
