@@ -27,6 +27,7 @@ export interface Task {
   tags: string[]; // Array of tag strings for categorization
   assignee: string; // Name of the assigned team member
   relatedRequirementId?: string; // Optional reference to related requirement
+  figmaUrl?: string; // Optional Figma design URL
   comments: Comment[]; // Array of comments on this task
   createdAt: string; // ISO date string for creation date
 }
@@ -38,6 +39,7 @@ export interface Requirement {
   id: string; // Unique requirement identifier
   title: string; // Requirement title (required)
   description: string; // Detailed requirement description
+  source?: string; // Standard source reference (e.g., ISO 9001:2015, GB/T 35273-2020)
   priority: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL"; // Requirement priority
   status: "DRAFT" | "REVIEW" | "APPROVED" | "IMPLEMENTED"; // Lifecycle status
   acceptanceCriteria: string[]; // List of acceptance criteria
@@ -137,6 +139,7 @@ export interface FormFields {
   tags: string[]; // Tags array (for tasks)
   assignee: string; // Assignee field (for tasks)
   relatedRequirementId: string; // Related requirement ID (for tasks)
+  figmaUrl: string; // Figma design URL (for tasks)
   steps: string; // Test steps (for test cases)
   expectedResult: string; // Expected result (for test cases)
   acceptanceCriteria: string; // Acceptance criteria (for requirements)
@@ -211,7 +214,6 @@ export type ViewMode =
   | "TASKS"
   | "REQUIREMENTS"
   | "TESTING"
-  | "AGENTS"
   | "BUGS"
   | "GOALS"
   | "AUDIT";
@@ -261,51 +263,6 @@ export interface KeyResult {
   currentValue: number;
   unit: string;
   status: "ON_TRACK" | "AT_RISK" | "BEHIND";
-}
-
-/**
- * AgentStatus union type representing the status of an AI agent.
- */
-export type AgentStatus =
-  | "IDLE"
-  | "WORKING"
-  | "COMPLETED"
-  | "FAILED"
-  | "PAUSED";
-
-/**
- * Agent interface representing an AI agent in the workflow system.
- */
-export interface Agent {
-  id: string; // Unique agent identifier
-  name: string; // Full agent name
-  nickname: string; // Chinese nickname for display
-  description: string; // Agent role description
-  role: string; // Agent role identifier
-  status: AgentStatus; // Current agent status
-  currentTask?: string; // Title of current task (if working)
-  currentTaskId?: string; // ID of current task (if working)
-  tasksCompleted: number; // Count of completed tasks
-  tasksFailed: number; // Count of failed tasks
-  lastActivity: string; // ISO timestamp of last activity
-  capabilities: string[]; // Array of agent capabilities
-  skills: string[]; // Array of agent skills for display
-  color: string; // Color code for agent visualization
-}
-
-/**
- * AgentTaskAssignment interface representing a task assignment to an agent.
- */
-export interface AgentTaskAssignment {
-  id: string; // Unique assignment identifier
-  agentId: string; // ID of the assigned agent
-  agentName: string; // Name of the assigned agent
-  taskId: string; // ID of the assigned task
-  taskTitle: string; // Title of the assigned task
-  assignedAt: string; // ISO timestamp of assignment
-  status: "ASSIGNED" | "IN_PROGRESS" | "COMPLETED" | "FAILED"; // Assignment status
-  completionTime?: string; // ISO timestamp when completed
-  result?: string; // Result/notes from the agent
 }
 
 /**
@@ -385,4 +342,5 @@ export interface ValidationResult {
   warnings: ValidationError[];
   validCount: number;
   totalCount: number;
+  type?: string;
 }

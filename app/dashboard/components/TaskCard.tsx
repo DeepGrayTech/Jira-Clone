@@ -199,6 +199,36 @@ export default function TaskCard({
             {task.dueDate && <span>📅 {task.dueDate}</span>}
           </div>
 
+          {task.figmaUrl && (
+            <div
+              style={{
+                marginTop: "8px",
+                padding: "4px 8px",
+                background: "#fff7ed",
+                borderRadius: "4px",
+                fontSize: "11px",
+                border: "1px solid #fed7aa",
+              }}
+            >
+              <a
+                href={task.figmaUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  color: "#c2410c",
+                  textDecoration: "none",
+                  fontWeight: 600,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "4px",
+                }}
+                aria-label={`View Figma design: ${task.figmaUrl}`}
+              >
+                🎨 Figma
+              </a>
+            </div>
+          )}
+
           <button
             onClick={(e) => {
               e.stopPropagation();

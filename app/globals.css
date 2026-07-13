@@ -70,7 +70,8 @@ body {
 }
 
 @keyframes flashBorder {
-  0%, 100% {
+  0%,
+  100% {
     border-color: #3b82f6;
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
   }
@@ -81,7 +82,8 @@ body {
 }
 
 @keyframes flashBackground {
-  0%, 100% {
+  0%,
+  100% {
     background-color: #ffffff;
   }
   50% {
@@ -90,7 +92,8 @@ body {
 }
 
 @keyframes pulseProgress {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 0.3;
     transform: translateX(-100%);
   }
@@ -101,7 +104,8 @@ body {
 }
 
 @keyframes pulseDot {
-  0%, 100% {
+  0%,
+  100% {
     transform: scale(1);
     opacity: 1;
   }
@@ -112,7 +116,8 @@ body {
 }
 
 @keyframes statusPulse {
-  0%, 100% {
+  0%,
+  100% {
     box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.4);
   }
   50% {

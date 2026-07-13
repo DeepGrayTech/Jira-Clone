@@ -123,35 +123,6 @@ describe("usePersistence", () => {
     },
   ];
 
-  const mockAgents = [
-    {
-      id: "a1",
-      name: "Test Agent",
-      nickname: "测试代理",
-      description: "Test Description",
-      role: "TESTER",
-      status: "IDLE",
-      tasksCompleted: 0,
-      tasksFailed: 0,
-      lastActivity: "2024-01-01",
-      capabilities: ["testing"],
-      skills: ["test"],
-      color: "#22c55e",
-    },
-  ];
-
-  const mockAgentAssignments = [
-    {
-      id: "aa1",
-      agentId: "a1",
-      agentName: "Test Agent",
-      taskId: "t1",
-      taskTitle: "Test Task",
-      assignedAt: "2024-01-01",
-      status: "ASSIGNED",
-    },
-  ];
-
   const mockAuditLogs = [
     {
       id: "al1",
@@ -207,8 +178,6 @@ describe("usePersistence", () => {
             mockKeyResults,
             mockTagHistory,
             mockComments,
-            mockAgents,
-            mockAgentAssignments,
             mockAuditLogs,
             true,
             jest.fn()
@@ -243,8 +212,6 @@ describe("usePersistence", () => {
             mockKeyResults,
             mockTagHistory,
             mockComments,
-            mockAgents,
-            mockAgentAssignments,
             mockAuditLogs,
             true,
             jest.fn()
@@ -279,8 +246,6 @@ describe("usePersistence", () => {
             mockKeyResults,
             mockTagHistory,
             mockComments,
-            mockAgents,
-            mockAgentAssignments,
             mockAuditLogs,
             true,
             jest.fn()
@@ -303,8 +268,6 @@ describe("usePersistence", () => {
       await act(async () => {
         renderHook(() =>
           usePersistence(
-            [],
-            [],
             [],
             [],
             [],
@@ -346,8 +309,6 @@ describe("usePersistence", () => {
             mockKeyResults,
             mockTagHistory,
             mockComments,
-            mockAgents,
-            mockAgentAssignments,
             mockAuditLogs,
             true,
             jest.fn()
@@ -381,8 +342,6 @@ describe("usePersistence", () => {
             mockKeyResults,
             mockTagHistory,
             mockComments,
-            mockAgents,
-            mockAgentAssignments,
             mockAuditLogs,
             true,
             jest.fn()
@@ -415,8 +374,6 @@ describe("usePersistence", () => {
             mockKeyResults,
             mockTagHistory,
             mockComments,
-            mockAgents,
-            mockAgentAssignments,
             mockAuditLogs,
             true,
             jest.fn()
@@ -456,8 +413,6 @@ describe("usePersistence", () => {
             mockKeyResults,
             mockTagHistory,
             mockComments,
-            mockAgents,
-            mockAgentAssignments,
             mockAuditLogs,
             false,
             jest.fn()
@@ -484,8 +439,6 @@ describe("usePersistence", () => {
             mockKeyResults,
             mockTagHistory,
             mockComments,
-            mockAgents,
-            mockAgentAssignments,
             mockAuditLogs,
             isInitialized,
             jest.fn()
@@ -522,8 +475,6 @@ describe("usePersistence", () => {
             mockKeyResults,
             mockTagHistory,
             mockComments,
-            mockAgents,
-            mockAgentAssignments,
             mockAuditLogs,
             true,
             jest.fn()
@@ -573,8 +524,6 @@ describe("usePersistence", () => {
             mockKeyResults,
             mockTagHistory,
             mockComments,
-            mockAgents,
-            mockAgentAssignments,
             mockAuditLogs,
             true,
             jest.fn()
@@ -626,8 +575,6 @@ describe("usePersistence", () => {
             mockKeyResults,
             [],
             mockComments,
-            mockAgents,
-            mockAgentAssignments,
             mockAuditLogs,
             true,
             setTagHistory
@@ -653,8 +600,6 @@ describe("usePersistence", () => {
             mockKeyResults,
             ["test"],
             mockComments,
-            mockAgents,
-            mockAgentAssignments,
             mockAuditLogs,
             true,
             setTagHistory
@@ -688,8 +633,6 @@ describe("usePersistence", () => {
             mockKeyResults,
             mockTagHistory,
             mockComments,
-            mockAgents,
-            mockAgentAssignments,
             mockAuditLogs,
             true,
             jest.fn()
@@ -709,8 +652,6 @@ describe("usePersistence", () => {
       expect(storageKeysUsed).toContain(STORAGE_KEYS.KEY_RESULTS);
       expect(storageKeysUsed).toContain(STORAGE_KEYS.TAG_HISTORY);
       expect(storageKeysUsed).toContain(STORAGE_KEYS.COMMENTS);
-      expect(storageKeysUsed).toContain(STORAGE_KEYS.AGENTS);
-      expect(storageKeysUsed).toContain(STORAGE_KEYS.AGENT_ASSIGNMENTS);
       expect(storageKeysUsed).toContain(STORAGE_KEYS.AUDIT_LOGS);
     });
   });

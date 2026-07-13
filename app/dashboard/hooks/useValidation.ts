@@ -11,11 +11,7 @@ import type {
   Goal,
   Milestone,
   KeyResult,
-  Agent,
 } from "../types";
-import {
-  getDefaultAgents,
-} from "../data/default-data";
 
 /**
  * Validation hook.
@@ -31,17 +27,17 @@ export function useValidation(
   goals: Goal[],
   milestones: Milestone[],
   keyResults: KeyResult[],
-  agents: Agent[],
   setTasks: React.Dispatch<React.SetStateAction<Task[]>>,
   setRequirements: React.Dispatch<React.SetStateAction<Requirement[]>>,
   setTestCases: React.Dispatch<React.SetStateAction<TestCase[]>>,
   setBugs: React.Dispatch<React.SetStateAction<Bug[]>>,
   setGoals: React.Dispatch<React.SetStateAction<Goal[]>>,
   setMilestones: React.Dispatch<React.SetStateAction<Milestone[]>>,
-  setKeyResults: React.Dispatch<React.SetStateAction<KeyResult[]>>,
-  setAgents: React.Dispatch<React.SetStateAction<Agent[]>>
+  setKeyResults: React.Dispatch<React.SetStateAction<KeyResult[]>>
 ) {
-  const [validationResults, setValidationResults] = useState<ValidationResult[]>([]);
+  const [validationResults, setValidationResults] = useState<
+    ValidationResult[]
+  >([]);
   const [showValidationBanner, setShowValidationBanner] = useState(true);
 
   useEffect(() => {
@@ -73,9 +69,7 @@ export function useValidation(
       {
         key: "TestCase",
         data: testCases,
-        setter: setTestCases as React.Dispatch<
-          React.SetStateAction<unknown[]>
-        >,
+        setter: setTestCases as React.Dispatch<React.SetStateAction<unknown[]>>,
         fallback: [],
       },
       {
@@ -106,18 +100,15 @@ export function useValidation(
         >,
         fallback: [],
       },
-      {
-        key: "Agent",
-        data: agents,
-        setter: setAgents as React.Dispatch<React.SetStateAction<unknown[]>>,
-        fallback: getDefaultAgents(),
-      },
     ];
 
     for (const { key, data, setter, fallback } of dataTypes) {
       if (data.length === 0) continue;
 
-      const result = validateDataIntegrity(data, key as Parameters<typeof validateDataIntegrity>[1]);
+      const result = validateDataIntegrity(
+        data,
+        key as Parameters<typeof validateDataIntegrity>[1]
+      );
       allResults.push(result);
       if (result.errors.length > 0) {
         results.push(result);
@@ -139,12 +130,14 @@ export function useValidation(
       }
     }
 
-    const totalIssues = allResults.filter(r => !r.isValid).length;
-    console.log('[useValidation] 数据完整性校验完成:', {
+    const totalIssues = allResults.filter((r) => !r.isValid).length;
+    console.log("[useValidation] 数据完整性校验完成:", {
       totalTypes: allResults.length,
-      validTypes: allResults.filter(r => r.isValid).length,
+      validTypes: allResults.filter((r) => r.isValid).length,
       totalIssues,
-      issues: allResults.filter(r => !r.isValid).map(r => ({ type: r.type, errors: r.errors.length }))
+      issues: allResults
+        .filter((r) => !r.isValid)
+        .map((r) => ({ type: r.type, errors: r.errors.length })),
     });
 
     if (results.length > 0) {
@@ -153,5 +146,10 @@ export function useValidation(
     }
   }, [isInitialized]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  return { validationResults, setValidationResults, showValidationBanner, setShowValidationBanner };
+  return {
+    validationResults,
+    setValidationResults,
+    showValidationBanner,
+    setShowValidationBanner,
+  };
 }

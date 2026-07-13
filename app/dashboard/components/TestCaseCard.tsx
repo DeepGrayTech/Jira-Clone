@@ -8,6 +8,8 @@ interface TestCaseCardProps {
   requirement?: Requirement;
   onEdit: (test: TestCase) => void;
   onDelete: (testId: string) => void;
+  fontSizeScale?: number;
+  isSmall?: boolean;
 }
 
 export default function TestCaseCard({
@@ -15,6 +17,8 @@ export default function TestCaseCard({
   requirement,
   onEdit,
   onDelete,
+  fontSizeScale = 1,
+  isSmall = false,
 }: TestCaseCardProps) {
   const getStatusStyle = () => {
     const styles = {
@@ -33,7 +37,9 @@ export default function TestCaseCard({
       key={testCase.id}
       role="button"
       tabIndex={0}
-      aria-label={`Test case: ${testCase.title}, Status: ${TEST_CASE_STATUS_LABELS[testCase.status]}`}
+      aria-label={`Test case: ${testCase.title}, Status: ${
+        TEST_CASE_STATUS_LABELS[testCase.status]
+      }`}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
@@ -41,13 +47,12 @@ export default function TestCaseCard({
         }
       }}
       style={{
-        minWidth: "300px",
-        maxWidth: "400px",
         background: COLORS.cardBackground,
-        padding: "20px",
-        borderRadius: "10px",
+        padding: isSmall ? "8px" : "12px",
+        borderRadius: "8px",
         border: `1px solid ${COLORS.border}`,
         boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+        cursor: "pointer",
       }}
       onClick={() => onEdit(testCase)}
     >
@@ -55,30 +60,34 @@ export default function TestCaseCard({
         style={{
           display: "flex",
           justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: "12px",
+          alignItems: "flex-start",
+          marginBottom: isSmall ? "6px" : "8px",
+          gap: "6px",
         }}
       >
-        <h3
+        <h4
           style={{
             margin: 0,
-            fontSize: "18px",
+            fontSize: `${13 * fontSizeScale}px`,
             fontWeight: 600,
             color: COLORS.text,
+            flex: 1,
+            lineHeight: "1.3",
           }}
         >
           {testCase.title}
-        </h3>
+        </h4>
         <span
           role="status"
           aria-label={`Status: ${TEST_CASE_STATUS_LABELS[testCase.status]}`}
           style={{
-            fontSize: "12px",
-            padding: "4px 8px",
-            borderRadius: "4px",
+            fontSize: "9px",
+            padding: "2px 6px",
+            borderRadius: "3px",
             background: statusStyle.bg,
             color: statusStyle.color,
             fontWeight: 600,
+            whiteSpace: "nowrap",
           }}
         >
           {TEST_CASE_STATUS_LABELS[testCase.status]}
@@ -88,10 +97,10 @@ export default function TestCaseCard({
       {testCase.description && (
         <p
           style={{
-            margin: "0 0 12px 0",
-            fontSize: "14px",
+            margin: "0 0 8px 0",
+            fontSize: "11px",
             color: COLORS.textSecondary,
-            lineHeight: "1.5",
+            lineHeight: "1.4",
           }}
         >
           {testCase.description}
@@ -101,11 +110,11 @@ export default function TestCaseCard({
       {requirement && (
         <div
           style={{
-            marginBottom: "12px",
-            padding: "8px 12px",
+            marginBottom: "8px",
+            padding: "4px 8px",
             background: "#f0fdf4",
-            borderRadius: "6px",
-            fontSize: "13px",
+            borderRadius: "4px",
+            fontSize: "11px",
             color: "#166534",
           }}
         >
@@ -113,31 +122,20 @@ export default function TestCaseCard({
         </div>
       )}
 
-      {testCase.executor && (
-        <p
-          style={{
-            margin: "0 0 12px 0",
-            fontSize: "13px",
-            color: COLORS.textSecondary,
-          }}
-        >
-          Executor: {testCase.executor}
-        </p>
-      )}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          fontSize: "11px",
+          color: COLORS.textSecondary,
+        }}
+      >
+        {testCase.executor && <span>👤 {testCase.executor}</span>}
+        {testCase.executedAt && <span>📅 {testCase.executedAt}</span>}
+      </div>
 
-      {testCase.executedAt && (
-        <p
-          style={{
-            margin: "0 0 12px 0",
-            fontSize: "13px",
-            color: COLORS.textSecondary,
-          }}
-        >
-          Executed: {testCase.executedAt}
-        </p>
-      )}
-
-      {(testCase.status === "FAILED") && (
+      {testCase.status === "FAILED" && (
         <div
           style={{
             marginBottom: "12px",
@@ -159,7 +157,7 @@ export default function TestCaseCard({
               ❌ Error: {testCase.errorMessage}
             </div>
           )}
-          
+
           {testCase.actualResult && (
             <div
               style={{
@@ -168,10 +166,11 @@ export default function TestCaseCard({
                 color: COLORS.textSecondary,
               }}
             >
-              <strong style={{ color: "#dc2626" }}>Actual Result:</strong> {testCase.actualResult}
+              <strong style={{ color: "#dc2626" }}>Actual Result:</strong>{" "}
+              {testCase.actualResult}
             </div>
           )}
-          
+
           {testCase.errorLog && (
             <div
               style={{
@@ -186,14 +185,22 @@ export default function TestCaseCard({
                 whiteSpace: "pre-wrap",
               }}
             >
-              <strong style={{ color: "#991b1b", display: "block", marginBottom: "4px" }}>📋 Error Log:</strong>
+              <strong
+                style={{
+                  color: "#991b1b",
+                  display: "block",
+                  marginBottom: "4px",
+                }}
+              >
+                📋 Error Log:
+              </strong>
               {testCase.errorLog}
             </div>
           )}
         </div>
       )}
 
-      {(testCase.status === "BLOCKED") && (
+      {testCase.status === "BLOCKED" && (
         <div
           style={{
             marginBottom: "12px",
@@ -205,7 +212,8 @@ export default function TestCaseCard({
             color: "#854d0e",
           }}
         >
-          ⚠️ This test case is blocked. Please resolve the dependencies before executing.
+          ⚠️ This test case is blocked. Please resolve the dependencies before
+          executing.
         </div>
       )}
 
@@ -216,13 +224,14 @@ export default function TestCaseCard({
         }}
         aria-label={`Delete test case: ${testCase.title}`}
         style={{
-          padding: "8px 12px",
+          marginTop: "8px",
+          padding: "3px 8px",
           background: "#fef2f2",
           border: "1px solid #fecaca",
           color: COLORS.buttonDanger,
-          borderRadius: "4px",
+          borderRadius: "3px",
           cursor: "pointer",
-          fontSize: "13px",
+          fontSize: "10px",
           fontWeight: 600,
         }}
       >

@@ -8,6 +8,8 @@ interface RequirementCardProps {
   onEdit: (req: Requirement) => void;
   onDelete: (reqId: string) => void;
   onAddTest: (reqId: string) => void;
+  fontSizeScale?: number;
+  isSmall?: boolean;
 }
 
 export default function RequirementCard({
@@ -15,6 +17,8 @@ export default function RequirementCard({
   onEdit,
   onDelete,
   onAddTest,
+  fontSizeScale = 1,
+  isSmall = false,
 }: RequirementCardProps) {
   const getStatusStyle = () => {
     const styles = {
@@ -52,13 +56,12 @@ export default function RequirementCard({
         }
       }}
       style={{
-        minWidth: "300px",
-        maxWidth: "400px",
         background: COLORS.cardBackground,
-        padding: "20px",
-        borderRadius: "10px",
+        padding: isSmall ? "8px" : "12px",
+        borderRadius: "8px",
         border: `1px solid ${COLORS.border}`,
         boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+        cursor: "pointer",
       }}
       onClick={() => onEdit(requirement)}
     >
@@ -66,30 +69,34 @@ export default function RequirementCard({
         style={{
           display: "flex",
           justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: "12px",
+          alignItems: "flex-start",
+          marginBottom: isSmall ? "6px" : "8px",
+          gap: "6px",
         }}
       >
-        <h3
+        <h4
           style={{
             margin: 0,
-            fontSize: "18px",
+            fontSize: `${13 * fontSizeScale}px`,
             fontWeight: 600,
             color: COLORS.text,
+            flex: 1,
+            lineHeight: "1.3",
           }}
         >
           {requirement.title}
-        </h3>
+        </h4>
         <span
           role="status"
           aria-label={`Status: ${REQUIREMENT_STATUS_LABELS[requirement.status]}`}
           style={{
-            fontSize: "12px",
-            padding: "4px 8px",
-            borderRadius: "4px",
+            fontSize: "9px",
+            padding: "2px 6px",
+            borderRadius: "3px",
             background: statusStyle.bg,
             color: statusStyle.color,
             fontWeight: 600,
+            whiteSpace: "nowrap",
           }}
         >
           {REQUIREMENT_STATUS_LABELS[requirement.status]}
@@ -99,10 +106,10 @@ export default function RequirementCard({
       {requirement.description && (
         <p
           style={{
-            margin: "0 0 12px 0",
-            fontSize: "14px",
+            margin: "0 0 8px 0",
+            fontSize: "11px",
             color: COLORS.textSecondary,
-            lineHeight: "1.5",
+            lineHeight: "1.4",
           }}
         >
           {requirement.description}
@@ -114,18 +121,22 @@ export default function RequirementCard({
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          fontSize: "13px",
+          fontSize: "11px",
           color: COLORS.textSecondary,
           marginBottom: "8px",
         }}
       >
         <span
+          role="status"
+          aria-label={`Priority: ${requirement.priority}`}
           style={{
-            padding: "4px 8px",
-            borderRadius: "4px",
+            fontSize: "9px",
+            padding: "2px 6px",
+            borderRadius: "3px",
             background: priorityStyle.bg,
             color: priorityStyle.color,
             fontWeight: 600,
+            whiteSpace: "nowrap",
           }}
         >
           {requirement.priority}
@@ -133,44 +144,45 @@ export default function RequirementCard({
         <span>📅 {requirement.updatedAt}</span>
       </div>
 
+      {requirement.source && (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "6px",
+            fontSize: "12px",
+            padding: "6px 10px",
+            background: "#f0f9ff",
+            borderRadius: "4px",
+            marginBottom: "8px",
+          }}
+        >
+          <span style={{ fontSize: "14px" }}>📋</span>
+          <span style={{ color: "#0369a1", fontWeight: 500 }}>
+            标准出处：{requirement.source}
+          </span>
+        </div>
+      )}
+
       <div
         style={{
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          fontSize: "12px",
-          padding: "8px",
-          background: "#f8fafc",
-          borderRadius: "6px",
+          fontSize: "11px",
+          color: COLORS.textSecondary,
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-          <span style={{ fontSize: "14px" }}>📥</span>
-          <div>
-            <span style={{ color: "#94a3b8", fontWeight: 500 }}>提出者</span>
-            <div style={{ color: COLORS.text, fontWeight: 600 }}>
-              {requirement.requester}
-            </div>
-          </div>
-        </div>
-        <div style={{ fontSize: "16px", color: "#cbd5e1" }}>→</div>
-        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-          <span style={{ fontSize: "14px" }}>📤</span>
-          <div>
-            <span style={{ color: "#94a3b8", fontWeight: 500 }}>执行者</span>
-            <div style={{ color: COLORS.text, fontWeight: 600 }}>
-              {requirement.executor}
-            </div>
-          </div>
-        </div>
+        <span>📥 {requirement.requester}</span>
+        <span>📤 {requirement.executor}</span>
       </div>
 
       {requirement.acceptanceCriteria.length > 0 && (
-        <div style={{ marginTop: "12px" }}>
+        <div style={{ marginTop: "8px" }}>
           <p
             style={{
-              margin: "0 0 8px 0",
-              fontSize: "13px",
+              margin: "0 0 4px 0",
+              fontSize: "11px",
               fontWeight: 600,
               color: COLORS.text,
             }}
@@ -180,16 +192,16 @@ export default function RequirementCard({
           <ul
             style={{
               margin: 0,
-              paddingLeft: "20px",
+              paddingLeft: "16px",
             }}
           >
             {requirement.acceptanceCriteria.map((criteria, idx) => (
               <li
                 key={idx}
                 style={{
-                  fontSize: "13px",
+                  fontSize: "11px",
                   color: COLORS.textSecondary,
-                  marginBottom: "4px",
+                  marginBottom: "2px",
                 }}
               >
                 {criteria}
@@ -202,8 +214,8 @@ export default function RequirementCard({
       <div
         style={{
           display: "flex",
-          gap: "8px",
-          marginTop: "12px",
+          gap: "4px",
+          marginTop: "8px",
         }}
       >
         <button
@@ -214,12 +226,12 @@ export default function RequirementCard({
           aria-label={`Add test case for requirement: ${requirement.title}`}
           style={{
             flex: 1,
-            padding: "8px",
+            padding: "3px 8px",
             background: COLORS.buttonSecondary,
             border: "none",
-            borderRadius: "4px",
+            borderRadius: "3px",
             cursor: "pointer",
-            fontSize: "13px",
+            fontSize: "10px",
             fontWeight: 600,
             color: COLORS.text,
           }}
@@ -233,13 +245,13 @@ export default function RequirementCard({
           }}
           aria-label={`Delete requirement: ${requirement.title}`}
           style={{
-            padding: "8px 12px",
+            padding: "3px 8px",
             background: "#fef2f2",
             border: "1px solid #fecaca",
             color: COLORS.buttonDanger,
-            borderRadius: "4px",
+            borderRadius: "3px",
             cursor: "pointer",
-            fontSize: "13px",
+            fontSize: "10px",
             fontWeight: 600,
           }}
         >

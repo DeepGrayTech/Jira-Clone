@@ -1,0 +1,92 @@
+
+========================================================
+                    Jira Clone - 使用说明
+========================================================
+
+【Easiest way】
+Double-click "启动项目.bat" to start!
+
+
+========================================================
+                    About this project
+========================================================
+
+This is a simple task management kanban app.
+
+Features:
+- Kanban view: To Do, In Progress, Done
+- Create tasks: Click "New Task" button
+- Edit tasks: Click on a task card
+- Delete tasks: Click "Delete" on a task card
+- Priority: Low, Medium, High, Urgent (color-coded)
+- Due date support
+- Tags support (comma separated)
+
+Note: Tasks are stored in browser memory only (cleared on refresh).
+
+
+========================================================
+                    Steps to start
+========================================================
+
+Step 1: Check Node.js
+- Press Win+R, type "cmd", press Enter
+- Type "node --version" and press Enter
+- If you see a version number, Node.js is installed
+- If not, download LTS version from https://nodejs.org/
+
+Step 2: Start the project
+- Double-click "启动项目.bat"
+- Wait for dependencies to install (first time may take a few minutes)
+- Open browser when you see "http://localhost:3000"
+
+Step 3: Use
+- Open http://localhost:3000 in your browser
+- Click "进入看板" (Go to Dashboard)
+- Start using!
+
+
+========================================================
+                    Common issues
+========================================================
+
+Issue 1: Double-clicking the bat file does nothing
+Solution: Right-click the bat file, choose "Edit" to see if content is correct
+
+Issue 2: "node is not recognized" error
+Solution: Install Node.js from https://nodejs.org/
+
+Issue 3: npm install is slow
+Solution:
+1. Press Win+R, type "cmd", press Enter
+2. Type this command and press Enter:
+   npm config set registry https://registry.npmmirror.com
+3. Then double-click "启动项目.bat" again
+
+Issue 4: Port already in use
+Solution: Close other programs or restart your computer
+
+
+========================================================
+                    Manual start (backup)
+========================================================
+
+If double-clicking bat file doesn't work:
+
+1. Open folder: d:\Trae\TraeProject\demo01
+2. Hold Shift + right-click in empty space
+3. Choose "Open PowerShell window here"
+4. Type these commands:
+
+npm install
+(wait for it to finish)
+
+npm run dev
+(wait for server to start)
+
+5. Open http://localhost:3000 in browser
+
+
+========================================================
+                    Have fun!
+========================================================

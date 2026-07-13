@@ -2,11 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { getAuthState, logout, type User } from "@/lib/auth";
-import { clearAllAgents } from "../subagent-bridge";
 
 /**
  * Authentication hook.
- * Manages authentication state, login/logout handlers, and agent cleanup on mount.
+ * Manages authentication state and login/logout handlers.
  * Does NOT record audit logs - the caller should wrap handlers with audit logging.
  */
 export function useAuth() {
@@ -23,17 +22,17 @@ export function useAuth() {
     setCurrentUser(auth.user);
   }, []);
 
-  useEffect(() => {
-    clearAllAgents();
-  }, []);
-
   /**
    * Handle successful login.
    * Updates authentication state after login form submission.
    */
   const handleLoginSuccess = () => {
     const auth = getAuthState();
-    console.log('[useAuth] 登录成功:', { username: auth.user?.username, email: auth.user?.email, timestamp: new Date().toISOString() });
+    console.log("[useAuth] 登录成功:", {
+      username: auth.user?.username,
+      email: auth.user?.email,
+      timestamp: new Date().toISOString(),
+    });
     setIsAuthenticated(auth.isAuthenticated);
     setCurrentUser(auth.user);
   };
@@ -43,7 +42,11 @@ export function useAuth() {
    * Clears auth token and resets authentication state.
    */
   const handleLogout = () => {
-    console.log('[useAuth] 登出:', { username: currentUser?.username, email: currentUser?.email, timestamp: new Date().toISOString() });
+    console.log("[useAuth] 登出:", {
+      username: currentUser?.username,
+      email: currentUser?.email,
+      timestamp: new Date().toISOString(),
+    });
     logout();
     setIsAuthenticated(false);
     setCurrentUser(null);

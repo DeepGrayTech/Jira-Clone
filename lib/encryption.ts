@@ -84,7 +84,7 @@ export const encryptData = async <T,>(data: T): Promise<string | null> => {
     const encrypted = await crypto.subtle.encrypt(
       { name: "AES-GCM", iv },
       key,
-      encoded
+      encoded.buffer as ArrayBuffer
     );
     const encryptedArray = new Uint8Array(encrypted);
     // Combine IV and ciphertext

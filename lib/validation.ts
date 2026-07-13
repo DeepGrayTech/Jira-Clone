@@ -14,7 +14,6 @@ import type {
   Goal,
   Milestone,
   KeyResult,
-  Agent,
 } from "@/app/dashboard/types";
 import type {
   ValidationError,
@@ -61,14 +60,6 @@ const VALID_GOAL_STATUSES = [
 const VALID_GOAL_TYPES = ["OKR", "SMART", "MILESTONE", "PROJECT"] as const;
 
 const VALID_KEY_RESULT_STATUSES = ["ON_TRACK", "AT_RISK", "BEHIND"] as const;
-
-const VALID_AGENT_STATUSES = [
-  "IDLE",
-  "WORKING",
-  "COMPLETED",
-  "FAILED",
-  "PAUSED",
-] as const;
 
 // ─── Helper Functions ─────────────────────────────────────────────────────────
 
@@ -456,63 +447,6 @@ function validateKeyResult(
   return errors;
 }
 
-/**
- * Validates a single Agent object.
- */
-function validateAgent(
-  agent: unknown,
-  index: number,
-  seenIds: Set<string>
-): ValidationError[] {
-  const errors: ValidationError[] = [];
-  const a = agent as Record<string, unknown>;
-  const id = typeof a?.id === "string" ? a.id : `agent-index-${index}`;
-  const typeName = "Agent";
-
-  if (!isNonEmptyString(a?.id)) {
-    addError(errors, id, typeName, "id", "id is required and must be a non-empty string");
-  } else if (seenIds.has(a.id as string)) {
-    addError(errors, id, typeName, "id", `Duplicate id: "${a.id}"`);
-  } else {
-    seenIds.add(a.id as string);
-  }
-
-  if (!isNonEmptyString(a?.name)) {
-    addError(errors, id, typeName, "name", "name is required and must be a non-empty string");
-  }
-
-  if (!isNonEmptyString(a?.nickname)) {
-    addError(errors, id, typeName, "nickname", "nickname is required and must be a non-empty string");
-  }
-
-  const agentStatus = String(a?.status ?? "");
-  if (a?.status !== undefined && !(VALID_AGENT_STATUSES as readonly string[]).includes(agentStatus)) {
-    addError(errors, id, typeName, "status", `Invalid status: "${agentStatus}"`);
-  }
-
-  if (typeof a?.tasksCompleted !== "number") {
-    addError(errors, id, typeName, "tasksCompleted", "tasksCompleted must be a number");
-  }
-
-  if (typeof a?.tasksFailed !== "number") {
-    addError(errors, id, typeName, "tasksFailed", "tasksFailed must be a number");
-  }
-
-  if (a?.lastActivity !== undefined && typeof a.lastActivity === "string" && !isValidTimestamp(a.lastActivity)) {
-    addError(errors, id, typeName, "lastActivity", `Invalid ISO 8601 date: "${a.lastActivity}"`);
-  }
-
-  if (a?.capabilities !== undefined && !isStringArray(a.capabilities)) {
-    addError(errors, id, typeName, "capabilities", "capabilities must be an array of strings");
-  }
-
-  if (a?.skills !== undefined && !isStringArray(a.skills)) {
-    addError(errors, id, typeName, "skills", "skills must be an array of strings");
-  }
-
-  return errors;
-}
-
 // ─── Data Type Mapping ────────────────────────────────────────────────────────
 
 type DataTypeName =
@@ -522,8 +456,7 @@ type DataTypeName =
   | "Bug"
   | "Goal"
   | "Milestone"
-  | "KeyResult"
-  | "Agent";
+  | "KeyResult";
 
 const VALIDATORS: Record<
   DataTypeName,
@@ -536,7 +469,6 @@ const VALIDATORS: Record<
   Goal: validateGoal,
   Milestone: validateMilestone,
   KeyResult: validateKeyResult,
-  Agent: validateAgent,
 };
 
 // ─── Public API ───────────────────────────────────────────────────────────────
@@ -625,6 +557,7 @@ export function validateDataIntegrity<T,>(
     warnings,
     validCount: Math.max(0, validCount),
     totalCount: data.length,
+    type,
   };
 }
 

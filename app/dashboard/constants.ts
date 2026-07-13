@@ -51,8 +51,6 @@ export const STORAGE_KEYS = {
   TEST_CASES: "jira-clone-test-cases", // Test case data storage key
   TAG_HISTORY: "jira-clone-tag-history", // Tag history storage key
   COMMENTS: "jira-clone-comments", // Comments storage key
-  AGENTS: "jira-clone-agents", // Agent data storage key
-  AGENT_ASSIGNMENTS: "jira-clone-agent-assignments", // Agent-task assignments key
   BUGS: "jira-clone-bugs", // Bug reports storage key
   GOALS: "jira-clone-goals", // Goals data storage key
   MILESTONES: "jira-clone-milestones", // Milestones data storage key

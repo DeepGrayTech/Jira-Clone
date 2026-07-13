@@ -61,13 +61,12 @@ const hashPassword = async (password: string): Promise<string> => {
 
   let hash: string;
   try {
-    const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+    const hashBuffer = await crypto.subtle.digest("SHA-256", data.buffer as ArrayBuffer);
     const hashArray = Array.from(new Uint8Array(hashBuffer));
     hash = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
   } catch {
-    // Node.js fallback for environments without crypto.subtle (e.g. jsdom)
     const { createHash } = require('crypto');
-    hash = createHash('sha256').update(Buffer.from(data)).digest('hex');
+    hash = createHash('sha256').update(Buffer.from(data.buffer as ArrayBuffer)).digest('hex');
     console.log('[hashPassword] 使用 Node.js crypto 回退');
   }
 

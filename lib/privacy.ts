@@ -13,13 +13,13 @@ export interface ExportedData {
   exportDate: string; // ISO timestamp of when the data was exported
   version: string; // Application version identifier
   data: {
-    tasks: unknown;
-    requirements: unknown;
-    testCases: unknown;
-    bugs: unknown;
-    goals: unknown;
-    milestones: unknown;
-    keyResults: unknown;
+    tasks: unknown[];
+    requirements: unknown[];
+    testCases: unknown[];
+    bugs: unknown[];
+    goals: unknown[];
+    milestones: unknown[];
+    keyResults: unknown[];
   };
 }
 
@@ -29,11 +29,12 @@ export interface ExportedData {
  * @param key - localStorage key to read from
  * @returns Parsed data or empty array
  */
-const readStorageItem = (key: string): unknown => {
+const readStorageItem = (key: string): unknown[] => {
   try {
     const raw = localStorage.getItem(key);
     if (!raw) return [];
-    return JSON.parse(raw);
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
   } catch {
     return [];
   }

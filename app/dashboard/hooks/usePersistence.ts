@@ -11,8 +11,6 @@ import type {
   Goal,
   Milestone,
   KeyResult,
-  Agent,
-  AgentTaskAssignment,
   Comment,
   AuditLogEntry,
 } from "../types";
@@ -107,8 +105,6 @@ export function usePersistence(
   keyResults: KeyResult[],
   tagHistory: string[],
   comments: Comment[],
-  agents: Agent[],
-  agentAssignments: AgentTaskAssignment[],
   auditLogs: AuditLogEntry[],
   isInitialized: boolean,
   setTagHistory: React.Dispatch<React.SetStateAction<string[]>>
@@ -157,16 +153,6 @@ export function usePersistence(
     if (!isInitialized) return;
     saveWithLog(comments, STORAGE_KEYS.COMMENTS, "comments");
   }, [comments, isInitialized]);
-
-  useEffect(() => {
-    if (!isInitialized) return;
-    saveWithLog(agents, STORAGE_KEYS.AGENTS, "agents");
-  }, [agents, isInitialized]);
-
-  useEffect(() => {
-    if (!isInitialized) return;
-    saveWithLog(agentAssignments, STORAGE_KEYS.AGENT_ASSIGNMENTS, "agentAssignments");
-  }, [agentAssignments, isInitialized]);
 
   useEffect(() => {
     if (!isInitialized) return;

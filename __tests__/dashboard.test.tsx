@@ -103,7 +103,7 @@ describe("Dashboard Component", () => {
       render(<Dashboard />);
 
       await waitFor(() => {
-        expect(screen.getByText("Jira Clone")).toBeInTheDocument();
+        expect(screen.getByText("📊 Jira Clone")).toBeInTheDocument();
       });
     });
 
@@ -113,7 +113,7 @@ describe("Dashboard Component", () => {
       render(<Dashboard />);
 
       await waitFor(() => {
-        expect(screen.getByText("🔒 Admin")).toBeInTheDocument();
+        expect(screen.getByText("🔒 Privacy")).toBeInTheDocument();
       });
     });
   });
@@ -125,7 +125,7 @@ describe("Dashboard Component", () => {
       render(<Dashboard />);
 
       await waitFor(() => {
-        expect(screen.getByText("Jira Clone")).toBeInTheDocument();
+        expect(screen.getByText("📊 Jira Clone")).toBeInTheDocument();
       });
     });
 
@@ -223,7 +223,7 @@ describe("Dashboard Component", () => {
         render(<Dashboard />);
 
         await waitFor(() => {
-          expect(screen.getByText("Privacy Policy")).toBeInTheDocument();
+          expect(screen.getByText("Privacy Consent")).toBeInTheDocument();
         });
       });
 
@@ -399,7 +399,11 @@ describe("Dashboard Component", () => {
 
       const result = validateDataIntegrity(duplicateTasks, "Task");
       expect(result.isValid).toBe(false);
-      expect(result.errors.some((e) => e.field === "id" && e.message.includes("Duplicate"))).toBe(true);
+      expect(
+        result.errors.some(
+          (e) => e.field === "id" && e.message.includes("Duplicate")
+        )
+      ).toBe(true);
     });
 
     it("should validate Bug data with correct severity and priority", () => {

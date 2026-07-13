@@ -42,11 +42,12 @@ export default function TaskColumn({
           aria-label={`${STATUS_LABELS[status]} column, ${tasks.length} tasks`}
           style={{
             minWidth: getColumnWidth(),
-            width: isSmall ? "95%" : "auto",
+            width: isSmall ? "95%" : "280px",
             maxWidth: "300px",
             background: COLORS.columnBackground,
             borderRadius: "12px",
             padding: isSmall ? "10px" : "16px",
+            flexShrink: 0,
           }}
         >
           <h3

@@ -9,7 +9,9 @@ import { useState, useEffect } from "react";
  *
  * @param setShowModal - Setter for the main modal visibility (for ESC key handling)
  */
-export function useWindow(setShowModal: React.Dispatch<React.SetStateAction<boolean>>) {
+export function useWindow(
+  setShowModal: React.Dispatch<React.SetStateAction<boolean>>
+) {
   const [windowWidth, setWindowWidth] = useState(1280);
   const [isClient, setIsClient] = useState(false);
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
