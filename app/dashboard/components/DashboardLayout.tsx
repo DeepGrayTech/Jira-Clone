@@ -1,27 +1,56 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useCallback, useMemo, useEffect } from "react";
 import { DragDropContext, DropResult } from "@hello-pangea/dnd";
-import { getAuthState, logoutAndClear, hasPermission, getCurrentUser, type User } from "@/lib/auth";
-import { exportUserData, importUserData, deleteAllUserData } from "@/lib/privacy";
+import { useRouter, useSearchParams } from "next/navigation";
+import {
+  getAuthState,
+  logoutAndClear,
+  hasPermission,
+  getCurrentUser,
+  type User,
+} from "@/lib/auth";
+import {
+  exportUserData,
+  importUserData,
+  deleteAllUserData,
+} from "@/lib/privacy";
 import LoginForm from "./LoginForm";
 import Modal from "./Modal";
 import DashboardNavigation from "./DashboardNavigation";
-import { TasksView, RequirementsView, TestingView, BugsView, GoalsView, AuditView } from "../views";
+import {
+  TasksView,
+  RequirementsView,
+  TestingView,
+  BugsView,
+  GoalsView,
+  AuditView,
+  NotificationsView,
+} from "../views";
+import NotificationCenter from "./NotificationCenter";
+import NotificationSettingsPanel from "./NotificationSettingsPanel";
 import { COLORS, STORAGE_KEYS } from "../constants";
 import { useAuth } from "../hooks/useAuth";
 import { useWindow } from "../hooks/useWindow";
 import { useDataLoader } from "../hooks/useDataLoader";
 import { usePersistence } from "../hooks/usePersistence";
 import { useValidation } from "../hooks/useValidation";
+import { useDashboardLogic } from "../hooks/useDashboardLogic";
 import { TaskProvider, useTasks } from "../contexts/TaskContext";
-import { RequirementProvider, useRequirements } from "../contexts/RequirementContext";
+import {
+  RequirementProvider,
+  useRequirements,
+} from "../contexts/RequirementContext";
 import { BugProvider, useBugs } from "../contexts/BugContext";
 import { GoalProvider, useGoals } from "../contexts/GoalContext";
 import { AuditProvider, useAuditLogs } from "../contexts/AuditContext";
 import { TestCaseProvider, useTestCases } from "../contexts/TestCaseContext";
 import { SharedProvider, useShared } from "../contexts/SharedContext";
+import { NotificationProvider } from "../contexts/NotificationContext";
+import { EpicProvider, useEpics } from "../contexts/EpicContext";
+import EpicSelector from "./EpicSelector";
 import { AuditService } from "../services/AuditService";
+import { EpicService } from "../services/EpicService";
 import type {
   Task,
   Requirement,
@@ -31,6 +60,7 @@ import type {
   Goal,
   ModalType,
   ViewMode,
+  Epic,
 } from "../types";
 import { validateDataIntegrity, getValidationSummary } from "@/lib/validation";
 import type { ValidationResult } from "../types";
@@ -42,15 +72,83 @@ import {
   isValidTestCaseStatus,
 } from "../types";
 
-export default function DashboardLayout() {
-  const { isAuthenticated, setIsAuthenticated, currentUser, setCurrentUser } = useAuth();
-  const [showModal, setShowModal] = useState(false);
-  const { windowWidth, isClient, showPrivacyModal, setShowPrivacyModal, privacyConsented, setPrivacyConsented, effectiveWidth, isSmall, isMedium } = useWindow(setShowModal);
+const VALID_VIEW_MODES: ViewMode[] = [
+  "TASKS",
+  "REQUIREMENTS",
+  "TESTING",
+  "BUGS",
+  "GOALS",
+  "AUDIT",
+  "NOTIFICATIONS",
+];
 
-  const [viewMode, setViewMode] = useState<ViewMode>("TASKS");
+export default function DashboardLayout() {
+  console.log(`[DashboardLayout] Outer component rendering`);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const { isAuthenticated, setIsAuthenticated, currentUser, setCurrentUser } =
+    useAuth();
+  const [showModal, setShowModal] = useState(false);
+  const {
+    windowWidth,
+    isClient,
+    showPrivacyModal,
+    setShowPrivacyModal,
+    privacyConsented,
+    setPrivacyConsented,
+    effectiveWidth,
+    isSmall,
+    isMedium,
+  } = useWindow(setShowModal);
+
+  const initialViewMode = (searchParams.get("view") as ViewMode) || "TASKS";
+  const [viewMode, setViewMode] = useState<ViewMode>(
+    VALID_VIEW_MODES.includes(initialViewMode) ? initialViewMode : "TASKS"
+  );
+
+  useEffect(() => {
+    const urlView = searchParams.get("view") as ViewMode;
+    if (urlView && VALID_VIEW_MODES.includes(urlView) && urlView !== viewMode) {
+      setViewMode(urlView);
+    }
+  }, [searchParams]);
+
+  const handleViewModeChange = useCallback(
+    (newViewAction: React.SetStateAction<ViewMode>) => {
+      const newView =
+        typeof newViewAction === "function"
+          ? newViewAction(viewMode)
+          : newViewAction;
+      console.log(
+        `[Router] handleViewModeChange | START | newView=${newView} | currentView=${viewMode}`
+      );
+      console.log(
+        `[Router] handleViewModeChange | searchParams before=${searchParams.toString()}`
+      );
+
+      setViewMode(newView);
+
+      const params = new URLSearchParams(searchParams);
+      const prevView = params.get("view");
+      params.set("view", newView);
+      const newUrl = `/dashboard?${params.toString()}`;
+
+      console.log(
+        `[Router] handleViewModeChange | transitioning | from=${prevView} | to=${newView} | url=${newUrl}`
+      );
+
+      router.push(newUrl, { scroll: false });
+
+      console.log(
+        `[Router] handleViewModeChange | COMPLETE | viewMode state updated to=${newView}`
+      );
+    },
+    [router, searchParams, viewMode]
+  );
   const [modalType, setModalType] = useState<ModalType>("task");
   const [editingTask, setEditingTask] = useState<Task | null>(null);
-  const [editingRequirement, setEditingRequirement] = useState<Requirement | null>(null);
+  const [editingRequirement, setEditingRequirement] =
+    useState<Requirement | null>(null);
   const [editingTestCase, setEditingTestCase] = useState<TestCase | null>(null);
   const [editingBug, setEditingBug] = useState<Bug | null>(null);
   const [formData, setFormData] = useState<FormFields>({
@@ -62,6 +160,7 @@ export default function DashboardLayout() {
     tags: [],
     assignee: "",
     relatedRequirementId: "",
+    relatedGoalId: "",
     figmaUrl: "",
     steps: "",
     expectedResult: "",
@@ -76,60 +175,70 @@ export default function DashboardLayout() {
   });
 
   const [showPrivacySettings, setShowPrivacySettings] = useState(false);
+  const [showNotificationSettings, setShowNotificationSettings] =
+    useState(false);
   const [importMessage, setImportMessage] = useState("");
   const fileInputRef = React.createRef<HTMLInputElement>();
 
   const auditService = new AuditService();
 
   return (
-    <TaskProvider>
-      <RequirementProvider>
-        <BugProvider>
-        <GoalProvider>
-          <AuditProvider>
-            <TestCaseProvider>
-              <SharedProvider>
-                <DashboardContent
-                  isAuthenticated={isAuthenticated}
-                  setIsAuthenticated={setIsAuthenticated}
-                  currentUser={currentUser}
-                  setCurrentUser={setCurrentUser}
-                  viewMode={viewMode}
-                  setViewMode={setViewMode}
-                  showModal={showModal}
-                  setShowModal={setShowModal}
-                  modalType={modalType}
-                  setModalType={setModalType}
-                  editingTask={editingTask}
-                  setEditingTask={setEditingTask}
-                  editingRequirement={editingRequirement}
-                  setEditingRequirement={setEditingRequirement}
-                  editingTestCase={editingTestCase}
-                  setEditingTestCase={setEditingTestCase}
-                  editingBug={editingBug}
-                  setEditingBug={setEditingBug}
-                  formData={formData}
-                  setFormData={setFormData}
-                  showPrivacyModal={showPrivacyModal}
-                  setShowPrivacyModal={setShowPrivacyModal}
-                  privacyConsented={privacyConsented}
-                  setPrivacyConsented={setPrivacyConsented}
-                  showPrivacySettings={showPrivacySettings}
-                  setShowPrivacySettings={setShowPrivacySettings}
-                  importMessage={importMessage}
-                  setImportMessage={setImportMessage}
-                  fileInputRef={fileInputRef}
-                  isSmall={isSmall}
-                  isMedium={isMedium}
-                  auditService={auditService}
-                />
-              </SharedProvider>
-            </TestCaseProvider>
-          </AuditProvider>
-        </GoalProvider>
-      </BugProvider>
-      </RequirementProvider>
-    </TaskProvider>
+    <NotificationProvider>
+      <EpicProvider>
+        <TaskProvider>
+          <RequirementProvider>
+            <BugProvider>
+              <GoalProvider>
+                <AuditProvider>
+                  <TestCaseProvider>
+                    <SharedProvider>
+                      <DashboardContent
+                        isAuthenticated={isAuthenticated}
+                        setIsAuthenticated={setIsAuthenticated}
+                        currentUser={currentUser}
+                        setCurrentUser={setCurrentUser}
+                        viewMode={viewMode}
+                        setViewMode={handleViewModeChange}
+                        showModal={showModal}
+                        setShowModal={setShowModal}
+                        modalType={modalType}
+                        setModalType={setModalType}
+                        editingTask={editingTask}
+                        setEditingTask={setEditingTask}
+                        editingRequirement={editingRequirement}
+                        setEditingRequirement={setEditingRequirement}
+                        editingTestCase={editingTestCase}
+                        setEditingTestCase={setEditingTestCase}
+                        editingBug={editingBug}
+                        setEditingBug={setEditingBug}
+                        formData={formData}
+                        setFormData={setFormData}
+                        showPrivacyModal={showPrivacyModal}
+                        setShowPrivacyModal={setShowPrivacyModal}
+                        privacyConsented={privacyConsented}
+                        setPrivacyConsented={setPrivacyConsented}
+                        showPrivacySettings={showPrivacySettings}
+                        setShowPrivacySettings={setShowPrivacySettings}
+                        showNotificationSettings={showNotificationSettings}
+                        setShowNotificationSettings={
+                          setShowNotificationSettings
+                        }
+                        importMessage={importMessage}
+                        setImportMessage={setImportMessage}
+                        fileInputRef={fileInputRef}
+                        isSmall={isSmall}
+                        isMedium={isMedium}
+                        auditService={auditService}
+                      />
+                    </SharedProvider>
+                  </TestCaseProvider>
+                </AuditProvider>
+              </GoalProvider>
+            </BugProvider>
+          </RequirementProvider>
+        </TaskProvider>
+      </EpicProvider>
+    </NotificationProvider>
   );
 }
 
@@ -147,7 +256,9 @@ interface DashboardContentProps {
   editingTask: Task | null;
   setEditingTask: React.Dispatch<React.SetStateAction<Task | null>>;
   editingRequirement: Requirement | null;
-  setEditingRequirement: React.Dispatch<React.SetStateAction<Requirement | null>>;
+  setEditingRequirement: React.Dispatch<
+    React.SetStateAction<Requirement | null>
+  >;
   editingTestCase: TestCase | null;
   setEditingTestCase: React.Dispatch<React.SetStateAction<TestCase | null>>;
   editingBug: Bug | null;
@@ -160,6 +271,8 @@ interface DashboardContentProps {
   setPrivacyConsented: React.Dispatch<React.SetStateAction<boolean>>;
   showPrivacySettings: boolean;
   setShowPrivacySettings: React.Dispatch<React.SetStateAction<boolean>>;
+  showNotificationSettings: boolean;
+  setShowNotificationSettings: React.Dispatch<React.SetStateAction<boolean>>;
   importMessage: string;
   setImportMessage: React.Dispatch<React.SetStateAction<string>>;
   fileInputRef: React.RefObject<HTMLInputElement>;
@@ -195,6 +308,8 @@ function DashboardContent({
   setPrivacyConsented,
   showPrivacySettings,
   setShowPrivacySettings,
+  showNotificationSettings,
+  setShowNotificationSettings,
   importMessage,
   setImportMessage,
   fileInputRef,
@@ -203,14 +318,104 @@ function DashboardContent({
   auditService,
 }: DashboardContentProps) {
   const { tasks, setTasks, addTask, updateTask } = useTasks();
-  const { requirements, setRequirements, addRequirement, updateRequirement, deleteRequirement } = useRequirements();
+  const {
+    requirements,
+    setRequirements,
+    addRequirement,
+    updateRequirement,
+    deleteRequirement,
+  } = useRequirements();
   const { bugs, setBugs, addBug, updateBug, deleteBug } = useBugs();
-  const { goals, setGoals, addGoal, updateGoal, deleteGoal, milestones, setMilestones, keyResults, setKeyResults } = useGoals();
+  const {
+    goals,
+    setGoals,
+    addGoal,
+    updateGoal,
+    deleteGoal,
+    milestones,
+    setMilestones,
+    keyResults,
+    setKeyResults,
+  } = useGoals();
   const { auditLogs, setAuditLogs, addAuditLog } = useAuditLogs();
-  const { testCases, setTestCases, addTestCase, updateTestCase, deleteTestCase } = useTestCases();
+  const {
+    testCases,
+    setTestCases,
+    addTestCase,
+    updateTestCase,
+    deleteTestCase,
+  } = useTestCases();
   const { comments, setComments, tagHistory, setTagHistory } = useShared();
+  const {
+    epics,
+    currentEpicId,
+    setCurrentEpic,
+    addEpic,
+    updateEpic,
+    setEpics,
+    deleteEpic,
+  } = useEpics();
 
   const [isInitialized, setIsInitialized] = useState(false);
+  console.log(
+    `[DashboardLayout] Component mounted | epicsCount=${epics.length}`
+  );
+  const [showNewEpicModal, setShowNewEpicModal] = useState(false);
+  const [newEpicTitle, setNewEpicTitle] = useState("");
+  const [showDeleteEpicModal, setShowDeleteEpicModal] = useState(false);
+  const [epicToDelete, setEpicToDelete] = useState<{
+    id: string;
+    title: string;
+  } | null>(null);
+  const [showEditEpicModal, setShowEditEpicModal] = useState(false);
+  const [editingEpic, setEditingEpic] = useState<Epic | null>(null);
+  const [editEpicTitle, setEditEpicTitle] = useState("");
+  const [editEpicDescription, setEditEpicDescription] = useState("");
+  const [editEpicColor, setEditEpicColor] = useState("#3b82f6");
+
+  const handleNewEpic = useCallback(() => {
+    console.log(`[Epic] handleNewEpic | START | opening create modal`);
+    setNewEpicTitle("");
+    setShowNewEpicModal(true);
+    console.log(
+      `[Epic] handleNewEpic | COMPLETE | modal opened, newEpicTitle reset to empty`
+    );
+  }, []);
+
+  const handleEditEpic = useCallback((epic: Epic) => {
+    console.log(
+      `[DashboardLayout] handleEditEpic | opening edit modal | epicId=${epic.id} | epicTitle="${epic.title}"`
+    );
+    setEditingEpic(epic);
+    setEditEpicTitle(epic.title);
+    setEditEpicDescription(epic.description || "");
+    setEditEpicColor(epic.color);
+    setShowEditEpicModal(true);
+  }, []);
+
+  const handleDeleteEpic = useCallback(
+    (epicId: string) => {
+      if (showDeleteEpicModal || epicToDelete) {
+        console.log(
+          `[DashboardLayout] onDeleteEpic | SKIPPED (race condition) | epicId=${epicId} | showDeleteEpicModal=${showDeleteEpicModal}`
+        );
+        return;
+      }
+      const epic = epics.find((e) => e.id === epicId);
+      if (epic) {
+        console.log(
+          `[DashboardLayout] onDeleteEpic | opening confirm modal | epicId=${epicId} | epicTitle="${epic.title}"`
+        );
+        setEpicToDelete({ id: epicId, title: epic.title });
+        setShowDeleteEpicModal(true);
+      } else {
+        console.warn(
+          `[DashboardLayout] onDeleteEpic | epic not found | epicId=${epicId}`
+        );
+      }
+    },
+    [showDeleteEpicModal, epicToDelete, epics]
+  );
 
   useDataLoader(
     setTasks,
@@ -223,7 +428,8 @@ function DashboardContent({
     setTagHistory,
     setComments,
     setAuditLogs,
-    setIsInitialized
+    setIsInitialized,
+    setEpics
   );
 
   usePersistence(
@@ -238,10 +444,16 @@ function DashboardContent({
     comments,
     auditLogs,
     isInitialized,
-    setTagHistory
+    setTagHistory,
+    epics
   );
 
-  const { validationResults, setValidationResults, showValidationBanner, setShowValidationBanner } = useValidation(
+  const {
+    validationResults,
+    setValidationResults,
+    showValidationBanner,
+    setShowValidationBanner,
+  } = useValidation(
     isInitialized,
     tasks,
     requirements,
@@ -259,6 +471,50 @@ function DashboardContent({
     setKeyResults
   );
 
+  const {
+    handleAddComment,
+    handleDeleteComment,
+    handlePrivacyConsent,
+    handleRevokeConsent,
+    handleLoginSuccess,
+    handleLogout,
+    handleExportData,
+    handleImportData,
+    handleClearAllData,
+    handleNewTask,
+    handleSaveTask,
+    handleNewRequirement,
+    handleSaveRequirement,
+    handleNewTestCase,
+    handleSaveTestCase,
+    handleNewBug,
+    handleSaveBug,
+    handleCreateGoal,
+    handleUpdateGoal,
+    handleDeleteGoal,
+  } = useDashboardLogic({
+    currentUser,
+    setIsAuthenticated,
+    setCurrentUser,
+    setShowModal,
+    setModalType,
+    editingTask,
+    setEditingTask,
+    editingRequirement,
+    setEditingRequirement,
+    editingTestCase,
+    setEditingTestCase,
+    editingBug,
+    setEditingBug,
+    formData,
+    setFormData,
+    setShowPrivacyModal,
+    setPrivacyConsented,
+    setImportMessage,
+    fileInputRef,
+    currentEpicId,
+  });
+
   const getFontSize = () => {
     if (isSmall) return 0.85;
     if (isMedium) return 0.95;
@@ -272,595 +528,6 @@ function DashboardContent({
   };
 
   const fontSizeScale = getFontSize();
-
-  const handleAddComment = (taskId: string, content: string) => {
-    if (!content.trim() || !currentUser) return;
-
-    const newComment = {
-      id: Date.now().toString(),
-      taskId,
-      author: currentUser.username || currentUser.email || "Unknown",
-      content: content.trim(),
-      createdAt: new Date().toISOString(),
-    };
-
-    setComments((prev) => [...prev, newComment]);
-    setTasks((prev) =>
-      prev.map((t) =>
-        t.id === taskId
-          ? { ...t, comments: [...(t.comments || []), newComment] }
-          : t
-      )
-    );
-  };
-
-  const handleDeleteComment = (commentId: string, taskId: string) => {
-    setComments((prev) => prev.filter((c) => c.id !== commentId));
-    setTasks((prev) =>
-      prev.map((t) =>
-        t.id === taskId
-          ? {
-              ...t,
-              comments: (t.comments || []).filter((c) => c.id !== commentId),
-            }
-          : t
-      )
-    );
-  };
-
-  const handlePrivacyConsent = () => {
-    setPrivacyConsented(true);
-    setShowPrivacyModal(false);
-    localStorage.setItem("jira-clone-privacy-consent", "true");
-  };
-
-  const handleRevokeConsent = () => {
-    if (
-      window.confirm(
-        "Revoking consent will delete all your data. This action cannot be undone. Are you sure?"
-      )
-    ) {
-      addAuditLog(
-        auditService.logAction(
-          "CLEAR",
-          "SYSTEM",
-          "system",
-          "Privacy consent revoked - all data cleared",
-          currentUser?.username || currentUser?.email || "Unknown"
-        )
-      );
-      logoutAndClear();
-      setIsAuthenticated(false);
-      setCurrentUser(null);
-      setPrivacyConsented(false);
-      setShowPrivacyModal(false);
-      setTasks([]);
-      setRequirements([]);
-      setTestCases([]);
-      setBugs([]);
-      setGoals([]);
-      setMilestones([]);
-      setKeyResults([]);
-      setAuditLogs([]);
-      setTagHistory([]);
-      setComments([]);
-    }
-  };
-
-  const handleLoginSuccess = () => {
-    const auth = getAuthState();
-    addAuditLog(
-      auditService.logAction(
-        "LOGIN",
-        "SYSTEM",
-        "system",
-        `User "${auth.user?.username || auth.user?.email}" logged in`,
-        auth.user?.username || auth.user?.email || "Unknown"
-      )
-    );
-  };
-
-  const handleLogout = () => {
-    const username = currentUser?.username || currentUser?.email || "Unknown";
-    addAuditLog(
-      auditService.logAction(
-        "LOGOUT",
-        "SYSTEM",
-        "system",
-        `User "${username}" logged out`,
-        username
-      )
-    );
-    logoutAndClear();
-    setIsAuthenticated(false);
-    setCurrentUser(null);
-  };
-
-  const handleExportData = () => {
-    exportUserData();
-    addAuditLog(
-      auditService.logAction(
-        "EXPORT",
-        "SYSTEM",
-        "system",
-        "User data exported to JSON file",
-        currentUser?.username || currentUser?.email || "Unknown"
-      )
-    );
-  };
-
-  const handleImportData = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    try {
-      setImportMessage("Importing...");
-      const importedData = await importUserData(file);
-
-      const validationResults: string[] = [];
-      const validateAndCollect = <T,>(data: T[], type: Parameters<typeof validateDataIntegrity>[1]) => {
-        if (Array.isArray(data) && data.length > 0) {
-          const result = validateDataIntegrity(data, type);
-          const summary = getValidationSummary(result);
-          if (!result.isValid) {
-            validationResults.push(`⚠ ${summary}`);
-          }
-        }
-      };
-
-      validateAndCollect(importedData.data.tasks as Task[], "Task");
-      validateAndCollect(importedData.data.requirements as Requirement[], "Requirement");
-      validateAndCollect(importedData.data.testCases as TestCase[], "TestCase");
-      validateAndCollect(importedData.data.bugs as Bug[], "Bug");
-      validateAndCollect(importedData.data.goals as Goal[], "Goal");
-
-      if (validationResults.length > 0) {
-        setImportMessage(
-          `Data integrity warnings:\n${validationResults.join("\n")}\nImport aborted. Please fix the data file.`
-        );
-        setTimeout(() => setImportMessage(""), 8000);
-        if (fileInputRef.current) fileInputRef.current.value = "";
-        return;
-      }
-
-      if (Array.isArray(importedData.data.tasks) && importedData.data.tasks.length > 0) {
-        setTasks((prev) => [...prev, ...(importedData.data.tasks as Task[])]);
-      }
-      if (Array.isArray(importedData.data.requirements) && importedData.data.requirements.length > 0) {
-        setRequirements((prev) => [...prev, ...(importedData.data.requirements as Requirement[])]);
-      }
-      if (Array.isArray(importedData.data.testCases) && importedData.data.testCases.length > 0) {
-        setTestCases((prev) => [...prev, ...(importedData.data.testCases as TestCase[])]);
-      }
-      if (Array.isArray(importedData.data.bugs) && importedData.data.bugs.length > 0) {
-        setBugs((prev) => [...prev, ...(importedData.data.bugs as Bug[])]);
-      }
-      if (Array.isArray(importedData.data.goals) && importedData.data.goals.length > 0) {
-        setGoals((prev) => [...prev, ...(importedData.data.goals as Goal[])]);
-      }
-
-      addAuditLog(
-        auditService.logAction(
-          "IMPORT",
-          "SYSTEM",
-          "system",
-          `Data imported from file: ${file.name}`,
-          currentUser?.username || currentUser?.email || "Unknown"
-        )
-      );
-      setImportMessage("Data imported successfully!");
-      setTimeout(() => setImportMessage(""), 3000);
-    } catch (error) {
-      setImportMessage(
-        error instanceof Error ? error.message : "Import failed"
-      );
-      setTimeout(() => setImportMessage(""), 5000);
-    }
-
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
-  };
-
-  const handleClearAllData = () => {
-    if (
-      window.confirm(
-        "Are you sure you want to delete all data? This action cannot be undone."
-      )
-    ) {
-      addAuditLog(
-        auditService.logAction(
-          "CLEAR",
-          "SYSTEM",
-          "system",
-          "All application data cleared by admin",
-          currentUser?.username || currentUser?.email || "Unknown"
-        )
-      );
-      setTasks([]);
-      setRequirements([]);
-      setTestCases([]);
-      setTagHistory([]);
-      setComments([]);
-      setBugs([]);
-      setGoals([]);
-      setMilestones([]);
-      setKeyResults([]);
-      setAuditLogs([]);
-      Object.values(STORAGE_KEYS).forEach((key) => localStorage.removeItem(key));
-      localStorage.removeItem("jira-clone-privacy-consent");
-    }
-  };
-
-  const handleNewTask = () => {
-    setEditingTask(null);
-    setModalType("task");
-    setFormData({
-      title: "",
-      description: "",
-      status: "TODO",
-      priority: "MEDIUM",
-      dueDate: "",
-      tags: [],
-      assignee: "",
-      relatedRequirementId: "",
-      figmaUrl: "",
-      steps: "",
-      expectedResult: "",
-      acceptanceCriteria: "",
-      requester: "",
-      executor: "",
-      severity: "",
-      bugPriority: "",
-      stepsToReproduce: "",
-      expectedBehavior: "",
-      actualBehavior: "",
-    });
-    setShowModal(true);
-  };
-
-  const handleSaveTask = () => {
-    if (!formData.title.trim()) return;
-
-    if (editingTask) {
-      updateTask(editingTask.id, {
-        title: formData.title,
-        description: formData.description,
-        status: isValidTaskStatus(formData.status) ? formData.status : "TODO",
-        priority: isValidTaskPriority(formData.priority) ? formData.priority : "MEDIUM",
-        dueDate: formData.dueDate,
-        tags: formData.tags,
-        assignee: formData.assignee,
-        relatedRequirementId: formData.relatedRequirementId || undefined,
-        figmaUrl: formData.figmaUrl || undefined,
-      });
-      addAuditLog(
-        auditService.logAction(
-          "UPDATE",
-          "TASK",
-          editingTask.id,
-          `Task updated: "${formData.title}"`
-        )
-      );
-    } else {
-      const newTask: Task = {
-        id: "task-" + Date.now(),
-        title: formData.title,
-        description: formData.description,
-        status: isValidTaskStatus(formData.status) ? formData.status : "TODO",
-        priority: isValidTaskPriority(formData.priority) ? formData.priority : "MEDIUM",
-        dueDate: formData.dueDate,
-        tags: formData.tags,
-        assignee: formData.assignee,
-        relatedRequirementId: formData.relatedRequirementId || undefined,
-        figmaUrl: formData.figmaUrl || undefined,
-        comments: [],
-        createdAt: new Date().toISOString(),
-      };
-      addTask(newTask);
-      addAuditLog(
-        auditService.logAction(
-          "CREATE",
-          "TASK",
-          newTask.id,
-          `Task created: "${formData.title}"`
-        )
-      );
-    }
-
-    setShowModal(false);
-    setEditingTask(null);
-  };
-
-  const handleNewRequirement = () => {
-    setEditingRequirement(null);
-    setModalType("requirement");
-    setFormData({
-      title: "",
-      description: "",
-      status: "DRAFT",
-      priority: "MEDIUM",
-      dueDate: "",
-      tags: [],
-      assignee: "",
-      relatedRequirementId: "",
-      figmaUrl: "",
-      steps: "",
-      expectedResult: "",
-      acceptanceCriteria: "",
-      requester: "",
-      executor: "",
-      severity: "",
-      bugPriority: "",
-      stepsToReproduce: "",
-      expectedBehavior: "",
-      actualBehavior: "",
-    });
-    setShowModal(true);
-  };
-
-  const handleSaveRequirement = () => {
-    if (!formData.title.trim()) return;
-
-    const acceptanceCriteriaArray = formData.acceptanceCriteria
-      .split("\n")
-      .map((s) => s.trim())
-      .filter((s) => s);
-
-    if (editingRequirement) {
-      updateRequirement(editingRequirement.id, {
-        title: formData.title,
-        description: formData.description,
-        status: isValidRequirementStatus(formData.status) ? formData.status : "DRAFT",
-        priority: isValidRequirementPriority(formData.priority) ? formData.priority : "MEDIUM",
-        acceptanceCriteria: acceptanceCriteriaArray,
-        requester: formData.requester,
-        executor: formData.executor,
-      });
-      addAuditLog(
-        auditService.logAction(
-          "UPDATE",
-          "REQUIREMENT",
-          editingRequirement.id,
-          `Requirement updated: "${formData.title}"`
-        )
-      );
-    } else {
-      const newReq: Requirement = {
-        id: "req-" + Date.now(),
-        title: formData.title,
-        description: formData.description,
-        priority: isValidRequirementPriority(formData.priority) ? formData.priority : "MEDIUM",
-        status: isValidRequirementStatus(formData.status) ? formData.status : "DRAFT",
-        acceptanceCriteria: acceptanceCriteriaArray,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        requester: formData.requester,
-        executor: formData.executor,
-      };
-      addRequirement(newReq);
-      addAuditLog(
-        auditService.logAction(
-          "CREATE",
-          "REQUIREMENT",
-          newReq.id,
-          `Requirement created: "${formData.title}"`
-        )
-      );
-    }
-
-    setShowModal(false);
-    setEditingRequirement(null);
-  };
-
-  const handleNewTestCase = () => {
-    setEditingTestCase(null);
-    setModalType("test");
-    setFormData({
-      title: "",
-      description: "",
-      status: "PENDING",
-      priority: "MEDIUM",
-      dueDate: "",
-      tags: [],
-      assignee: "",
-      relatedRequirementId: "",
-      figmaUrl: "",
-      steps: "",
-      expectedResult: "",
-      acceptanceCriteria: "",
-      requester: "",
-      executor: "",
-      severity: "",
-      bugPriority: "",
-      stepsToReproduce: "",
-      expectedBehavior: "",
-      actualBehavior: "",
-    });
-    setShowModal(true);
-  };
-
-  const handleSaveTestCase = () => {
-    if (!formData.title.trim()) return;
-
-    const stepsArray = Array.isArray(formData.steps)
-      ? formData.steps
-      : formData.steps.split("\n").map((s) => s.trim()).filter((s) => s);
-
-    if (editingTestCase) {
-      updateTestCase(editingTestCase.id, {
-        title: formData.title,
-        description: formData.description,
-        steps: stepsArray,
-        expectedResult: formData.expectedResult,
-        status: isValidTestCaseStatus(formData.status) ? formData.status : "PENDING",
-        executor: formData.assignee || undefined,
-      });
-      addAuditLog(
-        auditService.logAction(
-          "UPDATE",
-          "TEST_CASE",
-          editingTestCase.id,
-          `Test case updated: "${formData.title}"`
-        )
-      );
-    } else {
-      const newTcId = "t" + Date.now();
-      const newTestCase: TestCase = {
-        id: newTcId,
-        requirementId: formData.relatedRequirementId,
-        title: formData.title,
-        description: formData.description,
-        steps: stepsArray,
-        expectedResult: formData.expectedResult,
-        status: isValidTestCaseStatus(formData.status) ? formData.status : "PENDING",
-      };
-      addTestCase(newTestCase);
-      addAuditLog(
-        auditService.logAction(
-          "CREATE",
-          "TEST_CASE",
-          newTcId,
-          `Test case created: "${formData.title}"`
-        )
-      );
-    }
-
-    setShowModal(false);
-    setEditingTestCase(null);
-  };
-
-  const handleNewBug = () => {
-    setEditingBug(null);
-    setModalType("bug");
-    setFormData({
-      title: "",
-      description: "",
-      status: "REPORTED",
-      priority: "MEDIUM",
-      dueDate: "",
-      tags: [],
-      assignee: "",
-      relatedRequirementId: "",
-      figmaUrl: "",
-      steps: "",
-      expectedResult: "",
-      acceptanceCriteria: "",
-      requester: "",
-      executor: "",
-      severity: "",
-      bugPriority: "",
-      stepsToReproduce: "",
-      expectedBehavior: "",
-      actualBehavior: "",
-    });
-    setShowModal(true);
-  };
-
-  const handleSaveBug = () => {
-    if (!formData.title.trim()) return;
-
-    const stepsToReproduceArray = Array.isArray(formData.stepsToReproduce)
-      ? formData.stepsToReproduce
-      : formData.stepsToReproduce.split("\n").map((s) => s.trim()).filter((s) => s);
-
-    const reporter = currentUser?.username || currentUser?.email || "Current User";
-
-    if (editingBug) {
-      updateBug(editingBug.id, {
-        title: formData.title,
-        description: formData.description,
-        severity: (formData.severity || "MEDIUM") as Bug["severity"],
-        priority: (formData.bugPriority || "MEDIUM") as Bug["priority"],
-        stepsToReproduce: stepsToReproduceArray,
-        expectedBehavior: formData.expectedBehavior,
-        actualBehavior: formData.actualBehavior,
-      });
-      addAuditLog(
-        auditService.logAction(
-          "UPDATE",
-          "BUG",
-          editingBug.id,
-          `Bug updated: "${formData.title}"`
-        )
-      );
-    } else {
-      const newBugId = "bug-" + Date.now();
-      const newBug: Bug = {
-        id: newBugId,
-        title: formData.title,
-        description: formData.description,
-        severity: (formData.severity || "MEDIUM") as Bug["severity"],
-        priority: (formData.bugPriority || "MEDIUM") as Bug["priority"],
-        status: "REPORTED",
-        stepsToReproduce: stepsToReproduceArray,
-        expectedBehavior: formData.expectedBehavior,
-        actualBehavior: formData.actualBehavior,
-        reporter,
-        comments: [],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-      addBug(newBug);
-      addAuditLog(
-        auditService.logAction(
-          "CREATE",
-          "BUG",
-          newBugId,
-          `Bug created: "${formData.title}"`
-        )
-      );
-    }
-
-    setShowModal(false);
-    setEditingBug(null);
-  };
-
-  const handleCreateGoal = (goalData: Omit<Goal, "id" | "createdAt" | "updatedAt">) => {
-    if (!goalData.title || !goalData.title.trim()) return;
-    if (!goalData.startDate || !goalData.endDate) return;
-
-    const newGoal: Goal = {
-      ...goalData,
-      id: Date.now().toString(),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    addGoal(newGoal);
-    addAuditLog(
-      auditService.logAction(
-        "CREATE",
-        "GOAL",
-        newGoal.id,
-        `Goal created: "${goalData.title}"`
-      )
-    );
-  };
-
-  const handleUpdateGoal = (goal: Goal) => {
-    if (!goal.title || !goal.title.trim()) return;
-    updateGoal(goal.id, goal);
-    addAuditLog(
-      auditService.logAction(
-        "UPDATE",
-        "GOAL",
-        goal.id,
-        `Goal updated: "${goal.title}"`
-      )
-    );
-  };
-
-  const handleDeleteGoal = (goalId: string) => {
-    deleteGoal(goalId);
-    addAuditLog(
-      auditService.logAction(
-        "DELETE",
-        "GOAL",
-        goalId,
-        `Goal deleted: ID ${goalId}`
-      )
-    );
-  };
 
   if (!isAuthenticated) {
     return (
@@ -904,6 +571,7 @@ function DashboardContent({
               display: "flex",
               alignItems: "center",
               gap: `${12 * fontSizeScale}px`,
+              flexWrap: "wrap",
             }}
           >
             <h1
@@ -927,6 +595,35 @@ function DashboardContent({
             >
               Dashboard
             </span>
+            <React.Profiler
+              id="EpicSelector"
+              onRender={(
+                id,
+                phase,
+                actualDuration,
+                baseDuration,
+                startTime,
+                commitTime
+              ) => {
+                console.log(
+                  `[Perf] ${id} | phase=${phase} | actual=${actualDuration.toFixed(
+                    2
+                  )}ms | base=${baseDuration.toFixed(2)}ms | commit=${(
+                    commitTime - startTime
+                  ).toFixed(2)}ms`
+                );
+              }}
+            >
+              <EpicSelector
+                epics={epics}
+                currentEpicId={currentEpicId}
+                onEpicChange={setCurrentEpic}
+                onNewEpic={handleNewEpic}
+                onEditEpic={handleEditEpic}
+                onDeleteEpic={handleDeleteEpic}
+                fontSizeScale={fontSizeScale}
+              />
+            </React.Profiler>
           </div>
 
           <div
@@ -992,6 +689,21 @@ function DashboardContent({
             </button>
 
             <button
+              onClick={() => setShowNotificationSettings(true)}
+              style={{
+                padding: `${8 * fontSizeScale}px ${16 * fontSizeScale}px`,
+                background: COLORS.buttonSecondary,
+                border: `1px solid ${COLORS.border}`,
+                borderRadius: "6px",
+                cursor: "pointer",
+                fontSize: `${13 * fontSizeScale}px`,
+                fontWeight: 500,
+              }}
+            >
+              🔔 Notifications
+            </button>
+
+            <button
               onClick={() => {
                 fileInputRef.current?.click();
               }}
@@ -1038,6 +750,11 @@ function DashboardContent({
             >
               Logout
             </button>
+
+            <NotificationCenter
+              fontSizeScale={fontSizeScale}
+              onViewChange={setViewMode}
+            />
           </div>
         </div>
 
@@ -1046,12 +763,12 @@ function DashboardContent({
             style={{
               marginTop: `${12 * fontSizeScale}px`,
               padding: `${10 * fontSizeScale}px`,
-              background:
-                importMessage.includes("successfully")
-                  ? "#dcfce7"
-                  : "#fee2e2",
-              color:
-                importMessage.includes("successfully") ? "#166534" : "#991b1b",
+              background: importMessage.includes("successfully")
+                ? "#dcfce7"
+                : "#fee2e2",
+              color: importMessage.includes("successfully")
+                ? "#166534"
+                : "#991b1b",
               borderRadius: "6px",
               fontSize: `${13 * fontSizeScale}px`,
               fontWeight: 500,
@@ -1108,9 +825,9 @@ function DashboardContent({
                 lineHeight: "1.6",
               }}
             >
-              This application stores your data locally in your browser's localStorage.
-              By accepting, you consent to the storage and processing of your data
-              for the purpose of using this application.
+              This application stores your data locally in your browser's
+              localStorage. By accepting, you consent to the storage and
+              processing of your data for the purpose of using this application.
             </p>
             <div
               style={{
@@ -1153,6 +870,13 @@ function DashboardContent({
             </div>
           </div>
         </div>
+      )}
+
+      {showNotificationSettings && (
+        <NotificationSettingsPanel
+          fontSizeScale={fontSizeScale}
+          onClose={() => setShowNotificationSettings(false)}
+        />
       )}
 
       {showPrivacySettings && (
@@ -1211,13 +935,31 @@ function DashboardContent({
                 paddingLeft: "20px",
               }}
             >
-              <li style={{ marginBottom: "8px", fontSize: "13px", color: COLORS.textSecondary }}>
+              <li
+                style={{
+                  marginBottom: "8px",
+                  fontSize: "13px",
+                  color: COLORS.textSecondary,
+                }}
+              >
                 You can export all your data at any time
               </li>
-              <li style={{ marginBottom: "8px", fontSize: "13px", color: COLORS.textSecondary }}>
+              <li
+                style={{
+                  marginBottom: "8px",
+                  fontSize: "13px",
+                  color: COLORS.textSecondary,
+                }}
+              >
                 You can import previously exported data
               </li>
-              <li style={{ marginBottom: "8px", fontSize: "13px", color: COLORS.textSecondary }}>
+              <li
+                style={{
+                  marginBottom: "8px",
+                  fontSize: "13px",
+                  color: COLORS.textSecondary,
+                }}
+              >
                 You can permanently delete all your data
               </li>
               <li style={{ fontSize: "13px", color: COLORS.textSecondary }}>
@@ -1303,8 +1045,6 @@ function DashboardContent({
               </p>
               <div
                 style={{
-                  maxHeight: "200px",
-                  overflowY: "auto",
                   marginBottom: "12px",
                 }}
               >
@@ -1395,6 +1135,8 @@ function DashboardContent({
             setEditingTask={setEditingTask}
             setModalType={setModalType}
             setFormData={setFormData}
+            setShowModal={setShowModal}
+            currentEpicId={currentEpicId}
           />
         )}
 
@@ -1409,6 +1151,7 @@ function DashboardContent({
             setModalType={setModalType}
             setFormData={setFormData}
             setShowModal={setShowModal}
+            currentEpicId={currentEpicId}
           />
         )}
 
@@ -1423,6 +1166,7 @@ function DashboardContent({
             setModalType={setModalType}
             setFormData={setFormData}
             setShowModal={setShowModal}
+            currentEpicId={currentEpicId}
           />
         )}
 
@@ -1441,6 +1185,7 @@ function DashboardContent({
                 tags: [],
                 assignee: bug.assignee || "",
                 relatedRequirementId: bug.relatedRequirementId || "",
+                relatedGoalId: "",
                 figmaUrl: "",
                 steps: "",
                 expectedResult: "",
@@ -1455,6 +1200,7 @@ function DashboardContent({
               });
               setShowModal(true);
             }}
+            currentEpicId={currentEpicId}
           />
         )}
 
@@ -1463,11 +1209,18 @@ function DashboardContent({
             onCreateGoal={handleCreateGoal}
             onUpdateGoal={handleUpdateGoal}
             onDeleteGoal={handleDeleteGoal}
+            currentEpicId={currentEpicId}
           />
         )}
 
-        {viewMode === "AUDIT" && (
-          <AuditView fontSizeScale={fontSizeScale} />
+        {viewMode === "AUDIT" && <AuditView fontSizeScale={fontSizeScale} />}
+
+        {viewMode === "NOTIFICATIONS" && (
+          <NotificationsView
+            fontSizeScale={fontSizeScale}
+            isSmall={isSmall}
+            onViewChange={setViewMode}
+          />
         )}
       </main>
 
@@ -1490,6 +1243,7 @@ function DashboardContent({
         formData={formData}
         setFormData={setFormData}
         requirements={requirements}
+        goals={goals}
         tagHistory={tagHistory}
         onSave={
           modalType === "task"
@@ -1515,6 +1269,548 @@ function DashboardContent({
         onAddComment={handleAddComment}
         onDeleteComment={handleDeleteComment}
       />
+
+      {showNewEpicModal && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="new-epic-modal-title"
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: "rgba(0,0,0,0.5)",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            zIndex: 3000,
+          }}
+        >
+          <div
+            style={{
+              background: COLORS.cardBackground,
+              borderRadius: "12px",
+              padding: "24px",
+              width: "90%",
+              maxWidth: "400px",
+            }}
+          >
+            <h2
+              id="new-epic-modal-title"
+              style={{
+                margin: "0 0 16px 0",
+                fontSize: "20px",
+                fontWeight: 700,
+                color: COLORS.text,
+              }}
+            >
+              Create New Epic
+            </h2>
+            <input
+              type="text"
+              value={newEpicTitle}
+              onChange={(e) => setNewEpicTitle(e.target.value)}
+              placeholder="Enter Epic name"
+              style={{
+                width: "100%",
+                padding: "10px 12px",
+                border: `1px solid ${COLORS.border}`,
+                borderRadius: "6px",
+                fontSize: "14px",
+                marginBottom: "16px",
+                boxSizing: "border-box",
+              }}
+              autoFocus
+            />
+            <div
+              style={{
+                display: "flex",
+                gap: "12px",
+                justifyContent: "flex-end",
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => setShowNewEpicModal(false)}
+                style={{
+                  padding: "10px 24px",
+                  background: COLORS.buttonSecondary,
+                  border: "none",
+                  borderRadius: "6px",
+                  cursor: "pointer",
+                  fontSize: "14px",
+                  fontWeight: 600,
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (newEpicTitle.trim()) {
+                    console.log(
+                      `[Epic] Create | START | title="${newEpicTitle.trim()}" | existingEpicsCount=${
+                        epics.length
+                      }`
+                    );
+
+                    const epicService = new EpicService();
+                    console.log(`[Epic] Create | EpicService instantiated`);
+
+                    const existingIds = epics.map((e) => e.id);
+                    console.log(
+                      `[Epic] Create | existingIds=${JSON.stringify(
+                        existingIds
+                      )}`
+                    );
+
+                    const newEpic = epicService.createEpic(
+                      newEpicTitle.trim(),
+                      "",
+                      "#3b82f6",
+                      existingIds
+                    );
+                    console.log(
+                      `[Epic] Create | epic created | id=${newEpic.id} | title="${newEpic.title}" | color=${newEpic.color} | createdAt=${newEpic.createdAt}`
+                    );
+
+                    addEpic(newEpic);
+                    console.log(
+                      `[Epic] Create | addEpic dispatched | newEpicsCount=${
+                        epics.length + 1
+                      }`
+                    );
+
+                    setShowNewEpicModal(false);
+                    console.log(`[Epic] Create | modal closed`);
+
+                    setNewEpicTitle("");
+                    console.log(`[Epic] Create | COMPLETE | form reset`);
+                  } else {
+                    console.log(`[Epic] Create | SKIPPED | title is empty`);
+                  }
+                }}
+                disabled={!newEpicTitle.trim()}
+                style={{
+                  padding: "10px 24px",
+                  background: newEpicTitle.trim()
+                    ? COLORS.buttonPrimary
+                    : "#93c5fd",
+                  color: "#ffffff",
+                  border: "none",
+                  borderRadius: "6px",
+                  cursor: newEpicTitle.trim() ? "pointer" : "not-allowed",
+                  fontSize: "14px",
+                  fontWeight: 600,
+                }}
+              >
+                Create
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showDeleteEpicModal && epicToDelete && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="delete-epic-modal-title"
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: "rgba(0,0,0,0.5)",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            zIndex: 3000,
+          }}
+        >
+          <div
+            style={{
+              background: COLORS.cardBackground,
+              borderRadius: "12px",
+              padding: "24px",
+              width: "90%",
+              maxWidth: "400px",
+            }}
+          >
+            <h2
+              id="delete-epic-modal-title"
+              style={{
+                margin: "0 0 16px 0",
+                fontSize: "20px",
+                fontWeight: 700,
+                color: "#ef4444",
+              }}
+            >
+              Confirm Delete
+            </h2>
+            <p
+              style={{
+                margin: "0 0 20px 0",
+                fontSize: "14px",
+                color: COLORS.text,
+                lineHeight: "1.5",
+              }}
+            >
+              Are you sure you want to delete the Epic "
+              <strong>{epicToDelete.title}</strong>"?
+            </p>
+            <p
+              style={{
+                margin: "0 0 20px 0",
+                fontSize: "13px",
+                color: COLORS.textSecondary,
+                lineHeight: "1.5",
+              }}
+            >
+              This action will also delete all associated tasks, requirements,
+              test cases, bugs, goals, and comments. This cannot be undone.
+            </p>
+            <div
+              style={{
+                display: "flex",
+                gap: "12px",
+                justifyContent: "flex-end",
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => {
+                  setShowDeleteEpicModal(false);
+                  setEpicToDelete(null);
+                }}
+                style={{
+                  padding: "10px 24px",
+                  background: COLORS.buttonSecondary,
+                  border: "none",
+                  borderRadius: "6px",
+                  cursor: "pointer",
+                  fontSize: "14px",
+                  fontWeight: 600,
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (!epicToDelete) {
+                    console.warn(
+                      `[DashboardLayout] confirmDeleteEpic | SKIPPED (epicToDelete is null)`
+                    );
+                    return;
+                  }
+
+                  const deleteStartTime = performance.now();
+                  performance.mark("delete-epic-start");
+
+                  console.log(
+                    `[DashboardLayout] confirmDeleteEpic | starting | epicId=${epicToDelete.id} | epicTitle="${epicToDelete.title}"`
+                  );
+
+                  const tasksToDelete = tasks
+                    .filter((t) => t.epicId === epicToDelete.id)
+                    .map((t) => t.id);
+                  const goalsToDelete = goals
+                    .filter((g) => g.epicId === epicToDelete.id)
+                    .map((g) => g.id);
+                  const reqsToDelete = requirements
+                    .filter((r) => r.epicId === epicToDelete.id)
+                    .map((r) => r.id);
+                  const testCasesToDelete = testCases
+                    .filter((tc) => tc.epicId === epicToDelete.id)
+                    .map((tc) => tc.id);
+                  const bugsToDelete = bugs
+                    .filter((b) => b.epicId === epicToDelete.id)
+                    .map((b) => b.id);
+
+                  console.log(
+                    `[DashboardLayout] confirmDeleteEpic | cascading deletes | tasks=${tasksToDelete.length} | requirements=${reqsToDelete.length} | testCases=${testCasesToDelete.length} | bugs=${bugsToDelete.length} | goals=${goalsToDelete.length}`
+                  );
+
+                  setTasks((prev) =>
+                    prev.filter((t) => t.epicId !== epicToDelete.id)
+                  );
+                  setRequirements((prev) =>
+                    prev.filter((r) => r.epicId !== epicToDelete.id)
+                  );
+                  setTestCases((prev) =>
+                    prev.filter((tc) => tc.epicId !== epicToDelete.id)
+                  );
+                  setBugs((prev) =>
+                    prev.filter((b) => b.epicId !== epicToDelete.id)
+                  );
+                  setGoals((prev) =>
+                    prev.filter((g) => g.epicId !== epicToDelete.id)
+                  );
+                  setMilestones((prev) =>
+                    prev.filter((m) => !goalsToDelete.includes(m.goalId))
+                  );
+                  setKeyResults((prev) =>
+                    prev.filter((kr) => !goalsToDelete.includes(kr.goalId))
+                  );
+                  setComments((prev) =>
+                    prev.filter((c) => !tasksToDelete.includes(c.taskId))
+                  );
+                  deleteEpic(epicToDelete.id);
+
+                  setShowDeleteEpicModal(false);
+                  setEpicToDelete(null);
+
+                  const deleteEndTime = performance.now();
+                  performance.mark("delete-epic-end");
+                  performance.measure(
+                    "delete-epic-full-cycle",
+                    "delete-epic-start",
+                    "delete-epic-end"
+                  );
+
+                  const measure = performance.getEntriesByName(
+                    "delete-epic-full-cycle"
+                  )[0];
+                  console.log(
+                    `[Perf] Epic Delete | fullCycle=${
+                      measure?.duration.toFixed(2) ||
+                      (deleteEndTime - deleteStartTime).toFixed(2)
+                    }ms | tasks=${tasksToDelete.length} | epicsBefore=${
+                      epics.length
+                    } | epicsAfter=${epics.length - 1}`
+                  );
+                  performance.clearMarks("delete-epic-start");
+                  performance.clearMarks("delete-epic-end");
+                  performance.clearMeasures("delete-epic-full-cycle");
+
+                  console.log(
+                    `[DashboardLayout] confirmDeleteEpic | completed | epicId=${epicToDelete.id}`
+                  );
+                }}
+                style={{
+                  padding: "10px 24px",
+                  background: "#ef4444",
+                  color: "#ffffff",
+                  border: "none",
+                  borderRadius: "6px",
+                  cursor: "pointer",
+                  fontSize: "14px",
+                  fontWeight: 600,
+                }}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showEditEpicModal && editingEpic && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="edit-epic-modal-title"
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: "rgba(0,0,0,0.5)",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            zIndex: 3000,
+          }}
+        >
+          <div
+            style={{
+              background: COLORS.cardBackground,
+              borderRadius: "12px",
+              padding: "24px",
+              width: "90%",
+              maxWidth: "500px",
+            }}
+          >
+            <h2
+              id="edit-epic-modal-title"
+              style={{
+                margin: "0 0 16px 0",
+                fontSize: "20px",
+                fontWeight: 700,
+                color: COLORS.text,
+              }}
+            >
+              Edit Epic
+            </h2>
+            <input
+              type="text"
+              value={editEpicTitle}
+              onChange={(e) => setEditEpicTitle(e.target.value)}
+              placeholder="Epic title"
+              style={{
+                width: "100%",
+                padding: "10px 12px",
+                border: `1px solid ${COLORS.border}`,
+                borderRadius: "6px",
+                fontSize: "14px",
+                marginBottom: "12px",
+                boxSizing: "border-box",
+              }}
+              autoFocus
+            />
+            <textarea
+              value={editEpicDescription}
+              onChange={(e) => setEditEpicDescription(e.target.value)}
+              placeholder="Epic description (optional)"
+              rows={3}
+              style={{
+                width: "100%",
+                padding: "10px 12px",
+                border: `1px solid ${COLORS.border}`,
+                borderRadius: "6px",
+                fontSize: "14px",
+                marginBottom: "12px",
+                boxSizing: "border-box",
+                resize: "vertical",
+              }}
+            />
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "12px",
+                marginBottom: "16px",
+              }}
+            >
+              <label
+                style={{
+                  fontSize: "14px",
+                  fontWeight: 500,
+                  color: COLORS.text,
+                }}
+              >
+                Color:
+              </label>
+              <input
+                type="color"
+                value={editEpicColor}
+                onChange={(e) => setEditEpicColor(e.target.value)}
+                style={{
+                  width: "48px",
+                  height: "36px",
+                  border: `1px solid ${COLORS.border}`,
+                  borderRadius: "6px",
+                  cursor: "pointer",
+                  padding: "2px",
+                }}
+              />
+              <span style={{ fontSize: "14px", color: COLORS.textSecondary }}>
+                {editEpicColor}
+              </span>
+            </div>
+            <div
+              style={{
+                display: "flex",
+                gap: "12px",
+                justifyContent: "flex-end",
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => {
+                  setShowEditEpicModal(false);
+                  setEditingEpic(null);
+                }}
+                style={{
+                  padding: "10px 24px",
+                  background: COLORS.buttonSecondary,
+                  border: "none",
+                  borderRadius: "6px",
+                  cursor: "pointer",
+                  fontSize: "14px",
+                  fontWeight: 600,
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (!editingEpic) {
+                    console.warn(
+                      `[DashboardLayout] confirmEditEpic | SKIPPED (editingEpic is null)`
+                    );
+                    return;
+                  }
+
+                  const updateStartTime = performance.now();
+                  performance.mark("update-epic-start");
+
+                  console.log(
+                    `[DashboardLayout] confirmEditEpic | starting | epicId=${editingEpic.id} | oldTitle="${editingEpic.title}" | newTitle="${editEpicTitle}"`
+                  );
+
+                  const updates: Partial<Epic> = {
+                    title: editEpicTitle.trim(),
+                    description: editEpicDescription.trim(),
+                    color: editEpicColor,
+                  };
+
+                  updateEpic(editingEpic.id, updates);
+
+                  setShowEditEpicModal(false);
+                  setEditingEpic(null);
+
+                  const updateEndTime = performance.now();
+                  performance.mark("update-epic-end");
+                  performance.measure(
+                    "update-epic-full-cycle",
+                    "update-epic-start",
+                    "update-epic-end"
+                  );
+
+                  const measure = performance.getEntriesByName(
+                    "update-epic-full-cycle"
+                  )[0];
+                  console.log(
+                    `[Perf] Epic Update | fullCycle=${
+                      measure?.duration.toFixed(2) ||
+                      (updateEndTime - updateStartTime).toFixed(2)
+                    }ms | epicId=${editingEpic.id}`
+                  );
+                  performance.clearMarks("update-epic-start");
+                  performance.clearMarks("update-epic-end");
+                  performance.clearMeasures("update-epic-full-cycle");
+
+                  console.log(
+                    `[DashboardLayout] confirmEditEpic | completed | epicId=${editingEpic.id}`
+                  );
+                }}
+                disabled={!editEpicTitle.trim()}
+                style={{
+                  padding: "10px 24px",
+                  background: editEpicTitle.trim()
+                    ? COLORS.buttonPrimary
+                    : "#93c5fd",
+                  color: "#ffffff",
+                  border: "none",
+                  borderRadius: "6px",
+                  cursor: editEpicTitle.trim() ? "pointer" : "not-allowed",
+                  fontSize: "14px",
+                  fontWeight: 600,
+                }}
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

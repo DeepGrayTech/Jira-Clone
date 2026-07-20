@@ -6,6 +6,7 @@ import TaskColumn from "../components/TaskColumn";
 import { COLORS, STATUS_LABELS } from "../constants";
 import { useTasks } from "../contexts/TaskContext";
 import { useRequirements } from "../contexts/RequirementContext";
+import { useEpics } from "../contexts/EpicContext";
 import type { Task, FormFields } from "../types";
 import { isValidTaskStatus } from "../types";
 
@@ -16,8 +17,12 @@ interface TasksViewProps {
   onCreateTask: () => void;
   onEditTask: (task: Task) => void;
   setEditingTask: React.Dispatch<React.SetStateAction<Task | null>>;
-  setModalType: React.Dispatch<React.SetStateAction<"task" | "requirement" | "test" | "bug">>;
+  setModalType: React.Dispatch<
+    React.SetStateAction<"task" | "requirement" | "test" | "bug">
+  >;
   setFormData: React.Dispatch<React.SetStateAction<FormFields>>;
+  setShowModal: React.Dispatch<React.SetStateAction<boolean>>;
+  currentEpicId: string | null;
 }
 
 export default function TasksView({
@@ -29,15 +34,20 @@ export default function TasksView({
   setEditingTask,
   setModalType,
   setFormData,
+  setShowModal,
+  currentEpicId,
 }: TasksViewProps) {
   const { tasks, setTasks, deleteTask } = useTasks();
   const { requirements } = useRequirements();
+  const { epics } = useEpics();
 
   const [isDragging, setIsDragging] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterPriority, setFilterPriority] = useState("");
   const [filterAssignee, setFilterAssignee] = useState("");
-  const [recentlyDraggedTaskId, setRecentlyDraggedTaskId] = useState<string | null>(null);
+  const [recentlyDraggedTaskId, setRecentlyDraggedTaskId] = useState<
+    string | null
+  >(null);
 
   const allAssignees = useMemo(() => {
     return [...new Set(tasks.map((t) => t.assignee))].filter(Boolean);
@@ -59,9 +69,12 @@ export default function TasksView({
         filterAssignee === "" ||
         task.assignee.toLowerCase().includes(filterAssignee.toLowerCase());
 
-      return matchesSearch && matchesPriority && matchesAssignee;
+      const matchesEpic =
+        currentEpicId === null || task.epicId === currentEpicId;
+
+      return matchesSearch && matchesPriority && matchesAssignee && matchesEpic;
     });
-  }, [tasks, searchQuery, filterPriority, filterAssignee]);
+  }, [tasks, searchQuery, filterPriority, filterAssignee, currentEpicId]);
 
   const getFilteredTasksByStatus = (status: Task["status"]): Task[] => {
     return filteredTasks.filter((task) => task.status === status);
@@ -70,6 +83,7 @@ export default function TasksView({
   const handleEditTask = (task: Task) => {
     setEditingTask(task);
     setModalType("task");
+    setShowModal(true);
     setFormData({
       title: task.title,
       description: task.description,
@@ -79,6 +93,7 @@ export default function TasksView({
       tags: [...task.tags],
       assignee: task.assignee,
       relatedRequirementId: task.relatedRequirementId || "",
+      relatedGoalId: task.relatedGoalId || "",
       figmaUrl: task.figmaUrl || "",
       steps: "",
       expectedResult: "",
@@ -225,6 +240,7 @@ export default function TasksView({
             <option value="系统拆弹专家">系统拆弹专家</option>
             <option value="代码质检员">代码质检员</option>
             <option value="架构师">架构师</option>
+            <option value="管理员">管理员</option>
           </optgroup>
           {allAssignees.length > 0 && (
             <optgroup label="📋 Other Assignees">

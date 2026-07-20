@@ -30,7 +30,13 @@ export const BugProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const deleteBug = useCallback((id: string) => {
-    setBugs((prev) => prev.filter((b) => b.id !== id));
+    setBugs((prev) => {
+      const beforeCount = prev.length;
+      const after = prev.filter((b) => b.id !== id);
+      const afterCount = after.length;
+      console.log(`[BugContext] DELETE bug | id=${id} | before=${beforeCount} | after=${afterCount} | deleted=${beforeCount - afterCount}`);
+      return after;
+    });
   }, []);
 
   const getBugById = useCallback(

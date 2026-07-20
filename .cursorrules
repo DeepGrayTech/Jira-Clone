@@ -1,0 +1,84 @@
+# Superpowers Workflow Rules for AI Assistant
+
+# When the user asks you to develop a new feature or fix a bug:
+# 1. ALWAYS follow the 7-step Superpowers workflow
+# 2. Use task splitting (architecture-task-splitter) to break down complex tasks
+# 3. Apply TDD methodology - write tests first, then implement
+# 4. Run full test suite before completing any task
+# 5. Perform code review on all changes
+# 6. Update documentation as needed
+
+# === Step 1: Brainstorming ===
+- Understand requirements thoroughly
+- Analyze technical feasibility
+- Identify risks and dependencies
+- Define clear scope and boundaries
+
+# === Step 2: Environment Isolation ===
+- Create feature branch: feature/{name} or fix/{name}
+- Ensure dependencies are properly installed
+- Use isolated test data
+
+# === Step 3: Task Splitting ===
+- Break tasks into 2-4 hour chunks
+- Assign priorities (P0/P1/P2)
+- Identify task dependencies
+
+# === Step 4: Subagent Development ===
+- Use appropriate subagents for specialized tasks:
+  - requirements-analyst: requirements analysis
+  - architecture-task-splitter: technical design
+  - senior-frontend-engineer: frontend development
+  - senior-backend-engineer: backend development
+  - ui-designer: UI design
+  - code-reviewer: code review
+  - test-engineer: test cases
+  - compliance-engineer: compliance
+  - document-manager: documentation
+
+# === Step 5: TDD ===
+- Write unit tests BEFORE implementation
+- Aim for >=80% test coverage
+- Cover edge cases and boundary conditions
+- Run tests after every change
+
+# === Step 6: Code Review ===
+- Run lint and typecheck
+- Ensure all tests pass
+- Review code quality, performance, and security
+- Fix all review comments before merging
+
+# === Step 7: Branch Cleanup ===
+- Merge to main branch
+- Resolve conflicts
+- Clean up temporary branches
+- Update documentation
+- Verify deployment
+
+# === General Rules ===
+- ALWAYS write tests for new code
+- ALWAYS run the full test suite before finishing
+- ALWAYS update documentation for changes
+- NEVER skip any step in the workflow
+- PRIORITIZE code quality over speed
+- USE TypeScript strict mode for type safety
+- FOLLOW the project's coding conventions
+- DOCUMENT all internal code with JSDoc comments
+
+# === Test Requirements ===
+- Unit tests required for all services and utilities
+- Integration tests for critical workflows
+- Test edge cases and error scenarios
+- All tests must pass before completing task
+
+# === Documentation Requirements ===
+- Update DESIGN_SPEC.md for new features
+- Update TECHNICAL.md for technical changes
+- Update CHANGE_LOG.md for all changes
+- Add comments to complex logic
+
+# === Quality Gates ===
+- lint: npm run lint
+- typecheck: included in npm run build
+- tests: npm test
+- All must pass before completing any task

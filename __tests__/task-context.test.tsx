@@ -1,0 +1,197 @@
+import { render, screen, act } from "@testing-library/react";
+import { TaskProvider, useTasks } from "../app/dashboard/contexts/TaskContext";
+import type { Task } from "../app/dashboard/types";
+
+const TestComponent = ({
+  onRender,
+}: {
+  onRender: (context: ReturnType<typeof useTasks>) => void;
+}) => {
+  const context = useTasks();
+  if (onRender) onRender(context);
+  return (
+    <div>
+      <div data-testid="task-count">{context.tasks.length}</div>
+      {context.tasks.map((task) => (
+        <div key={task.id} data-testid={`task-${task.id}`}>
+          <span data-testid={`task-${task.id}-title`}>{task.title}</span>
+          <span data-testid={`task-${task.id}-status`}>{task.status}</span>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+const testTask: Task = {
+  id: "task-1",
+  title: "Test Task",
+  description: "Test description",
+  status: "TODO",
+  priority: "MEDIUM",
+  tags: ["tag1"],
+  createdAt: new Date().toISOString(),
+  comments: [],
+};
+
+describe("TaskContext", () => {
+  it("should initialize with empty tasks", () => {
+    render(
+      <TaskProvider>
+        <TestComponent />
+      </TaskProvider>
+    );
+
+    expect(screen.getByTestId("task-count").textContent).toBe("0");
+  });
+
+  it("should initialize with initial tasks", () => {
+    render(
+      <TaskProvider initialTasks={[testTask]}>
+        <TestComponent />
+      </TaskProvider>
+    );
+
+    expect(screen.getByTestId("task-count").textContent).toBe("1");
+    expect(screen.getByTestId("task-task-1-title").textContent).toBe("Test Task");
+  });
+
+  it("should add a task", () => {
+    let addTask: (task: Task) => void;
+
+    render(
+      <TaskProvider>
+        <TestComponent onRender={(ctx) => { addTask = ctx.addTask; }} />
+      </TaskProvider>
+    );
+
+    act(() => {
+      addTask(testTask);
+    });
+
+    expect(screen.getByTestId("task-count").textContent).toBe("1");
+    expect(screen.getByTestId("task-task-1-title").textContent).toBe("Test Task");
+  });
+
+  it("should update a task", () => {
+    let addTask: (task: Task) => void;
+    let updateTask: (id: string, updates: Partial<Task>) => void;
+
+    render(
+      <TaskProvider>
+        <TestComponent onRender={(ctx) => { addTask = ctx.addTask; updateTask = ctx.updateTask; }} />
+      </TaskProvider>
+    );
+
+    act(() => {
+      addTask(testTask);
+    });
+
+    expect(screen.getByTestId("task-task-1-status").textContent).toBe("TODO");
+
+    act(() => {
+      updateTask("task-1", { status: "IN_PROGRESS", priority: "HIGH" });
+    });
+
+    expect(screen.getByTestId("task-task-1-status").textContent).toBe("IN_PROGRESS");
+  });
+
+  it("should delete a task", () => {
+    let addTask: (task: Task) => void;
+    let deleteTask: (id: string) => void;
+
+    render(
+      <TaskProvider>
+        <TestComponent onRender={(ctx) => { addTask = ctx.addTask; deleteTask = ctx.deleteTask; }} />
+      </TaskProvider>
+    );
+
+    act(() => {
+      addTask(testTask);
+    });
+
+    expect(screen.getByTestId("task-count").textContent).toBe("1");
+
+    act(() => {
+      deleteTask("task-1");
+    });
+
+    expect(screen.getByTestId("task-count").textContent).toBe("0");
+    expect(screen.queryByTestId("task-task-1")).not.toBeInTheDocument();
+  });
+
+  it("should get task by id", () => {
+    let addTask: (task: Task) => void;
+    let getTaskById: (id: string) => Task | undefined;
+
+    render(
+      <TaskProvider>
+        <TestComponent onRender={(ctx) => { addTask = ctx.addTask; getTaskById = ctx.getTaskById; }} />
+      </TaskProvider>
+    );
+
+    act(() => {
+      addTask(testTask);
+    });
+
+    const found = getTaskById("task-1");
+    expect(found).toBeDefined();
+    expect(found?.title).toBe("Test Task");
+  });
+
+  it("should return undefined for non-existent task", () => {
+    let getTaskById: (id: string) => Task | undefined;
+
+    render(
+      <TaskProvider>
+        <TestComponent onRender={(ctx) => { getTaskById = ctx.getTaskById; }} />
+      </TaskProvider>
+    );
+
+    const found = getTaskById("non-existent");
+    expect(found).toBeUndefined();
+  });
+
+  it("should allow manual state updates via setTasks", () => {
+    let setTasks: React.Dispatch<React.SetStateAction<Task[]>>;
+
+    render(
+      <TaskProvider>
+        <TestComponent onRender={(ctx) => { setTasks = ctx.setTasks; }} />
+      </TaskProvider>
+    );
+
+    act(() => {
+      setTasks([testTask]);
+    });
+
+    expect(screen.getByTestId("task-count").textContent).toBe("1");
+  });
+
+  it("should throw error when useTasks is used outside TaskProvider", () => {
+    expect(() => {
+      render(<TestComponent />);
+    }).toThrow("useTasks must be used within TaskProvider");
+  });
+
+  it("should handle multiple tasks", () => {
+    let addTask: (task: Task) => void;
+
+    render(
+      <TaskProvider>
+        <TestComponent onRender={(ctx) => { addTask = ctx.addTask; }} />
+      </TaskProvider>
+    );
+
+    act(() => {
+      addTask(testTask);
+      addTask({
+        ...testTask,
+        id: "task-2",
+        title: "Second Task",
+      });
+    });
+
+    expect(screen.getByTestId("task-count").textContent).toBe("2");
+    expect(screen.getByTestId("task-task-2-title").textContent).toBe("Second Task");
+  });
+});

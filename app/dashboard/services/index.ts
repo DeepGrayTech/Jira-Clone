@@ -5,3 +5,6 @@ export { RequirementService } from "./RequirementService";
 export { BugService } from "./BugService";
 export { GoalService } from "./GoalService";
 export { TestCaseService } from "./TestCaseService";
+export { NotificationService } from "./NotificationService";
+export { SubagentTaskService } from "./SubagentTaskService";
+export { EpicService } from "./EpicService";

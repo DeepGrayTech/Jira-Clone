@@ -185,12 +185,31 @@ export const importUserData = (file: File): Promise<ExportedData> => {
 };
 
 /**
- * Deletes all user data from localStorage.
- * Clears all STORAGE_KEYS entries and the privacy consent flag.
+ * Deletes all user data from localStorage, preserving admin accounts.
+ * Clears all STORAGE_KEYS entries and the privacy consent flag,
+ * but keeps ADMIN role users in the users storage.
  * @returns An object with success status and a confirmation message
  */
 export const deleteAllUserData = (): { success: boolean; message: string } => {
   try {
+    const usersRaw = localStorage.getItem("jira-clone-users");
+    let adminUsers: unknown[] = [];
+    if (usersRaw) {
+      try {
+        const allUsers = JSON.parse(usersRaw);
+        if (Array.isArray(allUsers)) {
+          adminUsers = allUsers.filter(
+            (user: unknown) =>
+              typeof user === "object" &&
+              user !== null &&
+              (user as Record<string, unknown>).role === "ADMIN"
+          );
+        }
+      } catch {
+        adminUsers = [];
+      }
+    }
+
     const allKeys = Object.values(STORAGE_KEYS);
     for (const key of allKeys) {
       localStorage.removeItem(key);
@@ -199,9 +218,15 @@ export const deleteAllUserData = (): { success: boolean; message: string } => {
     localStorage.removeItem("jira-clone-auth-token");
     localStorage.removeItem("jira-clone-users");
 
+    if (adminUsers.length > 0) {
+      localStorage.setItem("jira-clone-users", JSON.stringify(adminUsers));
+    }
+
     return {
       success: true,
-      message: "All user data has been successfully deleted.",
+      message: adminUsers.length > 0
+        ? `All user data has been successfully deleted. Admin accounts (${adminUsers.length}) have been preserved.`
+        : "All user data has been successfully deleted.",
     };
   } catch (error) {
     return {

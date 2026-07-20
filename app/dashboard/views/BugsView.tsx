@@ -9,12 +9,17 @@ import type { Bug } from "../types";
 interface BugsViewProps {
   onCreateBug: () => void;
   onEditBug: (bug: Bug) => void;
+  currentEpicId: string | null;
 }
 
-export default function BugsView({ onCreateBug, onEditBug }: BugsViewProps) {
+export default function BugsView({ onCreateBug, onEditBug, currentEpicId }: BugsViewProps) {
   const { bugs, updateBug, deleteBug } = useBugs();
   const { tasks } = useTasks();
   const { requirements } = useRequirements();
+
+  const filteredBugs = bugs.filter((bug) => 
+    currentEpicId === null || bug.epicId === currentEpicId
+  );
 
   const handleUpdateBug = (bug: Bug) => {
     updateBug(bug.id, bug);
@@ -47,7 +52,7 @@ export default function BugsView({ onCreateBug, onEditBug }: BugsViewProps) {
 
   return (
     <BugTracker
-      bugs={bugs}
+      bugs={filteredBugs}
       tasks={tasks}
       requirements={requirements}
       onCreateBug={onCreateBug}

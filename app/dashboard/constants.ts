@@ -31,6 +31,7 @@ export const COLORS = {
   auditExport: "#eab308", // EXPORT action color (yellow)
   auditImport: "#f97316", // IMPORT action color (orange)
   auditClear: "#ef4444", // CLEAR action color (red)
+  auditRead: "#6b7280", // READ action color (gray)
   auditSystem: "#6366f1", // SYSTEM target color (indigo)
   auditTask: "#3b82f6", // TASK target color (blue)
   auditRequirement: "#8b5cf6", // REQUIREMENT target color (purple)
@@ -39,6 +40,9 @@ export const COLORS = {
   auditGoal: "#eab308", // GOAL target color (yellow)
   auditMilestone: "#06b6d4", // MILESTONE target color (cyan)
   auditKeyResult: "#f472b6", // KEY_RESULT target color (pink)
+  auditNotification: "#8b5cf6", // NOTIFICATION target color (purple)
+  auditSubagentTask: "#06b6d4", // SUBAGENT_TASK target color (cyan)
+  auditEpic: "#8b5cf6", // EPIC target color (purple)
 };
 
 /**
@@ -56,7 +60,14 @@ export const STORAGE_KEYS = {
   MILESTONES: "jira-clone-milestones", // Milestones data storage key
   KEY_RESULTS: "jira-clone-key-results", // Key Results data storage key
   AUDIT_LOGS: "jira-clone-audit-logs", // ISO 27001 audit logs storage key
+  NOTIFICATIONS: "jira-clone-notifications", // Notifications data storage key
+  SUBAGENT_TASKS: "jira-clone-subagent-tasks", // Subagent tasks storage key
+  NOTIFICATION_SETTINGS: "jira-clone-notification-settings", // Notification settings storage key
+  EPICS: "jira-clone-epics", // Epics data storage key
+  DATA_VERSION: "jira-clone-data-version", // Data format version key
 };
+
+export const DATA_VERSION = "3";
 
 /**
  * Status labels for tasks.

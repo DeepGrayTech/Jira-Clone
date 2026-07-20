@@ -382,6 +382,7 @@ export default function BugTracker({
   const [selectedBug, setSelectedBug] = useState<Bug | null>(null);
   const [newComment, setNewComment] = useState("");
   const [saveMessage, setSaveMessage] = useState("");
+  const [submitting, setSubmitting] = useState(false);
   const saveMessageTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
     null
   );
@@ -1063,6 +1064,7 @@ export default function BugTracker({
                   <option value="规矩守护者">规矩守护者</option>
                   <option value="Bug猎手">Bug猎手</option>
                   <option value="文档整理控">文档整理控</option>
+                  <option value="管理员">管理员</option>
                 </optgroup>
               </select>
               <p
@@ -1285,33 +1287,48 @@ export default function BugTracker({
                 </button>
                 <button
                   onClick={() => {
+                    if (submitting || !selectedBug) {
+                      console.log(`[BugTracker] saveBug | SKIPPED | submitting=${submitting} | selectedBug=${!!selectedBug}`);
+                      return;
+                    }
+                    console.log(`[BugTracker] saveBug | starting | bugId=${selectedBug.id} | bugTitle="${selectedBug.title}"`);
+                    setSubmitting(true);
                     onUpdateBug(selectedBug);
                     setSaveMessage("Bug updated successfully!");
                     if (saveMessageTimerRef.current) {
                       clearTimeout(saveMessageTimerRef.current);
                     }
-                    saveMessageTimerRef.current = setTimeout(
-                      () => setSaveMessage(""),
-                      3000
-                    );
+                    saveMessageTimerRef.current = setTimeout(() => {
+                      setSaveMessage("");
+                      setSubmitting(false);
+                      console.log(`[BugTracker] saveBug | completed | bugId=${selectedBug.id}`);
+                    }, 3000);
                   }}
+                  disabled={submitting}
                   aria-label="Save bug changes"
                   style={{
                     padding: "10px 20px",
-                    background: "#22c55e",
+                    background: submitting ? "#86efac" : "#22c55e",
                     color: "#ffffff",
                     border: "none",
                     borderRadius: "8px",
                     fontWeight: 600,
-                    cursor: "pointer",
+                    cursor: submitting ? "not-allowed" : "pointer",
+                    opacity: submitting ? 0.7 : 1,
                   }}
                 >
-                  Save
+                  {submitting ? "Saving..." : "Save"}
                 </button>
                 <button
                   onClick={() => {
+                    if (!selectedBug) {
+                      console.warn(`[BugTracker] deleteBug | SKIPPED (selectedBug is null)`);
+                      return;
+                    }
+                    console.log(`[BugTracker] deleteBug | starting | bugId=${selectedBug.id} | bugTitle="${selectedBug.title}"`);
                     onDeleteBug(selectedBug.id, selectedBug.updatedAt);
                     setSelectedBug(null);
+                    console.log(`[BugTracker] deleteBug | completed | bugId=${selectedBug.id}`);
                   }}
                   aria-label="Delete bug"
                   style={{

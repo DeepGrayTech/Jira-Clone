@@ -9,6 +9,7 @@ import type {
   FormFields,
   ModalType,
   Comment,
+  Goal,
 } from "../types";
 import {
   COLORS,
@@ -34,6 +35,7 @@ interface ModalProps {
   formData: FormFields;
   setFormData: React.Dispatch<React.SetStateAction<FormFields>>;
   requirements: Requirement[];
+  goals: Goal[];
   tagHistory: string[];
   onSave: () => void;
   onClose: () => void;
@@ -54,6 +56,7 @@ export default function Modal({
   formData,
   setFormData,
   requirements,
+  goals,
   tagHistory,
   onSave,
   onClose,
@@ -797,6 +800,47 @@ export default function Modal({
                   <option value="文档整理控" style={{ backgroundColor: "#ffffff" }}>👤 文档整理控 (Document Manager)</option>
                 </select>
               </div>
+
+              <div style={{ marginBottom: "16px" }}>
+                <label
+                  htmlFor="modal-req-related-goal"
+                  style={{
+                    display: "block",
+                    marginBottom: "6px",
+                    fontSize: "14px",
+                    fontWeight: 600,
+                    color: COLORS.text,
+                  }}
+                >
+                  Related Goal
+                </label>
+                <select
+                  id="modal-req-related-goal"
+                  value={formData.relatedGoalId}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      relatedGoalId: e.target.value,
+                    })
+                  }
+                  style={{
+                    width: "100%",
+                    padding: "10px 12px",
+                    border: `1px solid ${COLORS.border}`,
+                    borderRadius: "6px",
+                    fontSize: "14px",
+                    boxSizing: "border-box",
+                    backgroundColor: "#ffffff",
+                  }}
+                >
+                  <option value="">None</option>
+                  {goals.map((goal) => (
+                    <option key={goal.id} value={goal.id}>
+                      {goal.title} ({goal.type})
+                    </option>
+                  ))}
+                </select>
+              </div>
             </>
           )}
 
@@ -965,8 +1009,6 @@ export default function Modal({
                       boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
                       marginTop: "4px",
                       zIndex: 100,
-                      maxHeight: "200px",
-                      overflowY: "auto",
                     }}
                   >
                     {filteredTags.map((tag) => (
@@ -1046,6 +1088,7 @@ export default function Modal({
                     <option value="规矩守护者" style={{ backgroundColor: "#ffffff" }}>👤 规矩守护者 (Compliance Engineer)</option>
                     <option value="Bug猎手" style={{ backgroundColor: "#ffffff" }}>👤 Bug猎手 (Test Engineer)</option>
                     <option value="文档整理控" style={{ backgroundColor: "#ffffff" }}>👤 文档整理控 (Document Manager)</option>
+                    <option value="管理员" style={{ backgroundColor: "#ffffff" }}>👤 管理员 (Admin)</option>
                   </>
                 )}
               </select>
@@ -1089,6 +1132,49 @@ export default function Modal({
                 {requirements.map((req) => (
                   <option key={req.id} value={req.id}>
                     {req.title}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {modalType === "task" && (
+            <div style={{ marginBottom: "16px" }}>
+              <label
+                htmlFor="modal-related-goal"
+                style={{
+                  display: "block",
+                  marginBottom: "6px",
+                  fontSize: "14px",
+                  fontWeight: 600,
+                  color: COLORS.text,
+                }}
+              >
+                Related Goal
+              </label>
+              <select
+                id="modal-related-goal"
+                value={formData.relatedGoalId}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    relatedGoalId: e.target.value,
+                  })
+                }
+                style={{
+                  width: "100%",
+                  padding: "10px 12px",
+                  border: `1px solid ${COLORS.border}`,
+                  borderRadius: "6px",
+                  fontSize: "14px",
+                  boxSizing: "border-box",
+                  backgroundColor: "#ffffff",
+                }}
+              >
+                <option value="">None</option>
+                {goals.map((goal) => (
+                  <option key={goal.id} value={goal.id}>
+                    {goal.title} ({goal.type})
                   </option>
                 ))}
               </select>
@@ -1261,8 +1347,6 @@ export default function Modal({
                 aria-label="Comments list"
                 aria-live="polite"
                 style={{
-                  maxHeight: "200px",
-                  overflowY: "auto",
                   marginBottom: "12px",
                   border: `1px solid ${COLORS.border}`,
                   borderRadius: "6px",

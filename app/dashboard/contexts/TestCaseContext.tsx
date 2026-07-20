@@ -30,7 +30,13 @@ export const TestCaseProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const deleteTestCase = useCallback((id: string) => {
-    setTestCases((prev) => prev.filter((t) => t.id !== id));
+    setTestCases((prev) => {
+      const beforeCount = prev.length;
+      const after = prev.filter((t) => t.id !== id);
+      const afterCount = after.length;
+      console.log(`[TestCaseContext] DELETE testCase | id=${id} | before=${beforeCount} | after=${afterCount} | deleted=${beforeCount - afterCount}`);
+      return after;
+    });
   }, []);
 
   const getTestCaseById = useCallback(

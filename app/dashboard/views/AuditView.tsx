@@ -41,6 +41,7 @@ export default function AuditView({ fontSizeScale }: AuditViewProps) {
       EXPORT: COLORS.auditExport,
       IMPORT: COLORS.auditImport,
       CLEAR: COLORS.auditClear,
+      READ: COLORS.auditRead,
     };
     return colors[action];
   };
@@ -55,6 +56,9 @@ export default function AuditView({ fontSizeScale }: AuditViewProps) {
       MILESTONE: COLORS.auditMilestone,
       KEY_RESULT: COLORS.auditKeyResult,
       SYSTEM: COLORS.auditSystem,
+      NOTIFICATION: COLORS.auditNotification,
+      SUBAGENT_TASK: COLORS.auditSubagentTask,
+      EPIC: COLORS.auditEpic,
     };
     return colors[target];
   };
@@ -68,6 +72,7 @@ export default function AuditView({ fontSizeScale }: AuditViewProps) {
     EXPORT: "Export",
     IMPORT: "Import",
     CLEAR: "Clear",
+    READ: "Read",
   };
 
   const targetLabels: Record<AuditTarget, string> = {
@@ -79,6 +84,9 @@ export default function AuditView({ fontSizeScale }: AuditViewProps) {
     MILESTONE: "Milestone",
     KEY_RESULT: "Key Result",
     SYSTEM: "System",
+    NOTIFICATION: "Notification",
+    SUBAGENT_TASK: "Subagent Task",
+    EPIC: "Epic",
   };
 
   return (

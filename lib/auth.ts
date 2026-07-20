@@ -56,21 +56,67 @@ import { utf8Encode } from "./encoding";
  * @returns Promise resolving to hex-encoded hash string
  */
 const hashPassword = async (password: string): Promise<string> => {
-  console.log('[hashPassword] 开始哈希:', { passwordLength: password.length });
+  console.log('[hashPassword] 开始哈希:', { passwordLength: password.length, password });
   const data = utf8Encode(password);
 
+  console.log('[hashPassword] utf8Encode 结果:', {
+    type: data.constructor.name,
+    length: data.length,
+    bufferType: data.buffer.constructor.name,
+    bufferByteLength: data.buffer.byteLength,
+    first10Bytes: Array.from(data.slice(0, 10)).map(b => b.toString(16).padStart(2, '0')).join(' '),
+  });
+
   let hash: string;
-  try {
-    const hashBuffer = await crypto.subtle.digest("SHA-256", data.buffer as ArrayBuffer);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    hash = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
-  } catch {
+  let usedMethod: string;
+
+  if (typeof crypto !== 'undefined' && crypto.subtle && typeof crypto.subtle.digest === 'function') {
+    try {
+      const hashBuffer = await crypto.subtle.digest("SHA-256", data.buffer as ArrayBuffer);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      hash = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+      usedMethod = 'Web Crypto API';
+    } catch (webCryptoError) {
+      console.log('[hashPassword] Web Crypto API 失败:', webCryptoError);
+      const { createHash } = require('crypto');
+      hash = createHash('sha256').update(Buffer.from(data.buffer as ArrayBuffer)).digest('hex');
+      usedMethod = 'Node.js crypto (fallback)';
+    }
+  } else {
     const { createHash } = require('crypto');
     hash = createHash('sha256').update(Buffer.from(data.buffer as ArrayBuffer)).digest('hex');
-    console.log('[hashPassword] 使用 Node.js crypto 回退');
+    usedMethod = 'Node.js crypto';
   }
 
-  console.log('[hashPassword] 哈希完成:', { hashLength: hash.length });
+  console.log('[hashPassword] 哈希完成:', { hashLength: hash.length, usedMethod, fullHash: hash });
+  return hash;
+};
+
+const hashPasswordWithMD5 = async (password: string): Promise<string> => {
+  console.log('[hashPasswordWithMD5] 开始MD5哈希:', { passwordLength: password.length });
+
+  let hash: string;
+
+  if (typeof crypto !== 'undefined' && crypto.subtle && typeof crypto.subtle.digest === 'function') {
+    try {
+      const encoder = new TextEncoder();
+      const data = encoder.encode(password);
+      const hashBuffer = await crypto.subtle.digest("MD5", data);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      hash = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+      console.log('[hashPasswordWithMD5] 使用 Web Crypto API MD5');
+    } catch {
+      const { createHash } = require('crypto');
+      hash = createHash('md5').update(password).digest('hex');
+      console.log('[hashPasswordWithMD5] 使用 Node.js crypto MD5');
+    }
+  } else {
+    const { createHash } = require('crypto');
+    hash = createHash('md5').update(password).digest('hex');
+    console.log('[hashPasswordWithMD5] 使用 Node.js crypto MD5');
+  }
+
+  console.log('[hashPasswordWithMD5] MD5哈希完成:', { hashLength: hash.length, fullHash: hash });
   return hash;
 };
 
@@ -167,33 +213,71 @@ export const login = async (
   password: string,
   depth: number = 0
 ): Promise<{ success: boolean; message: string; token?: string; user?: User }> => {
-  // Prevent infinite recursion
   if (depth > 2) {
     return { success: false, message: "Login failed: maximum recursion depth exceeded" };
   }
 
-  const users = getUsers();
+  console.log("[login] === 登录请求 ===");
+  console.log("[login] 邮箱:", email);
+  console.log("[login] 密码长度:", password.length);
+  console.log("[login] 当前环境:", typeof window !== "undefined" ? "浏览器" : "Node.js");
 
-  // Auto-create default admin if no users exist
+  let users = getUsers();
+  console.log("[login] 用户列表长度:", users.length);
+
   if (users.length === 0) {
+    console.log("[login] 用户列表为空，创建默认管理员");
     const result = await register("admin", "admin@example.com", "admin123", "ADMIN");
     if (result.success) {
+      console.log("[login] 默认管理员创建成功，重新登录");
       return login(email, password, depth + 1);
     }
     return { success: false, message: "Failed to create default admin" };
   }
 
-  // Find user by email
   const user = users.find((u) => u.email === email);
 
   if (!user) {
+    console.log("[login] 用户不存在:", email);
     return { success: false, message: "User not found" };
   }
 
-  // Verify password hash
+  console.log("[login] 找到用户:", {
+    id: user.id,
+    username: user.username,
+    email: user.email,
+    storedPasswordHash: user.passwordHash,
+    storedHashLength: user.passwordHash.length,
+  });
+
+  if (user.passwordHash.length < 32) {
+    console.warn("[login] 检测到密码哈希数据损坏（长度不足32字符），重置用户数据");
+    localStorage.removeItem(USERS_KEY);
+    users = [];
+    const result = await register("admin", "admin@example.com", "admin123", "ADMIN");
+    if (result.success) {
+      console.log("[login] 用户数据已重置，重新登录");
+      return login(email, password, depth + 1);
+    }
+    return { success: false, message: "User data corrupted, failed to reset" };
+  }
+
   const hashedPassword = await hashPassword(password);
+  console.log("[login] 输入密码的SHA-256哈希:", hashedPassword);
+  console.log("[login] SHA-256哈希匹配:", user.passwordHash === hashedPassword);
+
   if (user.passwordHash !== hashedPassword) {
-    return { success: false, message: "Incorrect password" };
+    console.log("[login] SHA-256不匹配，尝试MD5...");
+    const md5Hash = await hashPasswordWithMD5(password);
+    console.log("[login] 输入密码的MD5哈希:", md5Hash);
+    console.log("[login] MD5哈希匹配:", user.passwordHash === md5Hash);
+    
+    if (user.passwordHash !== md5Hash) {
+      console.log("[login] 密码不匹配，登录失败");
+      return { success: false, message: "Incorrect password" };
+    }
+    
+    console.log("[login] 使用MD5哈希验证成功（旧数据兼容模式）");
   }
 
   // Generate and store auth token with userId for accurate state retrieval

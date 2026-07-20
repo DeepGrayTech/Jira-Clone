@@ -41,9 +41,31 @@ export const GoalProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const deleteGoal = useCallback((id: string) => {
-    setGoals((prev) => prev.filter((g) => g.id !== id));
-    setMilestones((prev) => prev.filter((m) => m.goalId !== id));
-    setKeyResults((prev) => prev.filter((kr) => kr.goalId !== id));
+    setGoals((prev) => {
+      const beforeCount = prev.length;
+      const after = prev.filter((g) => g.id !== id);
+      const afterCount = after.length;
+      console.log(`[GoalContext] DELETE goal | id=${id} | before=${beforeCount} | after=${afterCount} | deleted=${beforeCount - afterCount}`);
+      return after;
+    });
+    setMilestones((prev) => {
+      const beforeCount = prev.length;
+      const after = prev.filter((m) => m.goalId !== id);
+      const afterCount = after.length;
+      if (beforeCount !== afterCount) {
+        console.log(`[GoalContext] DELETE milestones | goalId=${id} | deleted=${beforeCount - afterCount}`);
+      }
+      return after;
+    });
+    setKeyResults((prev) => {
+      const beforeCount = prev.length;
+      const after = prev.filter((kr) => kr.goalId !== id);
+      const afterCount = after.length;
+      if (beforeCount !== afterCount) {
+        console.log(`[GoalContext] DELETE keyResults | goalId=${id} | deleted=${beforeCount - afterCount}`);
+      }
+      return after;
+    });
   }, []);
 
   const addMilestone = useCallback((milestone: Milestone) => {

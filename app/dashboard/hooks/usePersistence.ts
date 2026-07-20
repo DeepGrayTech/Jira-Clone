@@ -13,6 +13,7 @@ import type {
   KeyResult,
   Comment,
   AuditLogEntry,
+  Epic,
 } from "../types";
 
 function formatTime(date: Date): string {
@@ -107,7 +108,8 @@ export function usePersistence(
   comments: Comment[],
   auditLogs: AuditLogEntry[],
   isInitialized: boolean,
-  setTagHistory: React.Dispatch<React.SetStateAction<string[]>>
+  setTagHistory: React.Dispatch<React.SetStateAction<string[]>>,
+  epics?: Epic[]
 ) {
   useEffect(() => {
     if (!isInitialized) return;
@@ -158,6 +160,11 @@ export function usePersistence(
     if (!isInitialized) return;
     saveWithLog(auditLogs, STORAGE_KEYS.AUDIT_LOGS, "auditLogs");
   }, [auditLogs, isInitialized]);
+
+  useEffect(() => {
+    if (!isInitialized || !epics) return;
+    saveWithLog(epics, STORAGE_KEYS.EPICS, "epics");
+  }, [epics, isInitialized]);
 
   /**
    * Tag history collector: Automatically collects unique tags from all tasks.

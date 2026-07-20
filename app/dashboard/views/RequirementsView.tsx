@@ -4,6 +4,7 @@ import { useState, useMemo } from "react";
 import RequirementCard from "../components/RequirementCard";
 import { COLORS, REQUIREMENT_STATUS_LABELS } from "../constants";
 import { useRequirements } from "../contexts/RequirementContext";
+import { useEpics } from "../contexts/EpicContext";
 import type { Requirement, FormFields } from "../types";
 import { isValidRequirementStatus } from "../types";
 
@@ -17,6 +18,7 @@ interface RequirementsViewProps {
   setModalType: React.Dispatch<React.SetStateAction<"task" | "requirement" | "test" | "bug">>;
   setFormData: React.Dispatch<React.SetStateAction<FormFields>>;
   setShowModal: React.Dispatch<React.SetStateAction<boolean>>;
+  currentEpicId: string | null;
 }
 
 export default function RequirementsView({
@@ -29,8 +31,10 @@ export default function RequirementsView({
   setModalType,
   setFormData,
   setShowModal,
+  currentEpicId,
 }: RequirementsViewProps) {
   const { requirements, deleteRequirement } = useRequirements();
+  const { epics } = useEpics();
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
   const [filterPriority, setFilterPriority] = useState("");
@@ -47,9 +51,12 @@ export default function RequirementsView({
       const matchesPriority =
         filterPriority === "" || req.priority === filterPriority;
 
-      return matchesSearch && matchesStatus && matchesPriority;
+      const matchesEpic =
+        currentEpicId === null || req.epicId === currentEpicId;
+
+      return matchesSearch && matchesStatus && matchesPriority && matchesEpic;
     });
-  }, [requirements, searchQuery, filterStatus, filterPriority]);
+  }, [requirements, searchQuery, filterStatus, filterPriority, currentEpicId]);
 
   const getRequirementsByStatus = (status: Requirement["status"]): Requirement[] => {
     return filteredRequirements.filter((req) => req.status === status);
@@ -67,6 +74,7 @@ export default function RequirementsView({
       tags: [],
       assignee: req.executor || "",
       relatedRequirementId: "",
+      relatedGoalId: req.relatedGoalId || "",
       figmaUrl: "",
       steps: "",
       expectedResult: "",

@@ -5,3 +5,5 @@ export { GoalProvider, useGoals } from "./GoalContext";
 export { AuditProvider, useAuditLogs } from "./AuditContext";
 export { TestCaseProvider, useTestCases } from "./TestCaseContext";
 export { SharedProvider, useShared } from "./SharedContext";
+export { NotificationProvider, useNotifications } from "./NotificationContext";
+export { EpicProvider, useEpics } from "./EpicContext";

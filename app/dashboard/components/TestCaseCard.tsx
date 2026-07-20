@@ -179,8 +179,6 @@ export default function TestCaseCard({
                 backgroundColor: "#f8fafc",
                 padding: "8px",
                 borderRadius: "4px",
-                maxHeight: "150px",
-                overflowY: "auto",
                 fontFamily: "monospace",
                 whiteSpace: "pre-wrap",
               }}

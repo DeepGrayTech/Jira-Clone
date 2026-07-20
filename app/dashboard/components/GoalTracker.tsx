@@ -92,12 +92,23 @@ export default function GoalTracker({
   };
 
   const calculateProgressFromTasks = (goal: Goal) => {
+    if (goal.status === "ACHIEVED") {
+      return goal.currentProgress;
+    }
+
     const relatedTasks = getGoalRelatedTasks(goal);
     if (relatedTasks.length === 0) return goal.currentProgress;
+
     const completedCount = relatedTasks.filter(
       (t) => t.status === "DONE"
     ).length;
-    return Math.round((completedCount / relatedTasks.length) * 100);
+    const taskProgress = Math.round((completedCount / relatedTasks.length) * 100);
+
+    if (taskProgress === 0 && goal.currentProgress > 0) {
+      return goal.currentProgress;
+    }
+
+    return taskProgress;
   };
 
   /**
@@ -358,6 +369,7 @@ export default function GoalTracker({
     "规矩守护者",
     "Bug猎手",
     "文档整理控",
+    "管理员",
   ];
 
   return (
@@ -1570,8 +1582,6 @@ export default function GoalTracker({
                 </label>
                 <div
                   style={{
-                    maxHeight: "150px",
-                    overflowY: "auto",
                     border: "1px solid #e5e7eb",
                     borderRadius: "8px",
                     padding: "8px",
@@ -1619,8 +1629,6 @@ export default function GoalTracker({
                 </label>
                 <div
                   style={{
-                    maxHeight: "100px",
-                    overflowY: "auto",
                     border: "1px solid #e5e7eb",
                     borderRadius: "8px",
                     padding: "8px",
@@ -1667,8 +1675,6 @@ export default function GoalTracker({
                 </label>
                 <div
                   style={{
-                    maxHeight: "200px",
-                    overflowY: "auto",
                     border: "1px solid #e5e7eb",
                     borderRadius: "8px",
                     padding: "8px",
@@ -1728,8 +1734,6 @@ export default function GoalTracker({
                 </label>
                 <div
                   style={{
-                    maxHeight: "200px",
-                    overflowY: "auto",
                     border: "1px solid #e5e7eb",
                     borderRadius: "8px",
                     padding: "8px",

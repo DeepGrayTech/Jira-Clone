@@ -1,8 +1,8 @@
 # Jira Clone 技术文档
 
 > **项目名称**: Jira Clone - AI 驱动的项目管理工具
-> **版本**: v1.0.0
-> **更新日期**: 2026-07-08
+> **版本**: v1.3.0
+> **更新日期**: 2026-07-20
 > **文档类型**: 项目技术说明文档
 
 ---
@@ -262,9 +262,35 @@ Jira Clone 是一个 **AI 驱动的项目管理工具**，旨在提供完整的�
 
 ---
 
-## 七、最近修复记录（2026-07-08）
+## 七、最近修复记录（2026-07-20）
 
-### 7.1 安全模块修复
+### 7.4 登录问题修复（2026-07-20）
+
+| 文件 | 问题 | 修复内容 |
+|------|------|----------|
+| `lib/auth.ts` | Chrome浏览器登录失败，密码哈希数据损坏 | 添加 `hashPasswordWithMD5` 函数兼容旧数据；登录逻辑先尝试SHA-256验证，失败则尝试MD5；检测到密码哈希长度<32字符时判定数据损坏，自动重置用户数据并重新创建默认管理员账户 |
+| `lib/auth.ts` | 登录日志缺失 | 添加详细登录流程日志，包括环境检测、用户查找、哈希计算、匹配结果等 |
+
+### 7.5 任务卡片编辑功能修复（2026-07-20）
+
+| 文件 | 问题 | 修复内容 |
+|------|------|----------|
+| `app/dashboard/views/TasksView.tsx` | 任务卡片无法编辑 | 在 `TasksViewProps` 接口中添加 `setShowModal`；修改 `handleEditTask` 函数添加 `setShowModal(true)` |
+| `app/dashboard/components/DashboardLayout.tsx` | 编辑弹窗不显示 | 将 `setShowModal` 传递给 `TasksView` 组件 |
+
+### 7.6 数据完整性验证增强（2026-07-20）
+
+| 文件 | 问题 | 修复内容 |
+|------|------|----------|
+| `app/dashboard/hooks/useValidation.ts` | 验证错误日志被截断，无法定位具体错误项 | 增强日志输出，记录每个失败实体的类型、ID、字段和错误消息 |
+
+### 7.7 管理员用户添加（2026-07-20）
+
+| 文件 | 问题 | 修复内容 |
+|------|------|----------|
+| `app/dashboard/contexts/TaskContext.tsx` | 任务 assignee 选项缺少管理员 | 在任务分配选项中添加管理员用户 |
+
+### 7.1 安全模块修复（2026-07-08）
 
 | 文件 | 问题 | 修复内容 |
 |------|------|----------|
@@ -320,37 +346,106 @@ demo01/
 │   │   │   ├── AgentNode.tsx
 │   │   │   ├── AgentWorkflow.tsx
 │   │   │   ├── BugTracker.tsx
+│   │   │   ├── DashboardLayout.tsx
+│   │   │   ├── DashboardNavigation.tsx
 │   │   │   ├── GoalTracker.tsx
 │   │   │   ├── LoginForm.tsx
 │   │   │   ├── Modal.tsx
+│   │   │   ├── NotificationCenter.tsx
+│   │   │   ├── NotificationSettingsPanel.tsx
 │   │   │   ├── RequirementCard.tsx
+│   │   │   ├── SubagentProgressIndicator.tsx
 │   │   │   ├── TaskCard.tsx
 │   │   │   ├── TaskColumn.tsx
 │   │   │   ├── TestCaseCard.tsx
 │   │   │   └── TimelineView.tsx
+│   │   ├── contexts/
+│   │   │   ├── AuditContext.tsx
+│   │   │   ├── BugContext.tsx
+│   │   │   ├── GoalContext.tsx
+│   │   │   ├── NotificationContext.tsx
+│   │   │   ├── RequirementContext.tsx
+│   │   │   ├── SharedContext.tsx
+│   │   │   ├── TaskContext.tsx
+│   │   │   ├── TestCaseContext.tsx
+│   │   │   └── index.ts
+│   │   ├── data/
+│   │   │   └── default-data.ts
 │   │   ├── hooks/
-│   │   │   └── useAgentLiveStatus.ts
+│   │   │   ├── useAgentLiveStatus.ts
+│   │   │   ├── useAuth.ts
+│   │   │   ├── useDataLoader.ts
+│   │   │   ├── usePersistence.ts
+│   │   │   ├── useValidation.ts
+│   │   │   └── useWindow.ts
+│   │   ├── services/
+│   │   │   ├── AuditService.ts
+│   │   │   ├── BugService.ts
+│   │   │   ├── GoalService.ts
+│   │   │   ├── NotificationService.ts
+│   │   │   ├── RequirementService.ts
+│   │   │   ├── SubagentTaskService.ts
+│   │   │   ├── TaskService.ts
+│   │   │   ├── TestCaseService.ts
+│   │   │   ├── ValidationService.ts
+│   │   │   └── index.ts
+│   │   ├── views/
+│   │   │   ├── AuditView.tsx
+│   │   │   ├── BugsView.tsx
+│   │   │   ├── GoalsView.tsx
+│   │   │   ├── NotificationsView.tsx
+│   │   │   ├── RequirementsView.tsx
+│   │   │   ├── TasksView.tsx
+│   │   │   ├── TestingView.tsx
+│   │   │   └── index.ts
 │   │   ├── constants.ts
 │   │   ├── page.tsx
-│   │   ├── subagent-bridge.ts
 │   │   └── types.ts
 │   ├── globals.css
 │   ├── layout.tsx
 │   └── page.tsx
 ├── lib/
 │   ├── auth.ts
-│   └── encryption.ts
+│   ├── encoding.ts
+│   ├── encryption.ts
+│   ├── privacy.ts
+│   └── validation.ts
 ├── __tests__/
+│   ├── additional.test.tsx
+│   ├── admin-preservation.test.tsx
+│   ├── api-validation.test.ts
 │   ├── auth.test.ts
 │   ├── bug-tracker.test.tsx
+│   ├── components.test.tsx
+│   ├── dashboard-layout.test.tsx
 │   ├── dashboard.test.tsx
-│   └── encryption.test.ts
+│   ├── encoding.test.ts
+│   ├── encryption.test.ts
+│   ├── notification-system.test.tsx
+│   ├── privacy.test.ts
+│   └── usePersistence.test.ts
 ├── docs/
+│   ├── superpowers/
+│   │   └── specs/
+│   │       └── 2026-07-13-subagent-notification-system-design.md
 │   └── TECHNICAL.md
-├── package.json
-├── tsconfig.json
+├── .cursorrules
+├── CHANGE_LOG.md
+├── CODE_STYLE.md
+├── DESIGN_SPEC.md
+├── WORKFLOW_RULES.md
+├── README.md
 ├── jest.config.js
-└── tailwind.config.ts
+├── jest.d.ts
+├── jest.setup.js
+├── next.config.mjs
+├── package-lock.json
+├── package.json
+├── postcss.config.mjs
+├── tailwind.config.ts
+├── tsconfig.json
+├── 使用说明.txt
+└── 启动项目.bat
 ```
 
 ### B. 版本历史
@@ -359,8 +454,12 @@ demo01/
 |------|------|----------|
 | v1.0.0 | 2026-07-07 | 初始版本，包含全部 8 个功能模块 |
 | v1.0.1 | 2026-07-08 | 安全模块、UI 组件、数据流全面修复（详见第七章） |
+| v1.0.2 | 2026-07-13 | 添加 Subagent 调度通知系统，引入 Superpowers 七步工作流 |
+| v1.1.0 | 2026-07-11 | Dashboard组件大规模重构，拆分为15+组件、6个Context、4个服务、6个Hook |
+| v1.2.0 | 2026-07-17 | Epic功能完善：删除、编辑、性能优化与测试 |
+| v1.3.0 | 2026-07-20 | 登录问题修复（Chrome浏览器）、任务卡片编辑功能修复、数据完整性验证增强、管理员用户添加 |
 
 ---
 
 *文档维护者: 文档管理员*
-*最后更新: 2026-07-08*
+*最后更新: 2026-07-20*

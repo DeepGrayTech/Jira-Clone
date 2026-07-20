@@ -5,6 +5,7 @@ import TestCaseCard from "../components/TestCaseCard";
 import { COLORS, TEST_CASE_STATUS_LABELS } from "../constants";
 import { useTestCases } from "../contexts/TestCaseContext";
 import { useRequirements } from "../contexts/RequirementContext";
+import { useEpics } from "../contexts/EpicContext";
 import type { TestCase, FormFields } from "../types";
 
 interface TestingViewProps {
@@ -17,6 +18,7 @@ interface TestingViewProps {
   setModalType: React.Dispatch<React.SetStateAction<"task" | "requirement" | "test" | "bug">>;
   setFormData: React.Dispatch<React.SetStateAction<FormFields>>;
   setShowModal: React.Dispatch<React.SetStateAction<boolean>>;
+  currentEpicId: string | null;
 }
 
 export default function TestingView({
@@ -29,9 +31,11 @@ export default function TestingView({
   setModalType,
   setFormData,
   setShowModal,
+  currentEpicId,
 }: TestingViewProps) {
   const { testCases, deleteTestCase } = useTestCases();
   const { requirements } = useRequirements();
+  const { epics } = useEpics();
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
   const [filterRequirement, setFilterRequirement] = useState("");
@@ -48,9 +52,12 @@ export default function TestingView({
       const matchesRequirement =
         filterRequirement === "" || tc.requirementId === filterRequirement;
 
-      return matchesSearch && matchesStatus && matchesRequirement;
+      const matchesEpic =
+        currentEpicId === null || tc.epicId === currentEpicId;
+
+      return matchesSearch && matchesStatus && matchesRequirement && matchesEpic;
     });
-  }, [testCases, searchQuery, filterStatus, filterRequirement]);
+  }, [testCases, searchQuery, filterStatus, filterRequirement, currentEpicId]);
 
   const getTestCasesByStatus = (status: TestCase["status"]): TestCase[] => {
     return filteredTestCases.filter((tc) => tc.status === status);
@@ -68,6 +75,7 @@ export default function TestingView({
       tags: [],
       assignee: tc.executor || "",
       relatedRequirementId: tc.requirementId,
+      relatedGoalId: "",
       figmaUrl: "",
       steps: tc.steps.join("\n"),
       expectedResult: tc.expectedResult,

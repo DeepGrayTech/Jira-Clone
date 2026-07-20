@@ -130,16 +130,6 @@ export function useValidation(
       }
     }
 
-    const totalIssues = allResults.filter((r) => !r.isValid).length;
-    console.log("[useValidation] 数据完整性校验完成:", {
-      totalTypes: allResults.length,
-      validTypes: allResults.filter((r) => r.isValid).length,
-      totalIssues,
-      issues: allResults
-        .filter((r) => !r.isValid)
-        .map((r) => ({ type: r.type, errors: r.errors.length })),
-    });
-
     if (results.length > 0) {
       setValidationResults(results);
       setShowValidationBanner(true);

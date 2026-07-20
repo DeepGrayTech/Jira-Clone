@@ -14,6 +14,18 @@ export interface Comment {
   createdAt: string; // ISO timestamp of creation
 }
 
+export type EpicStatus = "ACTIVE" | "ARCHIVED";
+
+export interface Epic {
+  id: string;
+  title: string;
+  description: string;
+  color: string;
+  status: EpicStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
 /**
  * Task interface representing a kanban task.
  */
@@ -27,9 +39,11 @@ export interface Task {
   tags: string[]; // Array of tag strings for categorization
   assignee: string; // Name of the assigned team member
   relatedRequirementId?: string; // Optional reference to related requirement
+  relatedGoalId?: string; // Optional reference to related goal
   figmaUrl?: string; // Optional Figma design URL
   comments: Comment[]; // Array of comments on this task
   createdAt: string; // ISO date string for creation date
+  epicId?: string; // Optional reference to related epic
 }
 
 /**
@@ -47,6 +61,8 @@ export interface Requirement {
   updatedAt: string; // ISO timestamp of last update
   requester: string; // Name of the requester
   executor: string; // Name of the executor
+  relatedGoalId?: string; // Optional reference to related goal
+  epicId?: string; // Optional reference to related epic
 }
 
 /**
@@ -65,6 +81,7 @@ export interface TestCase {
   errorMessage?: string; // Error message if test failed
   errorLog?: string; // Detailed error log if test failed
   actualResult?: string; // Actual outcome of the test
+  epicId?: string; // Optional reference to related epic
 }
 
 /**
@@ -114,6 +131,7 @@ export interface Bug {
   resolution?: string; // How the bug was resolved
   comments: BugComment[]; // Array of comments on this bug
   attachments?: string[]; // Array of attachment URLs
+  epicId?: string; // Optional reference to related epic
 }
 
 /**
@@ -139,6 +157,7 @@ export interface FormFields {
   tags: string[]; // Tags array (for tasks)
   assignee: string; // Assignee field (for tasks)
   relatedRequirementId: string; // Related requirement ID (for tasks)
+  relatedGoalId: string; // Related goal ID (for tasks)
   figmaUrl: string; // Figma design URL (for tasks)
   steps: string; // Test steps (for test cases)
   expectedResult: string; // Expected result (for test cases)
@@ -174,7 +193,8 @@ export type AuditAction =
   | "LOGOUT"
   | "EXPORT"
   | "IMPORT"
-  | "CLEAR";
+  | "CLEAR"
+  | "READ";
 
 /**
  * Audit target types representing the entity being operated on.
@@ -187,7 +207,10 @@ export type AuditTarget =
   | "GOAL"
   | "MILESTONE"
   | "KEY_RESULT"
-  | "SYSTEM";
+  | "SYSTEM"
+  | "NOTIFICATION"
+  | "SUBAGENT_TASK"
+  | "EPIC";
 
 /**
  * AuditLogEntry interface representing an ISO 27001 security audit log entry.
@@ -216,7 +239,8 @@ export type ViewMode =
   | "TESTING"
   | "BUGS"
   | "GOALS"
-  | "AUDIT";
+  | "AUDIT"
+  | "NOTIFICATIONS";
 
 export type GoalStatus =
   | "NOT_STARTED"
@@ -243,6 +267,7 @@ export interface Goal {
   createdAt: string;
   updatedAt: string;
   color: string;
+  epicId?: string; // Optional reference to related epic
 }
 
 export interface Milestone {
@@ -344,3 +369,73 @@ export interface ValidationResult {
   totalCount: number;
   type?: string;
 }
+
+// ─── Notification System Types ────────────────────────────────────────────────
+
+export type NotificationType =
+  | "TASK_ASSIGNED"
+  | "TASK_STATUS_CHANGED"
+  | "TASK_COMMENTED"
+  | "BUG_REPORTED"
+  | "BUG_ASSIGNED"
+  | "REQUIREMENT_APPROVED"
+  | "TEST_CASE_FAILED"
+  | "GOAL_PROGRESS_UPDATED"
+  | "SUBAGENT_TASK_STARTED"
+  | "SUBAGENT_TASK_COMPLETED"
+  | "SUBAGENT_TASK_FAILED";
+
+export interface Notification {
+  id: string;
+  type: NotificationType;
+  title: string;
+  message: string;
+  targetId: string;
+  targetType: "TASK" | "BUG" | "REQUIREMENT" | "TEST_CASE" | "GOAL";
+  sender?: string;
+  recipient: string;
+  isRead: boolean;
+  isActionable: boolean;
+  actionUrl?: string;
+  scheduledSubagent?: string;
+  createdAt: string;
+}
+
+export interface SubagentTask {
+  id: string;
+  notificationId: string;
+  subagentName: string;
+  taskType: string;
+  status: "PENDING" | "RUNNING" | "COMPLETED" | "FAILED" | "CANCELLED";
+  progress: number;
+  inputData: Record<string, unknown>;
+  outputData?: Record<string, unknown>;
+  errorMessage?: string;
+  startedAt?: string;
+  completedAt?: string;
+  createdAt: string;
+}
+
+export interface NotificationSettings {
+  userId: string;
+  enabledTypes: NotificationType[];
+  autoScheduleSubagent: boolean;
+  preferredSubagents: string[];
+  muteUntil?: string;
+}
+
+export const isValidNotificationType = (type: string): type is NotificationType => {
+  return [
+    "TASK_ASSIGNED",
+    "TASK_STATUS_CHANGED",
+    "TASK_COMMENTED",
+    "BUG_REPORTED",
+    "BUG_ASSIGNED",
+    "REQUIREMENT_APPROVED",
+    "TEST_CASE_FAILED",
+    "GOAL_PROGRESS_UPDATED",
+    "SUBAGENT_TASK_STARTED",
+    "SUBAGENT_TASK_COMPLETED",
+    "SUBAGENT_TASK_FAILED",
+  ].includes(type);
+};

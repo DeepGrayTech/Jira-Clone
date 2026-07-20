@@ -30,7 +30,13 @@ export const RequirementProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const deleteRequirement = useCallback((id: string) => {
-    setRequirements((prev) => prev.filter((req) => req.id !== id));
+    setRequirements((prev) => {
+      const beforeCount = prev.length;
+      const after = prev.filter((req) => req.id !== id);
+      const afterCount = after.length;
+      console.log(`[RequirementContext] DELETE requirement | id=${id} | before=${beforeCount} | after=${afterCount} | deleted=${beforeCount - afterCount}`);
+      return after;
+    });
   }, []);
 
   const getRequirementById = useCallback(

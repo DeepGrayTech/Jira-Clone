@@ -2,7 +2,7 @@
 
 import { useLayoutEffect } from "react";
 import { decryptData } from "@/lib/encryption";
-import { STORAGE_KEYS } from "../constants";
+import { STORAGE_KEYS, DATA_VERSION } from "../constants";
 import {
   getDefaultTestCases,
   getDefaultGoals,
@@ -11,6 +11,7 @@ import {
   getDefaultBugs,
   getDefaultAuditLogs,
   getDefaultComments,
+  getDefaultEpics,
 } from "../data/default-data";
 import type {
   Task,
@@ -22,6 +23,7 @@ import type {
   KeyResult,
   Comment,
   AuditLogEntry,
+  Epic,
 } from "../types";
 
 const getDefaultRequirements = (): Requirement[] => [
@@ -38,6 +40,7 @@ const getDefaultRequirements = (): Requirement[] => [
       "支持任务搜索和按状态筛选",
     ],
     createdAt: "2026-06-01",
+    epicId: "epic1",
     updatedAt: "2026-06-12",
     requester: "需求粉碎机",
     executor: "像素魔法师",
@@ -54,6 +57,7 @@ const getDefaultRequirements = (): Requirement[] => [
       "支持需求关联任务",
     ],
     createdAt: "2026-06-10",
+    epicId: "epic1",
     updatedAt: "2026-06-15",
     requester: "需求粉碎机",
     executor: "像素魔法师",
@@ -71,6 +75,7 @@ const getDefaultRequirements = (): Requirement[] => [
       "支持测试执行状态标记",
     ],
     createdAt: "2026-06-14",
+    epicId: "epic1",
     updatedAt: "2026-06-18",
     requester: "代码找茬王",
     executor: "像素魔法师",
@@ -89,6 +94,7 @@ const getDefaultRequirements = (): Requirement[] => [
       "支持节点间连接线渲染",
     ],
     createdAt: "2026-06-16",
+    epicId: "epic1",
     updatedAt: "2026-06-20",
     requester: "系统拆弹专家",
     executor: "配色狂魔",
@@ -107,6 +113,7 @@ const getDefaultRequirements = (): Requirement[] => [
       "支持Bug评论和修复记录",
     ],
     createdAt: "2026-06-18",
+    epicId: "epic1",
     updatedAt: "2026-06-22",
     requester: "Bug猎手",
     executor: "像素魔法师",
@@ -124,6 +131,7 @@ const getDefaultRequirements = (): Requirement[] => [
       "支持目标进度自动计算",
     ],
     createdAt: "2026-06-25",
+    epicId: "epic1",
     updatedAt: "2026-07-03",
     requester: "需求粉碎机",
     executor: "数据大厨",
@@ -142,6 +150,7 @@ const getDefaultRequirements = (): Requirement[] => [
       "加密密钥安全管理",
     ],
     createdAt: "2026-06-20",
+    epicId: "epic1",
     updatedAt: "2026-06-24",
     requester: "规矩守护者",
     executor: "数据大厨",
@@ -159,6 +168,7 @@ const getDefaultRequirements = (): Requirement[] => [
       "布局和交互在不同屏幕尺寸下保持一致",
     ],
     createdAt: "2026-06-22",
+    epicId: "epic1",
     updatedAt: "2026-06-26",
     requester: "配色狂魔",
     executor: "配色狂魔",
@@ -176,6 +186,7 @@ const getDefaultRequirements = (): Requirement[] => [
       "日志支持按操作类型和时间筛选",
     ],
     createdAt: "2026-07-01",
+    epicId: "epic1",
     updatedAt: "2026-07-01",
     requester: "规矩守护者",
     executor: "系统拆弹专家",
@@ -200,6 +211,7 @@ const getDefaultRequirements = (): Requirement[] => [
       "密码和敏感字段禁止在日志及错误提示中明文回显",
     ],
     createdAt: "2026-07-08",
+    epicId: "epic1",
     updatedAt: "2026-07-09",
     requester: "规矩守护者",
     executor: "代码找茬王",
@@ -225,6 +237,7 @@ const getDefaultRequirements = (): Requirement[] => [
       "表单验证失败时提供具体的错误修正建议，状态消息通过 ARIA live regions 通知",
     ],
     createdAt: "2026-07-08",
+    epicId: "epic1",
     updatedAt: "2026-07-09",
     requester: "规矩守护者",
     executor: "配色狂魔",
@@ -249,6 +262,7 @@ const getDefaultRequirements = (): Requirement[] => [
       "测试文档版本控制：支持变更历史追溯和基线管理",
     ],
     createdAt: "2026-07-08",
+    epicId: "epic1",
     updatedAt: "2026-07-09",
     requester: "Bug猎手",
     executor: "Bug猎手",
@@ -273,6 +287,7 @@ const getDefaultRequirements = (): Requirement[] => [
       "支持Bug批量操作（批量更新状态、批量分配）和关联关系可视化",
     ],
     createdAt: "2026-07-08",
+    epicId: "epic1",
     updatedAt: "2026-07-09",
     requester: "Bug猎手",
     executor: "像素魔法师",
@@ -297,6 +312,7 @@ const getDefaultRequirements = (): Requirement[] => [
       "测试退出量化标准：缺陷发现率≤1个/天，用例通过率≥95%，无遗留致命与严重缺陷",
     ],
     createdAt: "2026-07-08",
+    epicId: "epic1",
     updatedAt: "2026-07-09",
     requester: "规矩守护者",
     executor: "Bug猎手",
@@ -322,6 +338,7 @@ const getDefaultRequirements = (): Requirement[] => [
       "使用质量评价：任务有效性≥90%，用户效率≥85%，满意度评分≥4.0/5.0",
     ],
     createdAt: "2026-07-08",
+    epicId: "epic1",
     updatedAt: "2026-07-09",
     requester: "规矩守护者",
     executor: "代码找茬王",
@@ -348,6 +365,7 @@ const getDefaultRequirements = (): Requirement[] => [
       "提供同意撤回机制：用户可随时撤回已授予的数据处理同意，撤回后停止相应处理",
     ],
     createdAt: "2026-07-08",
+    epicId: "epic1",
     updatedAt: "2026-07-09",
     requester: "规矩守护者",
     executor: "数据大厨",
@@ -374,6 +392,7 @@ const getDefaultRequirements = (): Requirement[] => [
       "访问权限定期审查：每季度审查用户权限，遵循最小权限原则，回收冗余权限",
     ],
     createdAt: "2026-07-08",
+    epicId: "epic1",
     updatedAt: "2026-07-09",
     requester: "规矩守护者",
     executor: "系统拆弹专家",
@@ -398,6 +417,7 @@ const getDefaultRequirements = (): Requirement[] => [
       "质量记录管理：完整保存质量活动记录，可追溯可审计",
     ],
     createdAt: "2026-07-10",
+    epicId: "epic1",
     updatedAt: "2026-07-10",
     requester: "规矩守护者",
     executor: "规矩守护者",
@@ -422,6 +442,7 @@ const getDefaultRequirements = (): Requirement[] => [
       "个人信息安全审计：定期审计个人信息处理活动",
     ],
     createdAt: "2026-07-10",
+    epicId: "epic1",
     updatedAt: "2026-07-10",
     requester: "规矩守护者",
     executor: "数据大厨",
@@ -446,6 +467,7 @@ const getDefaultRequirements = (): Requirement[] => [
       "数据泄露通知：发现后45天内通知受影响消费者",
     ],
     createdAt: "2026-07-10",
+    epicId: "epic1",
     updatedAt: "2026-07-10",
     requester: "规矩守护者",
     executor: "数据大厨",
@@ -470,6 +492,7 @@ const getDefaultRequirements = (): Requirement[] => [
       "建立业务连续性和灾难恢复计划",
     ],
     createdAt: "2026-07-10",
+    epicId: "epic1",
     updatedAt: "2026-07-10",
     requester: "规矩守护者",
     executor: "系统拆弹专家",
@@ -494,6 +517,7 @@ const getDefaultRequirements = (): Requirement[] => [
       "定期安全培训，确保所有人员了解安全要求",
     ],
     createdAt: "2026-07-10",
+    epicId: "epic1",
     updatedAt: "2026-07-10",
     requester: "规矩守护者",
     executor: "数据大厨",
@@ -518,6 +542,7 @@ const getDefaultRequirements = (): Requirement[] => [
       "隐私审计：定期审查隐私管理体系的有效性",
     ],
     createdAt: "2026-07-10",
+    epicId: "epic1",
     updatedAt: "2026-07-10",
     requester: "规矩守护者",
     executor: "规矩守护者",
@@ -541,6 +566,7 @@ const getDefaultRequirements = (): Requirement[] => [
       "过程能力基线：建立组织级过程能力基准",
     ],
     createdAt: "2026-07-10",
+    epicId: "epic1",
     updatedAt: "2026-07-10",
     requester: "代码找茬王",
     executor: "代码找茬王",
@@ -566,6 +592,7 @@ const getDefaultRequirements = (): Requirement[] => [
       "A10-2021 Server-Side Request Forgery：验证外部URL，限制SSRF攻击",
     ],
     createdAt: "2026-07-10",
+    epicId: "epic1",
     updatedAt: "2026-07-10",
     requester: "系统拆弹专家",
     executor: "系统拆弹专家",
@@ -590,6 +617,7 @@ const getDefaultRequirements = (): Requirement[] => [
       "安全运维：定期安全检查、备份恢复、应急响应",
     ],
     createdAt: "2026-07-11",
+    epicId: "epic1",
     updatedAt: "2026-07-11",
     requester: "规矩守护者",
     executor: "系统拆弹专家",
@@ -614,6 +642,7 @@ const getDefaultRequirements = (): Requirement[] => [
       "风险报告：定期向管理层汇报风险状况",
     ],
     createdAt: "2026-07-11",
+    epicId: "epic1",
     updatedAt: "2026-07-11",
     requester: "规矩守护者",
     executor: "规矩守护者",
@@ -638,6 +667,7 @@ const getDefaultRequirements = (): Requirement[] => [
       "风险评估：定期进行安全风险评估",
     ],
     createdAt: "2026-07-11",
+    epicId: "epic1",
     updatedAt: "2026-07-11",
     requester: "规矩守护者",
     executor: "数据大厨",
@@ -662,6 +692,7 @@ const getDefaultRequirements = (): Requirement[] => [
       "跨境数据传输：符合数据本地化要求",
     ],
     createdAt: "2026-07-11",
+    epicId: "epic1",
     updatedAt: "2026-07-11",
     requester: "规矩守护者",
     executor: "系统拆弹专家",
@@ -682,6 +713,7 @@ const getDefaultTasks = (): Task[] => [
     relatedRequirementId: "r1",
     comments: [],
     createdAt: "2026-06-01",
+    epicId: "epic1",
   },
   {
     id: "t2",
@@ -695,6 +727,7 @@ const getDefaultTasks = (): Task[] => [
     relatedRequirementId: "r1",
     comments: [],
     createdAt: "2026-06-03",
+    epicId: "epic1",
   },
   {
     id: "t3",
@@ -708,6 +741,7 @@ const getDefaultTasks = (): Task[] => [
     relatedRequirementId: "r1",
     comments: [],
     createdAt: "2026-06-05",
+    epicId: "epic1",
   },
   {
     id: "t4",
@@ -722,6 +756,7 @@ const getDefaultTasks = (): Task[] => [
     relatedRequirementId: "r1",
     comments: [],
     createdAt: "2026-06-07",
+    epicId: "epic1",
   },
   {
     id: "t5",
@@ -735,6 +770,7 @@ const getDefaultTasks = (): Task[] => [
     relatedRequirementId: "r1",
     comments: [],
     createdAt: "2026-06-09",
+    epicId: "epic1",
   },
   {
     id: "t6",
@@ -748,6 +784,7 @@ const getDefaultTasks = (): Task[] => [
     relatedRequirementId: "r2",
     comments: [],
     createdAt: "2026-06-11",
+    epicId: "epic1",
   },
   {
     id: "t7",
@@ -761,6 +798,7 @@ const getDefaultTasks = (): Task[] => [
     relatedRequirementId: "r3",
     comments: [],
     createdAt: "2026-06-13",
+    epicId: "epic1",
   },
 
   {
@@ -775,6 +813,7 @@ const getDefaultTasks = (): Task[] => [
     relatedRequirementId: "r5",
     comments: [],
     createdAt: "2026-06-17",
+    epicId: "epic1",
   },
   {
     id: "t10",
@@ -788,6 +827,7 @@ const getDefaultTasks = (): Task[] => [
     relatedRequirementId: "r6",
     comments: [],
     createdAt: "2026-06-19",
+    epicId: "epic1",
   },
   {
     id: "t11",
@@ -801,6 +841,7 @@ const getDefaultTasks = (): Task[] => [
     relatedRequirementId: "r6",
     comments: [],
     createdAt: "2026-06-20",
+    epicId: "epic1",
   },
   {
     id: "t12",
@@ -815,6 +856,7 @@ const getDefaultTasks = (): Task[] => [
     relatedRequirementId: "r7",
     comments: [],
     createdAt: "2026-06-21",
+    epicId: "epic1",
   },
   {
     id: "t13",
@@ -829,6 +871,7 @@ const getDefaultTasks = (): Task[] => [
     relatedRequirementId: "r8",
     comments: [],
     createdAt: "2026-06-22",
+    epicId: "epic1",
   },
   {
     id: "t14",
@@ -842,6 +885,7 @@ const getDefaultTasks = (): Task[] => [
     relatedRequirementId: "r9",
     comments: [],
     createdAt: "2026-06-23",
+    epicId: "epic1",
   },
   {
     id: "t15",
@@ -856,6 +900,7 @@ const getDefaultTasks = (): Task[] => [
     relatedRequirementId: "r3",
     comments: [],
     createdAt: "2026-06-24",
+    epicId: "epic1",
   },
   {
     id: "t16",
@@ -868,6 +913,7 @@ const getDefaultTasks = (): Task[] => [
     assignee: "系统拆弹专家",
     relatedRequirementId: "r7",
     comments: [],
+    epicId: "epic1",
     createdAt: "2026-06-25",
   },
 ];
@@ -893,13 +939,22 @@ export function useDataLoader(
   setTagHistory: React.Dispatch<React.SetStateAction<string[]>>,
   setComments: React.Dispatch<React.SetStateAction<Comment[]>>,
   setAuditLogs: React.Dispatch<React.SetStateAction<AuditLogEntry[]>>,
-  setIsInitialized: React.Dispatch<React.SetStateAction<boolean>>
+  setIsInitialized: React.Dispatch<React.SetStateAction<boolean>>,
+  setEpics?: React.Dispatch<React.SetStateAction<Epic[]>>
 ) {
   const MAX_AUDIT_LOG_ENTRIES = 1000;
 
   useLayoutEffect(() => {
     let cancelled = false;
     const loadData = async () => {
+      const savedDataVersion = localStorage.getItem(STORAGE_KEYS.DATA_VERSION);
+      if (savedDataVersion !== DATA_VERSION) {
+        Object.values(STORAGE_KEYS).forEach((key) => {
+          localStorage.removeItem(key);
+        });
+        localStorage.setItem(STORAGE_KEYS.DATA_VERSION, DATA_VERSION);
+      }
+
       const savedTasks = localStorage.getItem(STORAGE_KEYS.TASKS);
       const savedRequirements = localStorage.getItem(STORAGE_KEYS.REQUIREMENTS);
       const savedTestCases = localStorage.getItem(STORAGE_KEYS.TEST_CASES);
@@ -920,7 +975,10 @@ export function useDataLoader(
         }
         const defaultTasks = getDefaultTasks();
         const existingIds = new Set(loadedTasks.map((t) => t.id));
-        const mergedTasks = [...loadedTasks];
+        const mergedTasks: Task[] = loadedTasks.map((task) => ({
+          ...task,
+          epicId: task.epicId || "epic1",
+        }));
         defaultTasks.forEach((defaultTask) => {
           if (!existingIds.has(defaultTask.id)) {
             mergedTasks.push(defaultTask);
@@ -946,7 +1004,10 @@ export function useDataLoader(
         }
         const defaultRequirements = getDefaultRequirements();
         const existingIds = new Set(loadedRequirements.map((r) => r.id));
-        const mergedRequirements = [...loadedRequirements];
+        const mergedRequirements: Requirement[] = loadedRequirements.map((req) => ({
+          ...req,
+          epicId: req.epicId || "epic1",
+        }));
         defaultRequirements.forEach((defaultReq) => {
           if (!existingIds.has(defaultReq.id)) {
             mergedRequirements.push(defaultReq);
@@ -979,7 +1040,10 @@ export function useDataLoader(
         }
         const defaultTestCases = getDefaultTestCases();
         const existingIds = new Set(loadedTestCases.map((tc) => tc.id));
-        const mergedTestCases = [...loadedTestCases];
+        const mergedTestCases: TestCase[] = loadedTestCases.map((tc) => ({
+          ...tc,
+          epicId: tc.epicId || "epic1",
+        }));
         defaultTestCases.forEach((defaultTc) => {
           if (!existingIds.has(defaultTc.id)) {
             mergedTestCases.push(defaultTc);
@@ -1071,7 +1135,10 @@ export function useDataLoader(
         }
         const defaultBugs = getDefaultBugs();
         const existingIds = new Set(loadedBugs.map((b) => b.id));
-        const mergedBugs = [...loadedBugs];
+        const mergedBugs: Bug[] = loadedBugs.map((bug) => ({
+          ...bug,
+          epicId: bug.epicId || "epic1",
+        }));
         defaultBugs.forEach((defaultBug) => {
           if (!existingIds.has(defaultBug.id)) {
             mergedBugs.push(defaultBug);
@@ -1098,7 +1165,10 @@ export function useDataLoader(
         }
         const defaultGoals = getDefaultGoals();
         const existingIds = new Set(loadedGoals.map((g) => g.id));
-        const mergedGoals = [...loadedGoals];
+        const mergedGoals: Goal[] = loadedGoals.map((goal) => ({
+          ...goal,
+          epicId: goal.epicId || "epic1",
+        }));
         defaultGoals.forEach((defaultGoal) => {
           if (!existingIds.has(defaultGoal.id)) {
             mergedGoals.push(defaultGoal);
@@ -1181,6 +1251,40 @@ export function useDataLoader(
         }
       } else {
         setAuditLogs(getDefaultAuditLogs());
+      }
+
+      if (setEpics) {
+        const savedEpics = localStorage.getItem(STORAGE_KEYS.EPICS);
+        if (savedEpics) {
+          const decrypted = await decryptData<Epic[]>(savedEpics);
+          if (cancelled) return;
+          let loadedEpics: Epic[] = [];
+          if (decrypted) {
+            loadedEpics = decrypted;
+          } else {
+            try {
+              loadedEpics = JSON.parse(savedEpics);
+            } catch {
+              loadedEpics = [];
+            }
+          }
+          const defaultEpics = getDefaultEpics();
+          const mergedEpics = loadedEpics.map((epic) => {
+            const defaultEpic = defaultEpics.find((e) => e.id === epic.id);
+            if (defaultEpic) {
+              return { ...defaultEpic, ...epic };
+            }
+            return epic;
+          });
+          defaultEpics.forEach((defaultEpic) => {
+            if (!mergedEpics.some((e) => e.id === defaultEpic.id)) {
+              mergedEpics.push(defaultEpic);
+            }
+          });
+          setEpics(mergedEpics);
+        } else {
+          setEpics(getDefaultEpics());
+        }
       }
 
       const hasLocalData =
