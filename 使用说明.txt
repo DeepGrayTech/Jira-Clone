@@ -11,7 +11,7 @@ Double-click "启动项目.bat" to start!
                     About this project
 ========================================================
 
-This is a simple task management kanban app.
+This is a task management kanban app with multi-user support.
 
 Features:
 - Kanban view: To Do, In Progress, Done
@@ -21,8 +21,25 @@ Features:
 - Priority: Low, Medium, High, Urgent (color-coded)
 - Due date support
 - Tags support (comma separated)
+- Requirements, test cases, bug tracker, goals, epics
+- Multi-user login (NextAuth), data isolated per account
 
-Note: Tasks are stored in browser memory only (cleared on refresh).
+Note: Data is stored in a server-side SQLite database
+(prisma/dev.db), NOT in the browser. It survives refresh
+and is tied to your login account.
+
+
+========================================================
+                    Login accounts
+========================================================
+
+Two accounts are created automatically on first run:
+
+  demo@example.com  / demo123   (USER, with sample data)
+  admin@example.com / admin123  (ADMIN)
+
+The login form is pre-filled with the demo account,
+so you can just click "Log in".
 
 
 ========================================================
@@ -37,12 +54,16 @@ Step 1: Check Node.js
 
 Step 2: Start the project
 - Double-click "启动项目.bat"
-- Wait for dependencies to install (first time may take a few minutes)
-- Open browser when you see "http://localhost:3000"
+- First run takes a few minutes. The script will:
+  1. Install dependencies (npm install)
+  2. Create the .env config file if missing
+  3. Generate the Prisma client
+  4. Initialize the SQLite database and seed accounts
+  5. Start the dev server
 
 Step 3: Use
 - Open http://localhost:3000 in your browser
-- Click "进入看板" (Go to Dashboard)
+- Log in with demo@example.com / demo123 (pre-filled)
 - Start using!
 
 
@@ -64,7 +85,21 @@ Solution:
 3. Then double-click "启动项目.bat" again
 
 Issue 4: Port already in use
-Solution: Close other programs or restart your computer
+Solution: Not needed anymore - "npm run dev" auto-frees
+ports 3000-3002 on startup. If it still fails, restart
+your computer.
+
+Issue 5: Login fails with "Invalid email or password"
+Solution: The database may be missing the seed accounts.
+Run these commands in the project folder:
+   npm run db:seed
+Then try demo@example.com / demo123 again.
+
+Issue 6: Page shows a Prisma/database error
+Solution: The database may be out of sync. Reset it:
+   npm run db:reset
+   npm run db:seed
+WARNING: this deletes all data and restores demo data.
 
 
 ========================================================
@@ -81,10 +116,16 @@ If double-clicking bat file doesn't work:
 npm install
 (wait for it to finish)
 
+npx prisma generate
+npx prisma migrate deploy
+npm run db:seed
+(first run only - sets up the database)
+
 npm run dev
 (wait for server to start)
 
 5. Open http://localhost:3000 in browser
+6. Log in with demo@example.com / demo123
 
 
 ========================================================
