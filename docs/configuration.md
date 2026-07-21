@@ -33,7 +33,7 @@ const nextConfig = {
 | 字段 | 值 |
 |------|-----|
 | `name` | jira-clone |
-| `version` | 0.1.0 |
+| `version` | 1.4.0 |
 | `private` | true |
 
 ### 常用脚本
