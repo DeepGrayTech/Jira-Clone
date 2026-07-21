@@ -4,7 +4,7 @@ import { NotificationProvider, useNotifications } from "../app/dashboard/context
 const TestComponent = ({
   onRender,
 }: {
-  onRender: (context: ReturnType<typeof useNotifications>) => void;
+  onRender?: (context: ReturnType<typeof useNotifications>) => void;
 }) => {
   const context = useNotifications();
   if (onRender) onRender(context);
@@ -41,7 +41,7 @@ describe("NotificationContext", () => {
   });
 
   it("should provide all context methods", () => {
-    let context: ReturnType<typeof useNotifications>;
+    let context!: ReturnType<typeof useNotifications>;
     
     render(
       <NotificationProvider>
@@ -65,7 +65,7 @@ describe("NotificationContext", () => {
   });
 
   it("should have empty settings by default", () => {
-    let context: ReturnType<typeof useNotifications>;
+    let context!: ReturnType<typeof useNotifications>;
     
     render(
       <NotificationProvider>
@@ -78,7 +78,7 @@ describe("NotificationContext", () => {
   });
 
   it("should handle anonymous user when no auth token", () => {
-    let context: ReturnType<typeof useNotifications>;
+    let context!: ReturnType<typeof useNotifications>;
     
     render(
       <NotificationProvider>

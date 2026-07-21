@@ -49,6 +49,7 @@ describe("Modal", () => {
       content: "Test comment",
       author: "Test User",
       createdAt: "2024-01-01",
+      taskId: "task-1",
     },
   ];
 

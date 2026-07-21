@@ -1,6 +1,7 @@
 import { renderHook, act } from "@testing-library/react";
 import { useValidation } from "../app/dashboard/hooks/useValidation";
 import { validateDataIntegrity } from "../lib/validation";
+import type { ValidationResult } from "../app/dashboard/types";
 
 jest.mock("../lib/validation", () => ({
   validateDataIntegrity: jest.fn(),
@@ -58,7 +59,20 @@ describe("useValidation Hook", () => {
       ({ isInitialized }) =>
         useValidation(
           isInitialized,
-          [{ id: "1", title: "Test", status: "TODO", priority: "MEDIUM" }],
+          [
+            {
+              id: "1",
+              title: "Test",
+              description: "",
+              status: "TODO",
+              priority: "MEDIUM",
+              dueDate: "",
+              tags: [],
+              assignee: "",
+              comments: [],
+              createdAt: "",
+            },
+          ],
           [],
           [],
           [],
@@ -97,8 +111,30 @@ describe("useValidation Hook", () => {
         useValidation(
           isInitialized,
           [
-            { id: "invalid-1", title: "", status: "TODO", priority: "MEDIUM" },
-            { id: "valid-1", title: "Valid Task", status: "TODO", priority: "MEDIUM" },
+            {
+              id: "invalid-1",
+              title: "",
+              description: "",
+              status: "TODO",
+              priority: "MEDIUM",
+              dueDate: "",
+              tags: [],
+              assignee: "",
+              comments: [],
+              createdAt: "",
+            },
+            {
+              id: "valid-1",
+              title: "Valid Task",
+              description: "",
+              status: "TODO",
+              priority: "MEDIUM",
+              dueDate: "",
+              tags: [],
+              assignee: "",
+              comments: [],
+              createdAt: "",
+            },
           ],
           [],
           [],
@@ -143,8 +179,30 @@ describe("useValidation Hook", () => {
         useValidation(
           isInitialized,
           [
-            { id: "invalid-1", title: "", status: "TODO", priority: "MEDIUM" },
-            { id: "invalid-2", title: "", status: "TODO", priority: "MEDIUM" },
+            {
+              id: "invalid-1",
+              title: "",
+              description: "",
+              status: "TODO",
+              priority: "MEDIUM",
+              dueDate: "",
+              tags: [],
+              assignee: "",
+              comments: [],
+              createdAt: "",
+            },
+            {
+              id: "invalid-2",
+              title: "",
+              description: "",
+              status: "TODO",
+              priority: "MEDIUM",
+              dueDate: "",
+              tags: [],
+              assignee: "",
+              comments: [],
+              createdAt: "",
+            },
           ],
           [],
           [],
@@ -255,11 +313,22 @@ describe("useValidation Hook", () => {
       )
     );
 
-    const mockResults = [
+    const mockResults: ValidationResult[] = [
       {
         type: "Test",
         isValid: false,
-        errors: [{ type: "Test", field: "test", message: "Test error", id: "test-1" }],
+        errors: [
+          {
+            type: "Test",
+            field: "test",
+            message: "Test error",
+            id: "test-1",
+            severity: "error",
+          },
+        ],
+        warnings: [],
+        validCount: 0,
+        totalCount: 1,
       },
     ];
 

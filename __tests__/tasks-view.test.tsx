@@ -2,8 +2,29 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import TasksView from "../app/dashboard/views/TasksView";
 import { TaskProvider } from "../app/dashboard/contexts/TaskContext";
 import { RequirementProvider } from "../app/dashboard/contexts/RequirementContext";
+import { EpicProvider } from "../app/dashboard/contexts/EpicContext";
 import type { Task, FormFields } from "../app/dashboard/types";
 import { act } from "react";
+
+jest.mock("../app/dashboard/services/api", () => ({
+  fetchTasks: jest.fn(async () => []),
+  fetchRequirements: jest.fn(async () => []),
+  fetchTestCases: jest.fn(async () => []),
+  fetchBugs: jest.fn(async () => []),
+  fetchGoals: jest.fn(async () => []),
+  fetchEpics: jest.fn(async () => []),
+  fetchAuditLogs: jest.fn(async () => []),
+  fetchComments: jest.fn(async () => []),
+  createTaskApi: jest.fn(async (task: any) => task),
+  updateTaskApi: jest.fn(async (_id: string, task: any) => task),
+  deleteTaskApi: jest.fn(async () => undefined),
+  createRequirementApi: jest.fn(async (req: any) => req),
+  updateRequirementApi: jest.fn(async (_id: string, req: any) => req),
+  deleteRequirementApi: jest.fn(async () => undefined),
+  createEpicApi: jest.fn(async (epic: any) => epic),
+  updateEpicApi: jest.fn(async (_id: string, epic: any) => epic),
+  deleteEpicApi: jest.fn(async () => undefined),
+}));
 
 let mockOnDragEnd: ((result: any) => void) | null = null;
 
@@ -79,23 +100,28 @@ describe("TasksView", () => {
   const mockSetEditingTask = jest.fn();
   const mockSetModalType = jest.fn();
   const mockSetFormData = jest.fn();
+  const mockSetShowModal = jest.fn();
 
   const renderWithProviders = (tasks: Task[] = mockTasks) => {
     return render(
-      <TaskProvider initialTasks={tasks}>
-        <RequirementProvider>
-          <TasksView
-            fontSizeScale={1}
-            isSmall={false}
-            getColumnWidth={() => "300px"}
-            onCreateTask={mockOnCreateTask}
-            onEditTask={mockOnEditTask}
-            setEditingTask={mockSetEditingTask}
-            setModalType={mockSetModalType}
-            setFormData={mockSetFormData}
-          />
-        </RequirementProvider>
-      </TaskProvider>
+      <EpicProvider>
+        <TaskProvider initialTasks={tasks}>
+          <RequirementProvider>
+            <TasksView
+              fontSizeScale={1}
+              isSmall={false}
+              getColumnWidth={() => "300px"}
+              onCreateTask={mockOnCreateTask}
+              onEditTask={mockOnEditTask}
+              setEditingTask={mockSetEditingTask}
+              setModalType={mockSetModalType}
+              setFormData={mockSetFormData}
+              setShowModal={mockSetShowModal}
+              currentEpicId={null}
+            />
+          </RequirementProvider>
+        </TaskProvider>
+      </EpicProvider>
     );
   };
 
@@ -292,6 +318,7 @@ describe("TasksView", () => {
 
     expect(mockSetEditingTask).toHaveBeenCalled();
     expect(mockSetModalType).toHaveBeenCalledWith("task");
+    expect(mockSetShowModal).toHaveBeenCalledWith(true);
     expect(mockSetFormData).toHaveBeenCalled();
   });
 
@@ -391,20 +418,24 @@ describe("TasksView", () => {
 
   it("should handle isSmall prop", () => {
     const { container } = render(
-      <TaskProvider initialTasks={mockTasks}>
-        <RequirementProvider>
-          <TasksView
-            fontSizeScale={1}
-            isSmall={true}
-            getColumnWidth={() => "200px"}
-            onCreateTask={mockOnCreateTask}
-            onEditTask={mockOnEditTask}
-            setEditingTask={mockSetEditingTask}
-            setModalType={mockSetModalType}
-            setFormData={mockSetFormData}
-          />
-        </RequirementProvider>
-      </TaskProvider>
+      <EpicProvider>
+        <TaskProvider initialTasks={mockTasks}>
+          <RequirementProvider>
+            <TasksView
+              fontSizeScale={1}
+              isSmall={true}
+              getColumnWidth={() => "200px"}
+              onCreateTask={mockOnCreateTask}
+              onEditTask={mockOnEditTask}
+              setEditingTask={mockSetEditingTask}
+              setModalType={mockSetModalType}
+              setFormData={mockSetFormData}
+              setShowModal={mockSetShowModal}
+              currentEpicId={null}
+            />
+          </RequirementProvider>
+        </TaskProvider>
+      </EpicProvider>
     );
 
     const columns = container.querySelectorAll('[role="region"]');
@@ -413,20 +444,24 @@ describe("TasksView", () => {
 
   it("should handle different fontSizeScale", () => {
     const { getByText } = render(
-      <TaskProvider initialTasks={mockTasks}>
-        <RequirementProvider>
-          <TasksView
-            fontSizeScale={0.8}
-            isSmall={false}
-            getColumnWidth={() => "300px"}
-            onCreateTask={mockOnCreateTask}
-            onEditTask={mockOnEditTask}
-            setEditingTask={mockSetEditingTask}
-            setModalType={mockSetModalType}
-            setFormData={mockSetFormData}
-          />
-        </RequirementProvider>
-      </TaskProvider>
+      <EpicProvider>
+        <TaskProvider initialTasks={mockTasks}>
+          <RequirementProvider>
+            <TasksView
+              fontSizeScale={0.8}
+              isSmall={false}
+              getColumnWidth={() => "300px"}
+              onCreateTask={mockOnCreateTask}
+              onEditTask={mockOnEditTask}
+              setEditingTask={mockSetEditingTask}
+              setModalType={mockSetModalType}
+              setFormData={mockSetFormData}
+              setShowModal={mockSetShowModal}
+              currentEpicId={null}
+            />
+          </RequirementProvider>
+        </TaskProvider>
+      </EpicProvider>
     );
 
     expect(getByText("Task Board")).toBeInTheDocument();
@@ -707,9 +742,9 @@ describe("TasksView", () => {
         assignee: "TestUser",
         createdAt: "2024-01-01",
         comments: [],
-        relatedRequirementId: null,
-        relatedGoalId: null,
-        figmaUrl: null,
+        relatedRequirementId: undefined,
+        relatedGoalId: undefined,
+        figmaUrl: undefined,
       },
     ];
 

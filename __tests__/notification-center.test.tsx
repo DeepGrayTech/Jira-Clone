@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, jest } from "@jest/globals";
+import "@testing-library/jest-dom/jest-globals";
 import { render, screen, fireEvent, waitFor, cleanup } from "@testing-library/react";
 import NotificationCenter from "../app/dashboard/components/NotificationCenter";
 import { NotificationProvider } from "../app/dashboard/contexts";

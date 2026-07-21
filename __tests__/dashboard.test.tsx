@@ -1,9 +1,85 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { useSession } from "next-auth/react";
 import Dashboard from "../app/dashboard/page";
-import { register, login } from "../lib/auth";
+
+jest.mock("next-auth/react", () => ({
+  ...jest.requireActual("next-auth/react"),
+  useSession: jest.fn(),
+  signIn: jest.fn(),
+  signOut: jest.fn(),
+  SessionProvider: ({ children }: { children?: import("react").ReactNode }) => children,
+}));
+
+jest.mock("next/navigation", () => ({
+  useRouter: () => ({
+    push: jest.fn(),
+    replace: jest.fn(),
+    prefetch: jest.fn(),
+    back: jest.fn(),
+  }),
+  useSearchParams: () => new URLSearchParams(),
+  usePathname: () => "/dashboard",
+}));
+
+jest.mock("../app/dashboard/services/api", () => ({
+  ...jest.requireActual("../app/dashboard/services/api"),
+  fetchTasks: jest.fn(async () => []),
+  fetchRequirements: jest.fn(async () => []),
+  fetchTestCases: jest.fn(async () => []),
+  fetchBugs: jest.fn(async () => []),
+  fetchGoals: jest.fn(async () => []),
+  fetchEpics: jest.fn(async () => []),
+  fetchAuditLogs: jest.fn(async () => []),
+  fetchComments: jest.fn(async () => []),
+  createTaskApi: jest.fn(async (t) => t),
+  updateTaskApi: jest.fn(async (_id, u) => ({ id: _id, ...u })),
+  deleteTaskApi: jest.fn(async () => undefined),
+  createRequirementApi: jest.fn(async (r) => r),
+  updateRequirementApi: jest.fn(async (_id, u) => ({ id: _id, ...u })),
+  deleteRequirementApi: jest.fn(async () => undefined),
+  createTestCaseApi: jest.fn(async (tc) => tc),
+  updateTestCaseApi: jest.fn(async (_id, u) => ({ id: _id, ...u })),
+  deleteTestCaseApi: jest.fn(async () => undefined),
+  createBugApi: jest.fn(async (b) => b),
+  updateBugApi: jest.fn(async (_id, u) => ({ id: _id, ...u })),
+  deleteBugApi: jest.fn(async () => undefined),
+  createGoalApi: jest.fn(async (g) => g),
+  updateGoalApi: jest.fn(async (_id, u) => ({ id: _id, ...u })),
+  deleteGoalApi: jest.fn(async () => undefined),
+  createMilestoneApi: jest.fn(async (m) => ({ id: "m1", ...m })),
+  updateMilestoneApi: jest.fn(async (_id, u) => ({ id: _id, ...u })),
+  deleteMilestoneApi: jest.fn(async () => undefined),
+  createKeyResultApi: jest.fn(async (kr) => ({ id: "kr1", ...kr })),
+  updateKeyResultApi: jest.fn(async (_id, u) => ({ id: _id, ...u })),
+  deleteKeyResultApi: jest.fn(async () => undefined),
+  createCommentApi: jest.fn(async (c) => c),
+  deleteCommentApi: jest.fn(async () => undefined),
+  createAuditLogApi: jest.fn(async (l) => l),
+  createEpicApi: jest.fn(async (e) => e),
+  updateEpicApi: jest.fn(async (_id, u) => ({ id: _id, ...u })),
+  deleteEpicApi: jest.fn(async () => undefined),
+  importDataApi: jest.fn(async () => ({ success: true, imported: {} })),
+}));
+
+type SessionStatus = "loading" | "authenticated" | "unauthenticated";
+
+let sessionState: {
+  data: { user: Record<string, unknown> } | null;
+  status: SessionStatus;
+};
+
+const setMockSession = (
+  user: Record<string, unknown> | null,
+  status: SessionStatus
+) => {
+  sessionState = { data: user ? { user } : null, status };
+};
 
 beforeEach(() => {
   jest.clearAllMocks();
+
+  setMockSession(null, "unauthenticated");
+  (useSession as jest.Mock).mockImplementation(() => sessionState);
 
   const localStorageMock = (() => {
     let store: Record<string, string> = {};
@@ -82,9 +158,11 @@ beforeEach(() => {
   });
 });
 
-const setupAuthenticatedUser = async () => {
-  await register("testuser", "test@example.com", "password123", "ADMIN");
-  await login("test@example.com", "password123");
+const setupAuthenticatedUser = () => {
+  setMockSession(
+    { id: "1", name: "testuser", email: "test@example.com", role: "ADMIN" },
+    "authenticated"
+  );
 };
 
 describe("Dashboard Component", () => {

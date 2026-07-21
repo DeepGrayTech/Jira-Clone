@@ -1,17 +1,28 @@
-import { render, screen, act, fireEvent } from "@testing-library/react";
+import { render, screen, act, waitFor, fireEvent } from "@testing-library/react";
 import { BugProvider, useBugs } from "../app/dashboard/contexts/BugContext";
 import type { Bug } from "../app/dashboard/types";
+
+jest.mock("../app/dashboard/services/api", () => ({
+  createBugApi: jest.fn(async (bug: Bug) => bug),
+  updateBugApi: jest.fn(async (_id: string, updates: Partial<Bug>) => ({ id: _id, ...updates })),
+  deleteBugApi: jest.fn(async () => undefined),
+}));
 
 describe("BugContext", () => {
   const testBug: Bug = {
     id: "bug-1",
     title: "Test Bug",
     description: "Test Description",
-    status: "OPEN",
+    status: "REPORTED",
     severity: "HIGH",
     priority: "HIGH",
+    stepsToReproduce: [],
+    expectedBehavior: "",
+    actualBehavior: "",
+    reporter: "Test Reporter",
     assignee: "Test User",
     createdAt: "2024-01-01",
+    updatedAt: "2024-01-01",
     comments: [],
   };
 
@@ -50,8 +61,8 @@ describe("BugContext", () => {
     expect(screen.getByTestId("bug-count").textContent).toBe("0");
   });
 
-  it("should add a bug", () => {
-    let addBug: (bug: Bug) => void;
+  it("should add a bug", async () => {
+    let addBug: (bug: Bug) => Promise<void>;
 
     renderWithProvider(
       <TestComponent 
@@ -61,17 +72,17 @@ describe("BugContext", () => {
 
     expect(screen.getByTestId("bug-count").textContent).toBe("0");
 
-    act(() => {
-      addBug(testBug);
+    await act(async () => {
+      await addBug(testBug);
     });
 
     expect(screen.getByTestId("bug-count").textContent).toBe("1");
     expect(screen.getByTestId("bug-bug-1-title").textContent).toBe("Test Bug");
   });
 
-  it("should update a bug", () => {
-    let addBug: (bug: Bug) => void;
-    let updateBug: (id: string, updates: Partial<Bug>) => void;
+  it("should update a bug", async () => {
+    let addBug: (bug: Bug) => Promise<void>;
+    let updateBug: (id: string, updates: Partial<Bug>) => Promise<void>;
 
     renderWithProvider(
       <TestComponent 
@@ -82,22 +93,24 @@ describe("BugContext", () => {
       />
     );
 
-    act(() => {
-      addBug(testBug);
+    await act(async () => {
+      await addBug(testBug);
     });
 
-    expect(screen.getByTestId("bug-bug-1-status").textContent).toBe("OPEN");
+    expect(screen.getByTestId("bug-bug-1-status").textContent).toBe("REPORTED");
 
-    act(() => {
-      updateBug("bug-1", { status: "IN_PROGRESS", description: "Updated Description" });
+    await act(async () => {
+      await updateBug("bug-1", { status: "IN_PROGRESS", description: "Updated Description" });
     });
 
-    expect(screen.getByTestId("bug-bug-1-status").textContent).toBe("IN_PROGRESS");
+    await waitFor(() => {
+      expect(screen.getByTestId("bug-bug-1-status").textContent).toBe("IN_PROGRESS");
+    });
   });
 
-  it("should delete a bug", () => {
-    let addBug: (bug: Bug) => void;
-    let deleteBug: (id: string) => void;
+  it("should delete a bug", async () => {
+    let addBug: (bug: Bug) => Promise<void>;
+    let deleteBug: (id: string) => Promise<void>;
 
     renderWithProvider(
       <TestComponent 
@@ -108,22 +121,22 @@ describe("BugContext", () => {
       />
     );
 
-    act(() => {
-      addBug(testBug);
+    await act(async () => {
+      await addBug(testBug);
     });
 
     expect(screen.getByTestId("bug-count").textContent).toBe("1");
 
-    act(() => {
-      deleteBug("bug-1");
+    await act(async () => {
+      await deleteBug("bug-1");
     });
 
     expect(screen.getByTestId("bug-count").textContent).toBe("0");
     expect(screen.queryByTestId("bug-bug-1")).not.toBeInTheDocument();
   });
 
-  it("should get bug by id", () => {
-    let addBug: (bug: Bug) => void;
+  it("should get bug by id", async () => {
+    let addBug: (bug: Bug) => Promise<void>;
     let foundBug: Bug | undefined;
 
     renderWithProvider(
@@ -137,8 +150,8 @@ describe("BugContext", () => {
       />
     );
 
-    act(() => {
-      addBug(testBug);
+    await act(async () => {
+      await addBug(testBug);
     });
 
     fireEvent.click(screen.getByTestId("action-btn"));
@@ -175,8 +188,8 @@ describe("BugContext", () => {
     }).toThrow("useBugs must be used within BugProvider");
   });
 
-  it("should handle multiple bugs", () => {
-    let addBug: (bug: Bug) => void;
+  it("should handle multiple bugs", async () => {
+    let addBug: (bug: Bug) => Promise<void>;
 
     renderWithProvider(
       <TestComponent 
@@ -186,10 +199,10 @@ describe("BugContext", () => {
       />
     );
 
-    act(() => {
-      addBug(testBug);
-      addBug({ ...testBug, id: "bug-2", title: "Test Bug 2" });
-      addBug({ ...testBug, id: "bug-3", title: "Test Bug 3" });
+    await act(async () => {
+      await addBug(testBug);
+      await addBug({ ...testBug, id: "bug-2", title: "Test Bug 2" });
+      await addBug({ ...testBug, id: "bug-3", title: "Test Bug 3" });
     });
 
     expect(screen.getByTestId("bug-count").textContent).toBe("3");
@@ -198,9 +211,9 @@ describe("BugContext", () => {
     expect(screen.getByTestId("bug-bug-3-title").textContent).toBe("Test Bug 3");
   });
 
-  it("should update only the specified bug", () => {
-    let addBug: (bug: Bug) => void;
-    let updateBug: (id: string, updates: Partial<Bug>) => void;
+  it("should update only the specified bug", async () => {
+    let addBug: (bug: Bug) => Promise<void>;
+    let updateBug: (id: string, updates: Partial<Bug>) => Promise<void>;
 
     renderWithProvider(
       <TestComponent 
@@ -211,22 +224,24 @@ describe("BugContext", () => {
       />
     );
 
-    act(() => {
-      addBug(testBug);
-      addBug({ ...testBug, id: "bug-2", title: "Test Bug 2" });
+    await act(async () => {
+      await addBug(testBug);
+      await addBug({ ...testBug, id: "bug-2", title: "Test Bug 2" });
     });
 
-    act(() => {
-      updateBug("bug-1", { status: "RESOLVED" });
+    await act(async () => {
+      await updateBug("bug-1", { status: "RESOLVED" });
     });
 
-    expect(screen.getByTestId("bug-bug-1-status").textContent).toBe("RESOLVED");
-    expect(screen.getByTestId("bug-bug-2-status").textContent).toBe("OPEN");
+    await waitFor(() => {
+      expect(screen.getByTestId("bug-bug-1-status").textContent).toBe("RESOLVED");
+      expect(screen.getByTestId("bug-bug-2-status").textContent).toBe("REPORTED");
+    });
   });
 
-  it("should delete only the specified bug", () => {
-    let addBug: (bug: Bug) => void;
-    let deleteBug: (id: string) => void;
+  it("should delete only the specified bug", async () => {
+    let addBug: (bug: Bug) => Promise<void>;
+    let deleteBug: (id: string) => Promise<void>;
 
     renderWithProvider(
       <TestComponent 
@@ -237,14 +252,14 @@ describe("BugContext", () => {
       />
     );
 
-    act(() => {
-      addBug(testBug);
-      addBug({ ...testBug, id: "bug-2", title: "Test Bug 2" });
-      addBug({ ...testBug, id: "bug-3", title: "Test Bug 3" });
+    await act(async () => {
+      await addBug(testBug);
+      await addBug({ ...testBug, id: "bug-2", title: "Test Bug 2" });
+      await addBug({ ...testBug, id: "bug-3", title: "Test Bug 3" });
     });
 
-    act(() => {
-      deleteBug("bug-2");
+    await act(async () => {
+      await deleteBug("bug-2");
     });
 
     expect(screen.getByTestId("bug-count").textContent).toBe("2");

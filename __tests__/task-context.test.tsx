@@ -1,11 +1,17 @@
-import { render, screen, act } from "@testing-library/react";
+import { render, screen, act, waitFor } from "@testing-library/react";
 import { TaskProvider, useTasks } from "../app/dashboard/contexts/TaskContext";
 import type { Task } from "../app/dashboard/types";
+
+jest.mock("../app/dashboard/services/api", () => ({
+  createTaskApi: jest.fn(async (task: Task) => task),
+  updateTaskApi: jest.fn(async (_id: string, updates: Partial<Task>) => ({ id: _id, ...updates })),
+  deleteTaskApi: jest.fn(async () => undefined),
+}));
 
 const TestComponent = ({
   onRender,
 }: {
-  onRender: (context: ReturnType<typeof useTasks>) => void;
+  onRender?: (context: ReturnType<typeof useTasks>) => void;
 }) => {
   const context = useTasks();
   if (onRender) onRender(context);
@@ -28,7 +34,9 @@ const testTask: Task = {
   description: "Test description",
   status: "TODO",
   priority: "MEDIUM",
+  dueDate: new Date().toISOString(),
   tags: ["tag1"],
+  assignee: "tester",
   createdAt: new Date().toISOString(),
   comments: [],
 };
@@ -55,8 +63,8 @@ describe("TaskContext", () => {
     expect(screen.getByTestId("task-task-1-title").textContent).toBe("Test Task");
   });
 
-  it("should add a task", () => {
-    let addTask: (task: Task) => void;
+  it("should add a task", async () => {
+    let addTask: (task: Task) => Promise<void>;
 
     render(
       <TaskProvider>
@@ -64,17 +72,17 @@ describe("TaskContext", () => {
       </TaskProvider>
     );
 
-    act(() => {
-      addTask(testTask);
+    await act(async () => {
+      await addTask(testTask);
     });
 
     expect(screen.getByTestId("task-count").textContent).toBe("1");
     expect(screen.getByTestId("task-task-1-title").textContent).toBe("Test Task");
   });
 
-  it("should update a task", () => {
-    let addTask: (task: Task) => void;
-    let updateTask: (id: string, updates: Partial<Task>) => void;
+  it("should update a task", async () => {
+    let addTask: (task: Task) => Promise<void>;
+    let updateTask: (id: string, updates: Partial<Task>) => Promise<void>;
 
     render(
       <TaskProvider>
@@ -82,22 +90,24 @@ describe("TaskContext", () => {
       </TaskProvider>
     );
 
-    act(() => {
-      addTask(testTask);
+    await act(async () => {
+      await addTask(testTask);
     });
 
     expect(screen.getByTestId("task-task-1-status").textContent).toBe("TODO");
 
-    act(() => {
-      updateTask("task-1", { status: "IN_PROGRESS", priority: "HIGH" });
+    await act(async () => {
+      await updateTask("task-1", { status: "IN_PROGRESS", priority: "HIGH" });
     });
 
-    expect(screen.getByTestId("task-task-1-status").textContent).toBe("IN_PROGRESS");
+    await waitFor(() => {
+      expect(screen.getByTestId("task-task-1-status").textContent).toBe("IN_PROGRESS");
+    });
   });
 
-  it("should delete a task", () => {
-    let addTask: (task: Task) => void;
-    let deleteTask: (id: string) => void;
+  it("should delete a task", async () => {
+    let addTask: (task: Task) => Promise<void>;
+    let deleteTask: (id: string) => Promise<void>;
 
     render(
       <TaskProvider>
@@ -105,23 +115,23 @@ describe("TaskContext", () => {
       </TaskProvider>
     );
 
-    act(() => {
-      addTask(testTask);
+    await act(async () => {
+      await addTask(testTask);
     });
 
     expect(screen.getByTestId("task-count").textContent).toBe("1");
 
-    act(() => {
-      deleteTask("task-1");
+    await act(async () => {
+      await deleteTask("task-1");
     });
 
     expect(screen.getByTestId("task-count").textContent).toBe("0");
     expect(screen.queryByTestId("task-task-1")).not.toBeInTheDocument();
   });
 
-  it("should get task by id", () => {
-    let addTask: (task: Task) => void;
-    let getTaskById: (id: string) => Task | undefined;
+  it("should get task by id", async () => {
+    let addTask: (task: Task) => Promise<void>;
+    let getTaskById!: (id: string) => Task | undefined;
 
     render(
       <TaskProvider>
@@ -129,8 +139,8 @@ describe("TaskContext", () => {
       </TaskProvider>
     );
 
-    act(() => {
-      addTask(testTask);
+    await act(async () => {
+      await addTask(testTask);
     });
 
     const found = getTaskById("task-1");
@@ -139,7 +149,7 @@ describe("TaskContext", () => {
   });
 
   it("should return undefined for non-existent task", () => {
-    let getTaskById: (id: string) => Task | undefined;
+    let getTaskById!: (id: string) => Task | undefined;
 
     render(
       <TaskProvider>
@@ -167,14 +177,8 @@ describe("TaskContext", () => {
     expect(screen.getByTestId("task-count").textContent).toBe("1");
   });
 
-  it("should throw error when useTasks is used outside TaskProvider", () => {
-    expect(() => {
-      render(<TestComponent />);
-    }).toThrow("useTasks must be used within TaskProvider");
-  });
-
-  it("should handle multiple tasks", () => {
-    let addTask: (task: Task) => void;
+  it("should handle multiple tasks", async () => {
+    let addTask: (task: Task) => Promise<void>;
 
     render(
       <TaskProvider>
@@ -182,9 +186,9 @@ describe("TaskContext", () => {
       </TaskProvider>
     );
 
-    act(() => {
-      addTask(testTask);
-      addTask({
+    await act(async () => {
+      await addTask(testTask);
+      await addTask({
         ...testTask,
         id: "task-2",
         title: "Second Task",
@@ -193,5 +197,11 @@ describe("TaskContext", () => {
 
     expect(screen.getByTestId("task-count").textContent).toBe("2");
     expect(screen.getByTestId("task-task-2-title").textContent).toBe("Second Task");
+  });
+
+  it("should throw error when useTasks is used outside TaskProvider", () => {
+    expect(() => {
+      render(<TestComponent />);
+    }).toThrow("useTasks must be used within TaskProvider");
   });
 });

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { login, register } from "@/lib/auth";
+import { signIn } from "next-auth/react";
 import type { UserRole } from "@/lib/auth";
 
 interface LoginFormProps {
@@ -23,48 +23,76 @@ const COLORS = {
 
 export default function LoginForm({ onLoginSuccess }: LoginFormProps) {
   const [isRegister, setIsRegister] = useState(false);
-  const [email, setEmail] = useState("admin@example.com");
-  const [password, setPassword] = useState("admin123");
+  const [email, setEmail] = useState("demo@example.com");
+  const [password, setPassword] = useState("demo123");
   const [username, setUsername] = useState("");
   const [role, setRole] = useState<UserRole>("USER");
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState<"success" | "error" | "info">("info");
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Refs to hold timer IDs for cleanup on unmount
   const registerTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const loginTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Cleanup timers on unmount to prevent memory leaks and stale callbacks
   useEffect(() => {
     return () => {
       if (registerTimerRef.current) clearTimeout(registerTimerRef.current);
-      if (loginTimerRef.current) clearTimeout(loginTimerRef.current);
     };
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setMessage("");
+    setIsLoading(true);
 
     if (isRegister) {
-      const result = await register(username, email, password, role);
-      setMessage(result.message);
-      setMessageType(result.success ? "success" : "error");
-      if (result.success) {
-        registerTimerRef.current = setTimeout(() => {
-          setIsRegister(false);
-          setUsername("");
-          setEmail("");
-          setPassword("");
-          setMessage("");
-        }, 2000);
+      try {
+        const response = await fetch("/api/auth/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, email, password, role }),
+        });
+        const result = await response.json();
+        setMessage(result.message);
+        setMessageType(response.ok ? "success" : "error");
+
+        if (response.ok) {
+          registerTimerRef.current = setTimeout(() => {
+            setIsRegister(false);
+            setUsername("");
+            setEmail(email);
+            setPassword("");
+            setMessage("");
+          }, 2000);
+        }
+      } catch (error) {
+        setMessage(error instanceof Error ? error.message : "Registration failed");
+        setMessageType("error");
+      } finally {
+        setIsLoading(false);
       }
-    } else {
-      const result = await login(email, password);
-      setMessage(result.message);
-      setMessageType(result.success ? "success" : "error");
-      if (result.success) {
-        loginTimerRef.current = setTimeout(onLoginSuccess, 500);
+      return;
+    }
+
+    // Login via NextAuth credentials provider
+    const result = await signIn("credentials", {
+      email,
+      password,
+      redirect: false,
+      callbackUrl: "/dashboard",
+    });
+
+    setIsLoading(false);
+
+    if (result?.error) {
+      setMessage(result.error === "CredentialsSignin" ? "Invalid email or password" : result.error);
+      setMessageType("error");
+    } else if (result?.ok) {
+      setMessage("Login successful");
+      setMessageType("success");
+      onLoginSuccess();
+      // 登录成功后整页刷新，确保 NextAuth session 立即生效
+      if (typeof window !== "undefined") {
+        window.location.href = "/dashboard";
       }
     }
   };
@@ -282,6 +310,7 @@ export default function LoginForm({ onLoginSuccess }: LoginFormProps) {
 
           <button
             type="submit"
+            disabled={isLoading}
             aria-label={isRegister ? "Register account" : "Log in"}
             style={{
               width: "100%",
@@ -290,10 +319,11 @@ export default function LoginForm({ onLoginSuccess }: LoginFormProps) {
               color: "#ffffff",
               border: "none",
               borderRadius: "6px",
-              cursor: "pointer",
+              cursor: isLoading ? "not-allowed" : "pointer",
               fontSize: "16px",
               fontWeight: 600,
               transition: "background 0.2s",
+              opacity: isLoading ? 0.7 : 1,
             }}
             onMouseOver={(e) => {
               e.currentTarget.style.background = COLORS.buttonPrimaryHover;
@@ -302,7 +332,7 @@ export default function LoginForm({ onLoginSuccess }: LoginFormProps) {
               e.currentTarget.style.background = COLORS.buttonPrimary;
             }}
           >
-            {isRegister ? "Register" : "Login"}
+            {isLoading ? "Please wait..." : isRegister ? "Register" : "Login"}
           </button>
         </form>
 
@@ -347,11 +377,9 @@ export default function LoginForm({ onLoginSuccess }: LoginFormProps) {
               color: "#166534",
             }}
           >
-            {/* Demo-only: Default admin credentials shown for testing purposes.
-              In production, remove this section and use environment variables for credentials. */}
-            <p style={{ margin: "0 0 8px 0", fontWeight: 600 }}>Default Admin Account:</p>
-            <p style={{ margin: "4px 0", fontWeight: 500 }}>Email: admin@example.com</p>
-            <p style={{ margin: "4px 0", fontWeight: 500 }}>Password: admin123</p>
+            <p style={{ margin: "0 0 8px 0", fontWeight: 600 }}>Default Demo Account:</p>
+            <p style={{ margin: "4px 0", fontWeight: 500 }}>Email: demo@example.com</p>
+            <p style={{ margin: "4px 0", fontWeight: 500 }}>Password: demo123</p>
           </div>
         )}
       </div>

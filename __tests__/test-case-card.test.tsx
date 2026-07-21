@@ -4,14 +4,12 @@ import type { TestCase, Requirement } from "../app/dashboard/types";
 
 const mockTestCase: TestCase = {
   id: "tc-1",
+  requirementId: "req-1",
   title: "Test Case",
   description: "Test description",
   status: "PENDING",
-  priority: "MEDIUM",
-  preconditions: ["Precondition 1"],
-  testSteps: ["Step 1"],
-  expectedResults: ["Result 1"],
-  tags: ["tag1"],
+  steps: ["Step 1"],
+  expectedResult: "Result 1",
 };
 
 const mockRequirement: Requirement = {
@@ -20,10 +18,11 @@ const mockRequirement: Requirement = {
   description: "",
   status: "DRAFT",
   priority: "MEDIUM",
-  tags: [],
   acceptanceCriteria: [],
   createdAt: "2024-01-01",
   updatedAt: "2024-01-01",
+  requester: "Requester",
+  executor: "Executor",
 };
 
 describe("TestCaseCard", () => {

@@ -95,3 +95,8 @@ test-results.txt
 .cache/
 tmp/
 temp/
+
+# SQLite / Prisma
+*.db
+*.db-journal
+prisma/migrations/

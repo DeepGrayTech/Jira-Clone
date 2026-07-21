@@ -1,55 +1,44 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { getAuthState, logout, type User } from "@/lib/auth";
+import { useSession, signOut } from "next-auth/react";
+import { useEffect, useState } from "react";
 
-/**
- * Authentication hook.
- * Manages authentication state and login/logout handlers.
- * Does NOT record audit logs - the caller should wrap handlers with audit logging.
- */
+export interface AuthUser {
+  id: string;
+  email: string;
+  name?: string;
+  username?: string;
+  role?: string;
+}
+
 export function useAuth() {
+  const { data: session, status } = useSession();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
 
-  /**
-   * Initialize authentication state on component mount.
-   * Checks localStorage for existing auth token and user.
-   */
   useEffect(() => {
-    const auth = getAuthState();
-    setIsAuthenticated(auth.isAuthenticated);
-    setCurrentUser(auth.user);
-  }, []);
+    if (status === "authenticated" && session?.user) {
+      setIsAuthenticated(true);
+      const fallbackName = session.user.name || session.user.email || "Unknown";
+      setCurrentUser({
+        id: session.user.id || "",
+        email: session.user.email || "",
+        name: session.user.name || undefined,
+        username: fallbackName,
+        role: (session.user as any).role || "USER",
+      });
+    } else if (status === "unauthenticated") {
+      setIsAuthenticated(false);
+      setCurrentUser(null);
+    }
+  }, [session, status]);
 
-  /**
-   * Handle successful login.
-   * Updates authentication state after login form submission.
-   */
   const handleLoginSuccess = () => {
-    const auth = getAuthState();
-    console.log("[useAuth] 登录成功:", {
-      username: auth.user?.username,
-      email: auth.user?.email,
-      timestamp: new Date().toISOString(),
-    });
-    setIsAuthenticated(auth.isAuthenticated);
-    setCurrentUser(auth.user);
+    // NextAuth session is automatically refreshed after signIn callback
   };
 
-  /**
-   * Handle logout.
-   * Clears auth token and resets authentication state.
-   */
   const handleLogout = () => {
-    console.log("[useAuth] 登出:", {
-      username: currentUser?.username,
-      email: currentUser?.email,
-      timestamp: new Date().toISOString(),
-    });
-    logout();
-    setIsAuthenticated(false);
-    setCurrentUser(null);
+    signOut({ callbackUrl: "/" });
   };
 
   return {

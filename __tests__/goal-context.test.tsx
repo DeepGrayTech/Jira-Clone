@@ -1,6 +1,32 @@
-import { render, act } from "@testing-library/react";
+import { render, screen, act, waitFor } from "@testing-library/react";
 import { GoalProvider, useGoals } from "../app/dashboard/contexts/GoalContext";
 import type { Goal, Milestone, KeyResult } from "../app/dashboard/types";
+
+jest.mock("../app/dashboard/services/api", () => ({
+  createGoalApi: jest.fn(async (goal: Goal) => goal),
+  updateGoalApi: jest.fn(async (_id: string, updates: Partial<Goal>) => ({ id: _id, ...updates })),
+  deleteGoalApi: jest.fn(async () => undefined),
+  createMilestoneApi: jest.fn(async (payload: { title: string; dueDate: string; status: string; goalId: string }) => ({
+    id: "m1",
+    goalId: payload.goalId,
+    title: payload.title,
+    dueDate: payload.dueDate,
+    completed: payload.status === "COMPLETED",
+  })),
+  updateMilestoneApi: jest.fn(async (_id: string, updates: Partial<Milestone>) => ({ id: _id, ...updates })),
+  deleteMilestoneApi: jest.fn(async () => undefined),
+  createKeyResultApi: jest.fn(async (payload: { title: string; target: number; current: number; status: string; goalId: string }) => ({
+    id: "kr1",
+    goalId: payload.goalId,
+    title: payload.title,
+    targetValue: payload.target,
+    currentValue: payload.current,
+    status: payload.status,
+    unit: "%",
+  })),
+  updateKeyResultApi: jest.fn(async (_id: string, updates: Partial<KeyResult>) => ({ id: _id, ...updates })),
+  deleteKeyResultApi: jest.fn(async () => undefined),
+}));
 
 describe("GoalContext", () => {
   const mockGoal: Goal = {
@@ -38,286 +64,272 @@ describe("GoalContext", () => {
     status: "ON_TRACK",
   };
 
-  const TestComponent = () => {
-    const {
-      goals,
-      milestones,
-      keyResults,
-      addGoal,
-      updateGoal,
-      deleteGoal,
-      addMilestone,
-      updateMilestone,
-      deleteMilestone,
-      addKeyResult,
-      updateKeyResult,
-      deleteKeyResult,
-      setGoals,
-      setMilestones,
-      setKeyResults,
-    } = useGoals();
-
+  const TestComponent = ({ onRender }: { onRender?: (context: ReturnType<typeof useGoals>) => void }) => {
+    const context = useGoals();
+    if (onRender) onRender(context);
     return (
       <div>
-        <div data-testid="goals-count">{goals.length}</div>
-        <div data-testid="milestones-count">{milestones.length}</div>
-        <div data-testid="keyresults-count">{keyResults.length}</div>
-        <button
-          data-testid="add-goal"
-          onClick={() => addGoal(mockGoal)}
-        />
-        <button
-          data-testid="update-goal"
-          onClick={() => updateGoal("g1", { title: "Updated Goal" })}
-        />
-        <button
-          data-testid="delete-goal"
-          onClick={() => deleteGoal("g1")}
-        />
-        <button
-          data-testid="add-milestone"
-          onClick={() => addMilestone(mockMilestone)}
-        />
-        <button
-          data-testid="update-milestone"
-          onClick={() => updateMilestone("m1", { completed: true })}
-        />
-        <button
-          data-testid="delete-milestone"
-          onClick={() => deleteMilestone("m1")}
-        />
-        <button
-          data-testid="add-keyresult"
-          onClick={() => addKeyResult(mockKeyResult)}
-        />
-        <button
-          data-testid="update-keyresult"
-          onClick={() => updateKeyResult("kr1", { currentValue: 75 })}
-        />
-        <button
-          data-testid="delete-keyresult"
-          onClick={() => deleteKeyResult("kr1")}
-        />
-        <button
-          data-testid="set-goals"
-          onClick={() => setGoals([mockGoal])}
-        />
-        <button
-          data-testid="set-milestones"
-          onClick={() => setMilestones([mockMilestone])}
-        />
-        <button
-          data-testid="set-keyresults"
-          onClick={() => setKeyResults([mockKeyResult])}
-        />
+        <div data-testid="goals-count">{context.goals.length}</div>
+        <div data-testid="milestones-count">{context.milestones.length}</div>
+        <div data-testid="keyresults-count">{context.keyResults.length}</div>
       </div>
     );
   };
 
-  const renderWithProvider = () => {
+  const renderWithProvider = (onRender?: (context: ReturnType<typeof useGoals>) => void) => {
     return render(
       <GoalProvider>
-        <TestComponent />
+        <TestComponent onRender={onRender} />
       </GoalProvider>
     );
   };
 
   it("should initialize with empty state", () => {
-    const { getByTestId } = renderWithProvider();
+    renderWithProvider();
 
-    expect(getByTestId("goals-count").textContent).toBe("0");
-    expect(getByTestId("milestones-count").textContent).toBe("0");
-    expect(getByTestId("keyresults-count").textContent).toBe("0");
+    expect(screen.getByTestId("goals-count").textContent).toBe("0");
+    expect(screen.getByTestId("milestones-count").textContent).toBe("0");
+    expect(screen.getByTestId("keyresults-count").textContent).toBe("0");
   });
 
-  it("should add a goal", () => {
-    const { getByTestId } = renderWithProvider();
+  it("should add a goal", async () => {
+    let addGoal: (goal: Goal) => Promise<void>;
+    renderWithProvider((ctx) => { addGoal = ctx.addGoal; });
 
-    act(() => {
-      getByTestId("add-goal").click();
+    await act(async () => {
+      await addGoal(mockGoal);
     });
 
-    expect(getByTestId("goals-count").textContent).toBe("1");
+    expect(screen.getByTestId("goals-count").textContent).toBe("1");
   });
 
-  it("should update a goal", () => {
-    const { getByTestId } = renderWithProvider();
+  it("should update a goal", async () => {
+    let addGoal: (goal: Goal) => Promise<void>;
+    let updateGoal: (id: string, updates: Partial<Goal>) => Promise<void>;
+    renderWithProvider((ctx) => { addGoal = ctx.addGoal; updateGoal = ctx.updateGoal; });
 
-    act(() => {
-      getByTestId("add-goal").click();
+    await act(async () => {
+      await addGoal(mockGoal);
     });
 
-    act(() => {
-      getByTestId("update-goal").click();
+    await act(async () => {
+      await updateGoal("g1", { title: "Updated Goal" });
     });
 
-    expect(getByTestId("goals-count").textContent).toBe("1");
+    expect(screen.getByTestId("goals-count").textContent).toBe("1");
   });
 
-  it("should delete a goal", () => {
-    const { getByTestId } = renderWithProvider();
+  it("should delete a goal", async () => {
+    let addGoal: (goal: Goal) => Promise<void>;
+    let deleteGoal: (id: string) => Promise<void>;
+    renderWithProvider((ctx) => { addGoal = ctx.addGoal; deleteGoal = ctx.deleteGoal; });
 
-    act(() => {
-      getByTestId("add-goal").click();
+    await act(async () => {
+      await addGoal(mockGoal);
     });
 
-    expect(getByTestId("goals-count").textContent).toBe("1");
+    expect(screen.getByTestId("goals-count").textContent).toBe("1");
 
-    act(() => {
-      getByTestId("delete-goal").click();
+    await act(async () => {
+      await deleteGoal("g1");
     });
 
-    expect(getByTestId("goals-count").textContent).toBe("0");
+    expect(screen.getByTestId("goals-count").textContent).toBe("0");
   });
 
-  it("should delete associated milestones when deleting a goal", () => {
-    const { getByTestId } = renderWithProvider();
-
-    act(() => {
-      getByTestId("add-goal").click();
+  it("should delete associated milestones when deleting a goal", async () => {
+    let addGoal: (goal: Goal) => Promise<void>;
+    let addMilestone: (milestone: Milestone) => Promise<void>;
+    let deleteGoal: (id: string) => Promise<void>;
+    renderWithProvider((ctx) => {
+      addGoal = ctx.addGoal;
+      addMilestone = ctx.addMilestone;
+      deleteGoal = ctx.deleteGoal;
     });
 
-    act(() => {
-      getByTestId("add-milestone").click();
+    await act(async () => {
+      await addGoal(mockGoal);
+      await addMilestone(mockMilestone);
     });
 
-    expect(getByTestId("milestones-count").textContent).toBe("1");
-
-    act(() => {
-      getByTestId("delete-goal").click();
+    await waitFor(() => {
+      expect(screen.getByTestId("milestones-count").textContent).toBe("1");
     });
 
-    expect(getByTestId("milestones-count").textContent).toBe("0");
+    await act(async () => {
+      await deleteGoal("g1");
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("milestones-count").textContent).toBe("0");
+    });
   });
 
-  it("should delete associated key results when deleting a goal", () => {
-    const { getByTestId } = renderWithProvider();
-
-    act(() => {
-      getByTestId("add-goal").click();
+  it("should delete associated key results when deleting a goal", async () => {
+    let addGoal: (goal: Goal) => Promise<void>;
+    let addKeyResult: (keyResult: KeyResult) => Promise<void>;
+    let deleteGoal: (id: string) => Promise<void>;
+    renderWithProvider((ctx) => {
+      addGoal = ctx.addGoal;
+      addKeyResult = ctx.addKeyResult;
+      deleteGoal = ctx.deleteGoal;
     });
 
-    act(() => {
-      getByTestId("add-keyresult").click();
+    await act(async () => {
+      await addGoal(mockGoal);
+      await addKeyResult(mockKeyResult);
     });
 
-    expect(getByTestId("keyresults-count").textContent).toBe("1");
-
-    act(() => {
-      getByTestId("delete-goal").click();
+    await waitFor(() => {
+      expect(screen.getByTestId("keyresults-count").textContent).toBe("1");
     });
 
-    expect(getByTestId("keyresults-count").textContent).toBe("0");
+    await act(async () => {
+      await deleteGoal("g1");
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("keyresults-count").textContent).toBe("0");
+    });
   });
 
-  it("should add a milestone", () => {
-    const { getByTestId } = renderWithProvider();
+  it("should add a milestone", async () => {
+    let addMilestone: (milestone: Milestone) => Promise<void>;
+    renderWithProvider((ctx) => { addMilestone = ctx.addMilestone; });
 
-    act(() => {
-      getByTestId("add-milestone").click();
+    await act(async () => {
+      await addMilestone(mockMilestone);
     });
 
-    expect(getByTestId("milestones-count").textContent).toBe("1");
+    await waitFor(() => {
+      expect(screen.getByTestId("milestones-count").textContent).toBe("1");
+    });
   });
 
-  it("should update a milestone", () => {
-    const { getByTestId } = renderWithProvider();
+  it("should update a milestone", async () => {
+    let addMilestone: (milestone: Milestone) => Promise<void>;
+    let updateMilestone: (id: string, updates: Partial<Milestone>) => Promise<void>;
+    renderWithProvider((ctx) => { addMilestone = ctx.addMilestone; updateMilestone = ctx.updateMilestone; });
 
-    act(() => {
-      getByTestId("add-milestone").click();
+    await act(async () => {
+      await addMilestone(mockMilestone);
     });
 
-    act(() => {
-      getByTestId("update-milestone").click();
+    await act(async () => {
+      await updateMilestone("m1", { completed: true });
     });
 
-    expect(getByTestId("milestones-count").textContent).toBe("1");
+    await waitFor(() => {
+      expect(screen.getByTestId("milestones-count").textContent).toBe("1");
+    });
   });
 
-  it("should delete a milestone", () => {
-    const { getByTestId } = renderWithProvider();
+  it("should delete a milestone", async () => {
+    let addMilestone: (milestone: Milestone) => Promise<void>;
+    let deleteMilestone: (id: string) => Promise<void>;
+    renderWithProvider((ctx) => { addMilestone = ctx.addMilestone; deleteMilestone = ctx.deleteMilestone; });
 
-    act(() => {
-      getByTestId("add-milestone").click();
+    await act(async () => {
+      await addMilestone(mockMilestone);
     });
 
-    expect(getByTestId("milestones-count").textContent).toBe("1");
-
-    act(() => {
-      getByTestId("delete-milestone").click();
+    await waitFor(() => {
+      expect(screen.getByTestId("milestones-count").textContent).toBe("1");
     });
 
-    expect(getByTestId("milestones-count").textContent).toBe("0");
+    await act(async () => {
+      await deleteMilestone("m1");
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("milestones-count").textContent).toBe("0");
+    });
   });
 
-  it("should add a key result", () => {
-    const { getByTestId } = renderWithProvider();
+  it("should add a key result", async () => {
+    let addKeyResult: (keyResult: KeyResult) => Promise<void>;
+    renderWithProvider((ctx) => { addKeyResult = ctx.addKeyResult; });
 
-    act(() => {
-      getByTestId("add-keyresult").click();
+    await act(async () => {
+      await addKeyResult(mockKeyResult);
     });
 
-    expect(getByTestId("keyresults-count").textContent).toBe("1");
+    await waitFor(() => {
+      expect(screen.getByTestId("keyresults-count").textContent).toBe("1");
+    });
   });
 
-  it("should update a key result", () => {
-    const { getByTestId } = renderWithProvider();
+  it("should update a key result", async () => {
+    let addKeyResult: (keyResult: KeyResult) => Promise<void>;
+    let updateKeyResult: (id: string, updates: Partial<KeyResult>) => Promise<void>;
+    renderWithProvider((ctx) => { addKeyResult = ctx.addKeyResult; updateKeyResult = ctx.updateKeyResult; });
 
-    act(() => {
-      getByTestId("add-keyresult").click();
+    await act(async () => {
+      await addKeyResult(mockKeyResult);
     });
 
-    act(() => {
-      getByTestId("update-keyresult").click();
+    await act(async () => {
+      await updateKeyResult("kr1", { currentValue: 75 });
     });
 
-    expect(getByTestId("keyresults-count").textContent).toBe("1");
+    await waitFor(() => {
+      expect(screen.getByTestId("keyresults-count").textContent).toBe("1");
+    });
   });
 
-  it("should delete a key result", () => {
-    const { getByTestId } = renderWithProvider();
+  it("should delete a key result", async () => {
+    let addKeyResult: (keyResult: KeyResult) => Promise<void>;
+    let deleteKeyResult: (id: string) => Promise<void>;
+    renderWithProvider((ctx) => { addKeyResult = ctx.addKeyResult; deleteKeyResult = ctx.deleteKeyResult; });
 
-    act(() => {
-      getByTestId("add-keyresult").click();
+    await act(async () => {
+      await addKeyResult(mockKeyResult);
     });
 
-    expect(getByTestId("keyresults-count").textContent).toBe("1");
-
-    act(() => {
-      getByTestId("delete-keyresult").click();
+    await waitFor(() => {
+      expect(screen.getByTestId("keyresults-count").textContent).toBe("1");
     });
 
-    expect(getByTestId("keyresults-count").textContent).toBe("0");
+    await act(async () => {
+      await deleteKeyResult("kr1");
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("keyresults-count").textContent).toBe("0");
+    });
   });
 
   it("should set goals directly", () => {
-    const { getByTestId } = renderWithProvider();
+    let setGoals: React.Dispatch<React.SetStateAction<Goal[]>>;
+    renderWithProvider((ctx) => { setGoals = ctx.setGoals; });
 
     act(() => {
-      getByTestId("set-goals").click();
+      setGoals([mockGoal]);
     });
 
-    expect(getByTestId("goals-count").textContent).toBe("1");
+    expect(screen.getByTestId("goals-count").textContent).toBe("1");
   });
 
   it("should set milestones directly", () => {
-    const { getByTestId } = renderWithProvider();
+    let setMilestones: React.Dispatch<React.SetStateAction<Milestone[]>>;
+    renderWithProvider((ctx) => { setMilestones = ctx.setMilestones; });
 
     act(() => {
-      getByTestId("set-milestones").click();
+      setMilestones([mockMilestone]);
     });
 
-    expect(getByTestId("milestones-count").textContent).toBe("1");
+    expect(screen.getByTestId("milestones-count").textContent).toBe("1");
   });
 
   it("should set key results directly", () => {
-    const { getByTestId } = renderWithProvider();
+    let setKeyResults: React.Dispatch<React.SetStateAction<KeyResult[]>>;
+    renderWithProvider((ctx) => { setKeyResults = ctx.setKeyResults; });
 
     act(() => {
-      getByTestId("set-keyresults").click();
+      setKeyResults([mockKeyResult]);
     });
 
-    expect(getByTestId("keyresults-count").textContent).toBe("1");
+    expect(screen.getByTestId("keyresults-count").textContent).toBe("1");
   });
 
   it("should throw error when useGoals is used outside GoalProvider", () => {

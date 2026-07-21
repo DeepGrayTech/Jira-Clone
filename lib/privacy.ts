@@ -20,6 +20,7 @@ export interface ExportedData {
     goals: unknown[];
     milestones: unknown[];
     keyResults: unknown[];
+    epics?: unknown[]; // Optional for backwards compatibility with pre-v1.4.0 exports
   };
 }
 
@@ -66,7 +67,7 @@ const stripSensitiveFields = (data: unknown): unknown => {
 /**
  * Exports all user data from localStorage as a downloadable JSON file.
  * Collects data from all STORAGE_KEYS including tasks, requirements,
- * test cases, bugs, goals, milestones, and key results.
+ * test cases, bugs, goals, milestones, key results, and epics.
  *
  * The exported file follows the pattern:
  *   jira-clone-export-YYYY-MM-DDTHH-mm-ss.json
@@ -83,6 +84,7 @@ export const exportUserData = (): void => {
       goals: readStorageItem(STORAGE_KEYS.GOALS),
       milestones: readStorageItem(STORAGE_KEYS.MILESTONES),
       keyResults: readStorageItem(STORAGE_KEYS.KEY_RESULTS),
+      epics: readStorageItem(STORAGE_KEYS.EPICS),
     },
   };
 

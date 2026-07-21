@@ -8,7 +8,6 @@ const mockRequirement: Requirement = {
   description: "Test description",
   status: "DRAFT",
   priority: "MEDIUM",
-  tags: ["tag1", "tag2"],
   acceptanceCriteria: ["Criteria 1", "Criteria 2"],
   createdAt: "2024-01-01",
   updatedAt: "2024-01-02",

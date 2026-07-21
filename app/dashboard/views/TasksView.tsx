@@ -37,7 +37,7 @@ export default function TasksView({
   setShowModal,
   currentEpicId,
 }: TasksViewProps) {
-  const { tasks, setTasks, deleteTask } = useTasks();
+  const { tasks, deleteTask, updateTask } = useTasks();
   const { requirements } = useRequirements();
   const { epics } = useEpics();
 
@@ -121,15 +121,8 @@ export default function TasksView({
 
     if (!isValidTaskStatus(destination.droppableId)) return;
 
-    setTasks((prev) => {
-      const task = prev.find((t) => t.id === result.draggableId);
-      if (!task) return prev;
-
-      return prev.map((t) =>
-        t.id === result.draggableId
-          ? { ...t, status: destination.droppableId as Task["status"] }
-          : t
-      );
+    updateTask(result.draggableId, {
+      status: destination.droppableId as Task["status"],
     });
 
     setRecentlyDraggedTaskId(result.draggableId);

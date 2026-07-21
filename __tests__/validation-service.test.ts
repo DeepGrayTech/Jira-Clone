@@ -34,7 +34,7 @@ describe("ValidationService", () => {
       const result = service.validateTaskData({
         id: "task-1",
         title: "Test Task",
-        status: "INVALID_STATUS",
+        status: "INVALID_STATUS" as any,
         priority: "MEDIUM",
       });
 
@@ -48,7 +48,7 @@ describe("ValidationService", () => {
         id: "task-1",
         title: "Test Task",
         status: "TODO",
-        priority: "INVALID_PRIORITY",
+        priority: "INVALID_PRIORITY" as any,
       });
 
       expect(result.isValid).toBe(false);
@@ -60,8 +60,8 @@ describe("ValidationService", () => {
       const result = service.validateTaskData({
         id: "task-1",
         title: "",
-        status: "INVALID",
-        priority: "INVALID",
+        status: "INVALID" as any,
+        priority: "INVALID" as any,
       });
 
       expect(result.isValid).toBe(false);
@@ -99,7 +99,7 @@ describe("ValidationService", () => {
       const result = service.validateRequirementData({
         id: "req-1",
         title: "Test",
-        status: "INVALID",
+        status: "INVALID" as any,
         priority: "MEDIUM",
       });
 
@@ -111,7 +111,7 @@ describe("ValidationService", () => {
         id: "req-1",
         title: "Test",
         status: "DRAFT",
-        priority: "INVALID",
+        priority: "INVALID" as any,
       });
 
       expect(result.isValid).toBe(false);
@@ -145,7 +145,7 @@ describe("ValidationService", () => {
       const result = service.validateTestCaseData({
         id: "tc-1",
         title: "Test",
-        status: "INVALID",
+        status: "INVALID" as any,
       });
 
       expect(result.isValid).toBe(false);

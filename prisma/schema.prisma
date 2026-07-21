@@ -1,0 +1,167 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  username     String?
+  passwordHash String
+  role         String   @default("USER")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  tasks        Task[]
+  requirements Requirement[]
+  testCases    TestCase[]
+  bugs         Bug[]
+  goals        Goal[]
+  comments     Comment[]
+  auditLogs    AuditLog[]
+  epics        Epic[]
+}
+
+model Epic {
+  id          String  @id @default(cuid())
+  title       String
+  description String?
+  color       String  @default("#3b82f6")
+  userId      String
+  user        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  tasks        Task[]
+  requirements Requirement[]
+}
+
+model Task {
+  id                   String   @id @default(cuid())
+  title                String
+  description          String?
+  status               String
+  priority             String
+  dueDate              String?
+  tags                 String   // JSON array
+  assignee             String?
+  relatedRequirementId String?
+  figmaUrl             String?
+  epicId               String?
+  epic                 Epic?    @relation(fields: [epicId], references: [id])
+  userId               String
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  comments Comment[]
+}
+
+model Requirement {
+  id                 String   @id @default(cuid())
+  title              String
+  description        String?
+  status             String
+  priority           String
+  dueDate            String?
+  acceptanceCriteria String   // JSON array
+  requester          String?
+  executor           String?
+  epicId             String?
+  epic               Epic?    @relation(fields: [epicId], references: [id])
+  userId             String
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
+model TestCase {
+  id                   String  @id @default(cuid())
+  title                String
+  description          String?
+  status               String
+  steps                String  // JSON array
+  expectedResult       String?
+  relatedRequirementId String?
+  userId               String
+  user                 User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+}
+
+model Bug {
+  id               String  @id @default(cuid())
+  title            String
+  description      String?
+  severity         String
+  priority         String
+  stepsToReproduce String  // JSON array
+  expectedBehavior String?
+  actualBehavior   String?
+  userId           String
+  user             User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model Goal {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  status      String
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  milestones Milestone[]
+  keyResults KeyResult[]
+}
+
+model Milestone {
+  id        String   @id @default(cuid())
+  title     String
+  dueDate   String?
+  status    String
+  goalId    String
+  goal      Goal     @relation(fields: [goalId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model KeyResult {
+  id        String   @id @default(cuid())
+  title     String
+  target    Float
+  current   Float    @default(0)
+  status    String
+  goalId    String
+  goal      Goal     @relation(fields: [goalId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  content   String
+  taskId    String
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  author    String
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  action     String
+  entityType String
+  entityId   String
+  details    String
+  username   String
+  createdAt  DateTime @default(now())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}

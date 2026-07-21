@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, jest } from "@jest/globals";
+import "@testing-library/jest-dom/jest-globals";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import GoalTracker from "../app/dashboard/components/GoalTracker";
 import type { Goal, Task, Requirement, Milestone, KeyResult, GoalStatus, GoalType } from "../app/dashboard/types";
@@ -62,9 +63,10 @@ const mockMilestones: Milestone[] = [
     id: "milestone-1",
     goalId: "goal-1",
     title: "Phase 1 Complete",
-    targetDate: "2024-01-15",
-    achieved: true,
-    createdAt: "2024-01-01T09:00:00Z",
+    description: "Complete phase 1 of the goal",
+    dueDate: "2024-01-15",
+    completed: true,
+    completedAt: "2024-01-15T09:00:00Z",
   },
 ];
 
@@ -76,7 +78,7 @@ const mockKeyResults: KeyResult[] = [
     targetValue: 100,
     currentValue: 100,
     unit: "%",
-    createdAt: "2024-01-01T09:00:00Z",
+    status: "ON_TRACK",
   },
 ];
 
@@ -117,13 +119,13 @@ const mockGoals: Goal[] = [
 ];
 
 describe("GoalTracker", () => {
-  const mockOnCreateGoal = jest.fn();
-  const mockOnUpdateGoal = jest.fn();
-  const mockOnDeleteGoal = jest.fn();
+  const mockOnCreateGoal = jest.fn<(goal: Omit<Goal, "id" | "createdAt" | "updatedAt">) => void>();
+  const mockOnUpdateGoal = jest.fn<(goal: Goal) => void>();
+  const mockOnDeleteGoal = jest.fn<(goalId: string, expectedUpdatedAt?: string) => void>();
 
   beforeEach(() => {
     jest.clearAllMocks();
-    window.confirm = jest.fn().mockReturnValue(true);
+    window.confirm = jest.fn<(message?: string) => boolean>().mockReturnValue(true);
   });
 
   afterEach(() => {
@@ -369,7 +371,7 @@ describe("GoalTracker", () => {
   });
 
   it("should not delete a goal when cancelled", async () => {
-    window.confirm = jest.fn().mockReturnValue(false);
+    window.confirm = jest.fn<(message?: string) => boolean>().mockReturnValue(false);
 
     renderGoalTracker();
 
@@ -845,7 +847,7 @@ describe("GoalTracker", () => {
   });
 
   it("should not delete a goal when dialog is cancelled", () => {
-    window.confirm = jest.fn().mockReturnValue(false);
+    window.confirm = jest.fn<(message?: string) => boolean>().mockReturnValue(false);
 
     renderGoalTracker();
 

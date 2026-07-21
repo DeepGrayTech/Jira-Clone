@@ -1,6 +1,7 @@
 import { TaskService } from "../app/dashboard/services/TaskService";
 import { AuditService } from "../app/dashboard/services/AuditService";
 import { ValidationService } from "../app/dashboard/services/ValidationService";
+import type { Task } from "../app/dashboard/types";
 
 jest.mock("../app/dashboard/services/AuditService");
 jest.mock("../app/dashboard/services/ValidationService");
@@ -19,12 +20,14 @@ describe("TaskService", () => {
   it("should create a task", () => {
     validationService.validateTaskData = jest.fn().mockReturnValue({ isValid: true, errors: [], warnings: [], validCount: 1, totalCount: 1, type: "Task" });
 
-    const taskData = {
+    const taskData: Omit<Task, "id" | "createdAt"> = {
       title: "Test Task",
       description: "Test description",
       status: "TODO",
       priority: "MEDIUM",
+      dueDate: "2024-12-31",
       tags: ["tag1"],
+      assignee: "user1",
       comments: [],
     };
 
@@ -40,12 +43,14 @@ describe("TaskService", () => {
   it("should throw error for invalid task data", () => {
     validationService.validateTaskData = jest.fn().mockReturnValue({ isValid: false, errors: [{ id: "1", type: "Task", field: "title", message: "Title is required", severity: "error" }], warnings: [], validCount: 0, totalCount: 1, type: "Task" });
 
-    const taskData = {
+    const taskData: Omit<Task, "id" | "createdAt"> = {
       title: "",
       description: "Test",
       status: "TODO",
       priority: "MEDIUM",
+      dueDate: "",
       tags: [],
+      assignee: "",
       comments: [],
     };
 
@@ -55,7 +60,7 @@ describe("TaskService", () => {
   it("should update a task", () => {
     validationService.validateTaskData = jest.fn().mockReturnValue({ isValid: true, errors: [], warnings: [], validCount: 1, totalCount: 1, type: "Task" });
 
-    const updates = {
+    const updates: Partial<Task> = {
       title: "Updated Title",
       status: "IN_PROGRESS",
     };
@@ -71,7 +76,7 @@ describe("TaskService", () => {
 
     const updates = {
       status: "INVALID",
-    };
+    } as unknown as Partial<Task>;
 
     expect(() => service.updateTask("task-1", updates)).toThrow("Invalid task update data");
   });
@@ -105,13 +110,15 @@ describe("TaskService", () => {
   it("should generate CREATE audit log", () => {
     auditService.logAction = jest.fn().mockReturnValue({ id: "log-1" });
     
-    const task = {
+    const task: Task = {
       id: "task-1",
       title: "Test Task",
       description: "",
       status: "TODO",
       priority: "MEDIUM",
+      dueDate: "2024-12-31",
       tags: [],
+      assignee: "user1",
       comments: [],
       createdAt: new Date().toISOString(),
     };
@@ -125,13 +132,15 @@ describe("TaskService", () => {
   it("should generate UPDATE audit log", () => {
     auditService.logAction = jest.fn().mockReturnValue({ id: "log-1" });
     
-    const task = {
+    const task: Task = {
       id: "task-1",
       title: "Test Task",
       description: "",
       status: "IN_PROGRESS",
       priority: "MEDIUM",
+      dueDate: "2024-12-31",
       tags: [],
+      assignee: "user1",
       comments: [],
       createdAt: new Date().toISOString(),
     };
@@ -145,13 +154,15 @@ describe("TaskService", () => {
   it("should generate DELETE audit log", () => {
     auditService.logAction = jest.fn().mockReturnValue({ id: "log-1" });
     
-    const task = {
+    const task: Task = {
       id: "task-1",
       title: "Test Task",
       description: "",
       status: "DONE",
       priority: "MEDIUM",
+      dueDate: "2024-12-31",
       tags: [],
+      assignee: "admin",
       comments: [],
       createdAt: new Date().toISOString(),
     };

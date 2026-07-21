@@ -552,12 +552,7 @@ describe("useDataLoader", () => {
       });
 
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining("[useDataLoader] 数据加载完成"),
-        expect.objectContaining({
-          tasks: expect.any(String),
-          requirements: expect.any(String),
-          source: expect.any(String),
-        })
+        expect.stringContaining("[useDataLoader] 已从"),
       );
     });
   });
@@ -565,7 +560,7 @@ describe("useDataLoader", () => {
   describe("data merging strategy", () => {
     it("should preserve existing data and add new default data", async () => {
       const existingTasks = [{ id: "custom-task", title: "Custom Task" } as any];
-      mockDecryptData.mockImplementation((data: string) => {
+      mockDecryptData.mockImplementation(async (data: string) => {
         if (data.includes("tasks")) return existingTasks;
         return null;
       });

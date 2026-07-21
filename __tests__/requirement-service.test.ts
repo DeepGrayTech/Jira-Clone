@@ -20,10 +20,11 @@ describe("RequirementService", () => {
     const reqData = {
       title: "Test Requirement",
       description: "Test description",
-      status: "DRAFT",
-      priority: "MEDIUM",
-      tags: ["tag1"],
+      status: "DRAFT" as const,
+      priority: "MEDIUM" as const,
       acceptanceCriteria: ["criteria1"],
+      requester: "user1",
+      executor: "user2",
     };
 
     const result = service.createRequirement(reqData);
@@ -39,7 +40,7 @@ describe("RequirementService", () => {
   it("should update a requirement", () => {
     const updates = {
       title: "Updated Title",
-      status: "REVIEW",
+      status: "REVIEW" as const,
     };
 
     const result = service.updateRequirement("req-1", updates);
@@ -56,12 +57,13 @@ describe("RequirementService", () => {
       id: "req-1",
       title: "Test Requirement",
       description: "",
-      status: "DRAFT",
-      priority: "MEDIUM",
-      tags: [],
+      status: "DRAFT" as const,
+      priority: "MEDIUM" as const,
       acceptanceCriteria: [],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
+      requester: "user1",
+      executor: "user2",
     };
 
     const result = service.generateAuditLog("CREATE", req, "user1");
@@ -77,12 +79,13 @@ describe("RequirementService", () => {
       id: "req-1",
       title: "Test Requirement",
       description: "",
-      status: "DRAFT",
-      priority: "MEDIUM",
-      tags: [],
+      status: "DRAFT" as const,
+      priority: "MEDIUM" as const,
       acceptanceCriteria: [],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
+      requester: "user1",
+      executor: "user2",
     };
 
     const result = service.generateAuditLog("UPDATE", req);
@@ -98,12 +101,13 @@ describe("RequirementService", () => {
       id: "req-1",
       title: "Test Requirement",
       description: "",
-      status: "DRAFT",
-      priority: "MEDIUM",
-      tags: [],
+      status: "DRAFT" as const,
+      priority: "MEDIUM" as const,
       acceptanceCriteria: [],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
+      requester: "user1",
+      executor: "user2",
     };
 
     const result = service.generateAuditLog("DELETE", req, "admin");

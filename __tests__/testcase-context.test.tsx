@@ -1,6 +1,12 @@
-import { render, screen, act, fireEvent } from "@testing-library/react";
+import { render, screen, act, waitFor, fireEvent } from "@testing-library/react";
 import { TestCaseProvider, useTestCases } from "../app/dashboard/contexts/TestCaseContext";
 import type { TestCase } from "../app/dashboard/types";
+
+jest.mock("../app/dashboard/services/api", () => ({
+  createTestCaseApi: jest.fn(async (tc: TestCase) => tc),
+  updateTestCaseApi: jest.fn(async (_id: string, updates: Partial<TestCase>) => ({ id: _id, ...updates })),
+  deleteTestCaseApi: jest.fn(async () => undefined),
+}));
 
 describe("TestCaseContext", () => {
   const testCase: TestCase = {
@@ -9,12 +15,9 @@ describe("TestCaseContext", () => {
     title: "Test Case 1",
     description: "Test Description",
     status: "PENDING",
-    priority: "HIGH",
     steps: ["Step 1", "Step 2"],
     expectedResult: "Expected Result",
     actualResult: "",
-    createdAt: "2024-01-01",
-    updatedAt: "2024-01-01",
   };
 
   const TestComponent = ({ 
@@ -51,8 +54,8 @@ describe("TestCaseContext", () => {
     expect(screen.getByTestId("tc-count").textContent).toBe("0");
   });
 
-  it("should add a test case", () => {
-    let addTestCase: (tc: TestCase) => void;
+  it("should add a test case", async () => {
+    let addTestCase: (tc: TestCase) => Promise<void>;
 
     renderWithProvider(
       <TestComponent onRender={(ctx) => { addTestCase = ctx.addTestCase; }} />
@@ -60,17 +63,17 @@ describe("TestCaseContext", () => {
 
     expect(screen.getByTestId("tc-count").textContent).toBe("0");
 
-    act(() => {
-      addTestCase(testCase);
+    await act(async () => {
+      await addTestCase(testCase);
     });
 
     expect(screen.getByTestId("tc-count").textContent).toBe("1");
     expect(screen.getByTestId("tc-tc-1-title").textContent).toBe("Test Case 1");
   });
 
-  it("should update a test case", () => {
-    let addTestCase: (tc: TestCase) => void;
-    let updateTestCase: (id: string, updates: Partial<TestCase>) => void;
+  it("should update a test case", async () => {
+    let addTestCase: (tc: TestCase) => Promise<void>;
+    let updateTestCase: (id: string, updates: Partial<TestCase>) => Promise<void>;
 
     renderWithProvider(
       <TestComponent 
@@ -81,22 +84,24 @@ describe("TestCaseContext", () => {
       />
     );
 
-    act(() => {
-      addTestCase(testCase);
+    await act(async () => {
+      await addTestCase(testCase);
     });
 
     expect(screen.getByTestId("tc-tc-1-status").textContent).toBe("PENDING");
 
-    act(() => {
-      updateTestCase("tc-1", { status: "PASS", actualResult: "Actual Result" });
+    await act(async () => {
+      await updateTestCase("tc-1", { status: "PASSED", actualResult: "Actual Result" });
     });
 
-    expect(screen.getByTestId("tc-tc-1-status").textContent).toBe("PASS");
+    await waitFor(() => {
+      expect(screen.getByTestId("tc-tc-1-status").textContent).toBe("PASSED");
+    });
   });
 
-  it("should delete a test case", () => {
-    let addTestCase: (tc: TestCase) => void;
-    let deleteTestCase: (id: string) => void;
+  it("should delete a test case", async () => {
+    let addTestCase: (tc: TestCase) => Promise<void>;
+    let deleteTestCase: (id: string) => Promise<void>;
 
     renderWithProvider(
       <TestComponent 
@@ -107,22 +112,22 @@ describe("TestCaseContext", () => {
       />
     );
 
-    act(() => {
-      addTestCase(testCase);
+    await act(async () => {
+      await addTestCase(testCase);
     });
 
     expect(screen.getByTestId("tc-count").textContent).toBe("1");
 
-    act(() => {
-      deleteTestCase("tc-1");
+    await act(async () => {
+      await deleteTestCase("tc-1");
     });
 
     expect(screen.getByTestId("tc-count").textContent).toBe("0");
     expect(screen.queryByTestId("tc-tc-1")).not.toBeInTheDocument();
   });
 
-  it("should get test case by id", () => {
-    let addTestCase: (tc: TestCase) => void;
+  it("should get test case by id", async () => {
+    let addTestCase: (tc: TestCase) => Promise<void>;
     let foundTestCase: TestCase | undefined;
 
     renderWithProvider(
@@ -134,8 +139,8 @@ describe("TestCaseContext", () => {
       />
     );
 
-    act(() => {
-      addTestCase(testCase);
+    await act(async () => {
+      await addTestCase(testCase);
     });
 
     fireEvent.click(screen.getByTestId("action-btn"));
@@ -172,17 +177,17 @@ describe("TestCaseContext", () => {
     }).toThrow("useTestCases must be used within TestCaseProvider");
   });
 
-  it("should handle multiple test cases", () => {
-    let addTestCase: (tc: TestCase) => void;
+  it("should handle multiple test cases", async () => {
+    let addTestCase: (tc: TestCase) => Promise<void>;
 
     renderWithProvider(
       <TestComponent onRender={(ctx) => { addTestCase = ctx.addTestCase; }} />
     );
 
-    act(() => {
-      addTestCase(testCase);
-      addTestCase({ ...testCase, id: "tc-2", title: "Test Case 2" });
-      addTestCase({ ...testCase, id: "tc-3", title: "Test Case 3" });
+    await act(async () => {
+      await addTestCase(testCase);
+      await addTestCase({ ...testCase, id: "tc-2", title: "Test Case 2" });
+      await addTestCase({ ...testCase, id: "tc-3", title: "Test Case 3" });
     });
 
     expect(screen.getByTestId("tc-count").textContent).toBe("3");
@@ -191,9 +196,9 @@ describe("TestCaseContext", () => {
     expect(screen.getByTestId("tc-tc-3-title").textContent).toBe("Test Case 3");
   });
 
-  it("should update only the specified test case", () => {
-    let addTestCase: (tc: TestCase) => void;
-    let updateTestCase: (id: string, updates: Partial<TestCase>) => void;
+  it("should update only the specified test case", async () => {
+    let addTestCase: (tc: TestCase) => Promise<void>;
+    let updateTestCase: (id: string, updates: Partial<TestCase>) => Promise<void>;
 
     renderWithProvider(
       <TestComponent 
@@ -204,22 +209,24 @@ describe("TestCaseContext", () => {
       />
     );
 
-    act(() => {
-      addTestCase(testCase);
-      addTestCase({ ...testCase, id: "tc-2", title: "Test Case 2" });
+    await act(async () => {
+      await addTestCase(testCase);
+      await addTestCase({ ...testCase, id: "tc-2", title: "Test Case 2" });
     });
 
-    act(() => {
-      updateTestCase("tc-1", { status: "FAIL" });
+    await act(async () => {
+      await updateTestCase("tc-1", { status: "FAILED" });
     });
 
-    expect(screen.getByTestId("tc-tc-1-status").textContent).toBe("FAIL");
-    expect(screen.getByTestId("tc-tc-2-status").textContent).toBe("PENDING");
+    await waitFor(() => {
+      expect(screen.getByTestId("tc-tc-1-status").textContent).toBe("FAILED");
+      expect(screen.getByTestId("tc-tc-2-status").textContent).toBe("PENDING");
+    });
   });
 
-  it("should delete only the specified test case", () => {
-    let addTestCase: (tc: TestCase) => void;
-    let deleteTestCase: (id: string) => void;
+  it("should delete only the specified test case", async () => {
+    let addTestCase: (tc: TestCase) => Promise<void>;
+    let deleteTestCase: (id: string) => Promise<void>;
 
     renderWithProvider(
       <TestComponent 
@@ -230,14 +237,14 @@ describe("TestCaseContext", () => {
       />
     );
 
-    act(() => {
-      addTestCase(testCase);
-      addTestCase({ ...testCase, id: "tc-2", title: "Test Case 2" });
-      addTestCase({ ...testCase, id: "tc-3", title: "Test Case 3" });
+    await act(async () => {
+      await addTestCase(testCase);
+      await addTestCase({ ...testCase, id: "tc-2", title: "Test Case 2" });
+      await addTestCase({ ...testCase, id: "tc-3", title: "Test Case 3" });
     });
 
-    act(() => {
-      deleteTestCase("tc-2");
+    await act(async () => {
+      await deleteTestCase("tc-2");
     });
 
     expect(screen.getByTestId("tc-count").textContent).toBe("2");

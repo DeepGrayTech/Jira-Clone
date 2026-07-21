@@ -1,11 +1,17 @@
-import { render, screen, act } from "@testing-library/react";
+import { render, screen, act, waitFor } from "@testing-library/react";
 import { RequirementProvider, useRequirements } from "../app/dashboard/contexts/RequirementContext";
 import type { Requirement } from "../app/dashboard/types";
+
+jest.mock("../app/dashboard/services/api", () => ({
+  createRequirementApi: jest.fn(async (req: Requirement) => req),
+  updateRequirementApi: jest.fn(async (_id: string, updates: Partial<Requirement>) => ({ id: _id, ...updates })),
+  deleteRequirementApi: jest.fn(async () => undefined),
+}));
 
 const TestComponent = ({
   onRender,
 }: {
-  onRender: (context: ReturnType<typeof useRequirements>) => void;
+  onRender?: (context: ReturnType<typeof useRequirements>) => void;
 }) => {
   const context = useRequirements();
   if (onRender) onRender(context);
@@ -46,8 +52,8 @@ describe("RequirementContext", () => {
     expect(screen.getByTestId("req-count").textContent).toBe("0");
   });
 
-  it("should add a requirement", () => {
-    let addRequirement: (req: Requirement) => void;
+  it("should add a requirement", async () => {
+    let addRequirement: (req: Requirement) => Promise<void>;
 
     render(
       <RequirementProvider>
@@ -55,17 +61,17 @@ describe("RequirementContext", () => {
       </RequirementProvider>
     );
 
-    act(() => {
-      addRequirement(testRequirement);
+    await act(async () => {
+      await addRequirement(testRequirement);
     });
 
     expect(screen.getByTestId("req-count").textContent).toBe("1");
     expect(screen.getByTestId("req-req-1-title").textContent).toBe("Test Requirement");
   });
 
-  it("should update a requirement", () => {
-    let addRequirement: (req: Requirement) => void;
-    let updateRequirement: (id: string, updates: Partial<Requirement>) => void;
+  it("should update a requirement", async () => {
+    let addRequirement: (req: Requirement) => Promise<void>;
+    let updateRequirement: (id: string, updates: Partial<Requirement>) => Promise<void>;
 
     render(
       <RequirementProvider>
@@ -73,22 +79,24 @@ describe("RequirementContext", () => {
       </RequirementProvider>
     );
 
-    act(() => {
-      addRequirement(testRequirement);
+    await act(async () => {
+      await addRequirement(testRequirement);
     });
 
     expect(screen.getByTestId("req-req-1-status").textContent).toBe("DRAFT");
 
-    act(() => {
-      updateRequirement("req-1", { status: "IN_PROGRESS", priority: "HIGH" });
+    await act(async () => {
+      await updateRequirement("req-1", { status: "REVIEW", priority: "HIGH" });
     });
 
-    expect(screen.getByTestId("req-req-1-status").textContent).toBe("IN_PROGRESS");
+    await waitFor(() => {
+      expect(screen.getByTestId("req-req-1-status").textContent).toBe("REVIEW");
+    });
   });
 
-  it("should delete a requirement", () => {
-    let addRequirement: (req: Requirement) => void;
-    let deleteRequirement: (id: string) => void;
+  it("should delete a requirement", async () => {
+    let addRequirement: (req: Requirement) => Promise<void>;
+    let deleteRequirement: (id: string) => Promise<void>;
 
     render(
       <RequirementProvider>
@@ -96,23 +104,23 @@ describe("RequirementContext", () => {
       </RequirementProvider>
     );
 
-    act(() => {
-      addRequirement(testRequirement);
+    await act(async () => {
+      await addRequirement(testRequirement);
     });
 
     expect(screen.getByTestId("req-count").textContent).toBe("1");
 
-    act(() => {
-      deleteRequirement("req-1");
+    await act(async () => {
+      await deleteRequirement("req-1");
     });
 
     expect(screen.getByTestId("req-count").textContent).toBe("0");
     expect(screen.queryByTestId("req-req-1")).not.toBeInTheDocument();
   });
 
-  it("should get requirement by id", () => {
-    let addRequirement: (req: Requirement) => void;
-    let getRequirementById: (id: string) => Requirement | undefined;
+  it("should get requirement by id", async () => {
+    let addRequirement: (req: Requirement) => Promise<void>;
+    let getRequirementById!: (id: string) => Requirement | undefined;
 
     render(
       <RequirementProvider>
@@ -120,8 +128,8 @@ describe("RequirementContext", () => {
       </RequirementProvider>
     );
 
-    act(() => {
-      addRequirement(testRequirement);
+    await act(async () => {
+      await addRequirement(testRequirement);
     });
 
     const found = getRequirementById("req-1");
@@ -130,7 +138,7 @@ describe("RequirementContext", () => {
   });
 
   it("should return undefined for non-existent requirement", () => {
-    let getRequirementById: (id: string) => Requirement | undefined;
+    let getRequirementById!: (id: string) => Requirement | undefined;
 
     render(
       <RequirementProvider>
@@ -164,8 +172,8 @@ describe("RequirementContext", () => {
     }).toThrow("useRequirements must be used within RequirementProvider");
   });
 
-  it("should handle multiple requirements", () => {
-    let addRequirement: (req: Requirement) => void;
+  it("should handle multiple requirements", async () => {
+    let addRequirement: (req: Requirement) => Promise<void>;
 
     render(
       <RequirementProvider>
@@ -173,9 +181,9 @@ describe("RequirementContext", () => {
       </RequirementProvider>
     );
 
-    act(() => {
-      addRequirement(testRequirement);
-      addRequirement({
+    await act(async () => {
+      await addRequirement(testRequirement);
+      await addRequirement({
         ...testRequirement,
         id: "req-2",
         title: "Second Requirement",

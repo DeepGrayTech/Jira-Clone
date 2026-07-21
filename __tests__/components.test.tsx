@@ -26,27 +26,28 @@ describe("Component Tests", () => {
 
     const mockOnEdit = jest.fn();
     const mockOnDelete = jest.fn();
+    const mockOnAddTest = jest.fn();
 
     beforeEach(() => {
       jest.clearAllMocks();
     });
 
     it("should render requirement card with title and description", () => {
-      render(<RequirementCard requirement={mockRequirement} onEdit={mockOnEdit} onDelete={mockOnDelete} isSmall={false} fontSizeScale={1} />);
+      render(<RequirementCard requirement={mockRequirement} onEdit={mockOnEdit} onDelete={mockOnDelete} onAddTest={mockOnAddTest} isSmall={false} fontSizeScale={1} />);
 
       expect(screen.getByText("Test Requirement")).toBeInTheDocument();
       expect(screen.getByText("Test Description")).toBeInTheDocument();
     });
 
     it("should display priority and status badges", () => {
-      render(<RequirementCard requirement={mockRequirement} onEdit={mockOnEdit} onDelete={mockOnDelete} isSmall={false} fontSizeScale={1} />);
+      render(<RequirementCard requirement={mockRequirement} onEdit={mockOnEdit} onDelete={mockOnDelete} onAddTest={mockOnAddTest} isSmall={false} fontSizeScale={1} />);
 
       expect(screen.getByText("HIGH")).toBeInTheDocument();
       expect(screen.getByText("Draft")).toBeInTheDocument();
     });
 
     it("should call onEdit when card is clicked", () => {
-      render(<RequirementCard requirement={mockRequirement} onEdit={mockOnEdit} onDelete={mockOnDelete} isSmall={false} fontSizeScale={1} />);
+      render(<RequirementCard requirement={mockRequirement} onEdit={mockOnEdit} onDelete={mockOnDelete} onAddTest={mockOnAddTest} isSmall={false} fontSizeScale={1} />);
 
       fireEvent.click(screen.getByText("Test Requirement"));
 
@@ -121,7 +122,7 @@ describe("Component Tests", () => {
   });
 
   describe("LoginForm", () => {
-    const mockOnLogin = jest.fn();
+    const mockOnLoginSuccess = jest.fn();
 
     beforeEach(() => {
       jest.clearAllMocks();
@@ -150,14 +151,14 @@ describe("Component Tests", () => {
     });
 
     it("should render login form with email and password fields", () => {
-      render(<LoginForm onLogin={mockOnLogin} />);
+      render(<LoginForm onLoginSuccess={mockOnLoginSuccess} />);
 
       expect(screen.getByPlaceholderText("Enter email")).toBeInTheDocument();
       expect(screen.getByPlaceholderText("Enter password")).toBeInTheDocument();
     });
 
     it("should render login and register buttons", () => {
-      render(<LoginForm onLogin={mockOnLogin} />);
+      render(<LoginForm onLoginSuccess={mockOnLoginSuccess} />);
 
       expect(screen.getByText("Login")).toBeInTheDocument();
       expect(screen.getByText("Register")).toBeInTheDocument();

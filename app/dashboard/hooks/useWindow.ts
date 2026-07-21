@@ -7,10 +7,10 @@ import { useState, useEffect } from "react";
  * Manages window dimensions, client-side rendering flag, privacy consent modal,
  * and keyboard shortcuts.
  *
- * @param setShowModal - Setter for the main modal visibility (for ESC key handling)
+ * @param setShowModal - Optional setter for the main modal visibility (for ESC key handling)
  */
 export function useWindow(
-  setShowModal: React.Dispatch<React.SetStateAction<boolean>>
+  setShowModal?: React.Dispatch<React.SetStateAction<boolean>>
 ) {
   const [windowWidth, setWindowWidth] = useState(1280);
   const [isClient, setIsClient] = useState(false);
@@ -28,7 +28,7 @@ export function useWindow(
     window.addEventListener("resize", handleResize);
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
+      if (e.key === "Escape" && setShowModal) {
         setShowModal(false);
       }
     };
@@ -45,7 +45,7 @@ export function useWindow(
       window.removeEventListener("resize", handleResize);
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, []);
+  }, [setShowModal]);
 
   // === RESPONSIVE UTILITIES ===
   const effectiveWidth = isClient ? windowWidth : 1280;

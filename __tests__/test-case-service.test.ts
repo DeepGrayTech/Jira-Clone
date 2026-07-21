@@ -20,14 +20,12 @@ describe("TestCaseService", () => {
     validationService.validateTestCaseData = jest.fn().mockReturnValue({ isValid: true, errors: [], warnings: [], validCount: 1, totalCount: 1, type: "TestCase" });
 
     const tcData = {
+      requirementId: "req-1",
       title: "Test Case",
       description: "Test description",
-      status: "PENDING",
-      priority: "MEDIUM",
-      preconditions: ["precondition1"],
-      testSteps: ["step1"],
-      expectedResults: ["result1"],
-      tags: ["tag1"],
+      status: "PENDING" as const,
+      steps: ["step1"],
+      expectedResult: "result1",
     };
 
     const result = service.createTestCase(tcData);
@@ -42,14 +40,12 @@ describe("TestCaseService", () => {
     validationService.validateTestCaseData = jest.fn().mockReturnValue({ isValid: false, errors: [{ id: "1", type: "TestCase", field: "title", message: "Title is required", severity: "error" }], warnings: [], validCount: 0, totalCount: 1, type: "TestCase" });
 
     const tcData = {
+      requirementId: "req-1",
       title: "",
       description: "Test",
-      status: "PENDING",
-      priority: "MEDIUM",
-      preconditions: [],
-      testSteps: [],
-      expectedResults: [],
-      tags: [],
+      status: "PENDING" as const,
+      steps: [],
+      expectedResult: "",
     };
 
     expect(() => service.createTestCase(tcData)).toThrow("Invalid test case data");
@@ -58,13 +54,13 @@ describe("TestCaseService", () => {
   it("should update a test case", () => {
     const updates = {
       title: "Updated Title",
-      status: "IN_PROGRESS",
+      status: "PASSED" as const,
     };
 
     const result = service.updateTestCase("tc-1", updates);
 
     expect(result.title).toBe("Updated Title");
-    expect(result.status).toBe("IN_PROGRESS");
+    expect(result.status).toBe("PASSED");
   });
 
   it("should generate CREATE audit log", () => {
@@ -72,14 +68,12 @@ describe("TestCaseService", () => {
     
     const tc = {
       id: "tc-1",
+      requirementId: "req-1",
       title: "Test Case",
       description: "",
-      status: "PENDING",
-      priority: "MEDIUM",
-      preconditions: [],
-      testSteps: [],
-      expectedResults: [],
-      tags: [],
+      status: "PENDING" as const,
+      steps: [],
+      expectedResult: "",
     };
 
     const result = service.generateAuditLog("CREATE", tc, "user1");
@@ -93,14 +87,12 @@ describe("TestCaseService", () => {
     
     const tc = {
       id: "tc-1",
+      requirementId: "req-1",
       title: "Test Case",
       description: "",
-      status: "IN_PROGRESS",
-      priority: "MEDIUM",
-      preconditions: [],
-      testSteps: [],
-      expectedResults: [],
-      tags: [],
+      status: "PASSED" as const,
+      steps: [],
+      expectedResult: "",
     };
 
     const result = service.generateAuditLog("UPDATE", tc);
@@ -114,14 +106,12 @@ describe("TestCaseService", () => {
     
     const tc = {
       id: "tc-1",
+      requirementId: "req-1",
       title: "Test Case",
       description: "",
-      status: "COMPLETED",
-      priority: "MEDIUM",
-      preconditions: [],
-      testSteps: [],
-      expectedResults: [],
-      tags: [],
+      status: "BLOCKED" as const,
+      steps: [],
+      expectedResult: "",
     };
 
     const result = service.generateAuditLog("DELETE", tc, "admin");

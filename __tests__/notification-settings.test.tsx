@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, jest } from "@jest/globals";
+import "@testing-library/jest-dom/jest-globals";
 import { render, screen, fireEvent, waitFor, cleanup } from "@testing-library/react";
 import NotificationSettingsPanel from "../app/dashboard/components/NotificationSettingsPanel";
 import { NotificationProvider } from "../app/dashboard/contexts";
@@ -109,7 +110,7 @@ describe("NotificationSettingsPanel", () => {
     const resetButton = screen.getByText("Reset to Default");
     fireEvent.click(resetButton);
 
-    const checkboxes = screen.getAllByRole("checkbox");
+    const checkboxes = screen.getAllByRole<HTMLInputElement>("checkbox");
     expect(checkboxes.filter(cb => cb.checked).length).toBeGreaterThan(0);
   });
 
@@ -124,7 +125,7 @@ describe("NotificationSettingsPanel", () => {
       expect(screen.getAllByRole("checkbox").length).toBeGreaterThan(0);
     });
 
-    const checkboxes = screen.getAllByRole("checkbox");
+    const checkboxes = screen.getAllByRole<HTMLInputElement>("checkbox");
     const firstCheckbox = checkboxes[0];
     const initialState = firstCheckbox.checked;
     
@@ -139,7 +140,7 @@ describe("NotificationSettingsPanel", () => {
       </NotificationProvider>
     );
 
-    const checkboxes = screen.getAllByRole("checkbox");
+    const checkboxes = screen.getAllByRole<HTMLInputElement>("checkbox");
     const autoScheduleCheckbox = checkboxes.find(cb => cb.nextElementSibling?.textContent === "Enable auto-scheduling");
     expect(autoScheduleCheckbox).toBeChecked();
 

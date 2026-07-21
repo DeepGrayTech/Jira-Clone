@@ -1,11 +1,16 @@
-import { render, screen, act } from "@testing-library/react";
+import { render, screen, act, waitFor } from "@testing-library/react";
 import { SharedProvider, useShared } from "../app/dashboard/contexts/SharedContext";
 import type { Comment, OperationLog } from "../app/dashboard/types";
+
+jest.mock("../app/dashboard/services/api", () => ({
+  createCommentApi: jest.fn(async (comment: Comment) => comment),
+  deleteCommentApi: jest.fn(async () => undefined),
+}));
 
 const TestComponent = ({
   onRender,
 }: {
-  onRender: (context: ReturnType<typeof useShared>) => void;
+  onRender?: (context: ReturnType<typeof useShared>) => void;
 }) => {
   const context = useShared();
   if (onRender) onRender(context);
@@ -31,8 +36,8 @@ describe("SharedContext", () => {
     expect(screen.getByTestId("log-count").textContent).toBe("0");
   });
 
-  it("should add a comment", () => {
-    let addComment: (comment: Comment) => void;
+  it("should add a comment", async () => {
+    let addComment: (comment: Comment) => Promise<void>;
 
     render(
       <SharedProvider>
@@ -48,16 +53,16 @@ describe("SharedContext", () => {
       createdAt: new Date().toISOString(),
     };
 
-    act(() => {
-      addComment(testComment);
+    await act(async () => {
+      await addComment(testComment);
     });
 
     expect(screen.getByTestId("comment-count").textContent).toBe("1");
   });
 
-  it("should delete a comment", () => {
-    let addComment: (comment: Comment) => void;
-    let deleteComment: (commentId: string) => void;
+  it("should delete a comment", async () => {
+    let addComment: (comment: Comment) => Promise<void>;
+    let deleteComment: (commentId: string) => Promise<void>;
 
     render(
       <SharedProvider>
@@ -73,17 +78,19 @@ describe("SharedContext", () => {
       createdAt: new Date().toISOString(),
     };
 
-    act(() => {
-      addComment(testComment);
+    await act(async () => {
+      await addComment(testComment);
     });
 
     expect(screen.getByTestId("comment-count").textContent).toBe("1");
 
-    act(() => {
-      deleteComment("comment-1");
+    await act(async () => {
+      await deleteComment("comment-1");
     });
 
-    expect(screen.getByTestId("comment-count").textContent).toBe("0");
+    await waitFor(() => {
+      expect(screen.getByTestId("comment-count").textContent).toBe("0");
+    });
   });
 
   it("should log an operation", () => {

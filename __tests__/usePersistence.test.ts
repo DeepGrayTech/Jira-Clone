@@ -2,6 +2,17 @@ import { renderHook, act } from "@testing-library/react";
 import { encryptData } from "../lib/encryption";
 import { usePersistence } from "../app/dashboard/hooks/usePersistence";
 import { STORAGE_KEYS } from "../app/dashboard/constants";
+import type {
+  Task,
+  Requirement,
+  TestCase,
+  Bug,
+  Goal,
+  Milestone,
+  KeyResult,
+  Comment,
+  AuditLogEntry,
+} from "../app/dashboard/types";
 
 jest.mock("../lib/encryption", () => ({
   encryptData: jest.fn(),
@@ -10,7 +21,7 @@ jest.mock("../lib/encryption", () => ({
 const mockEncryptData = encryptData as jest.MockedFunction<typeof encryptData>;
 
 describe("usePersistence", () => {
-  const mockTasks = [
+  const mockTasks: Task[] = [
     {
       id: "t1",
       title: "Test Task",
@@ -25,7 +36,7 @@ describe("usePersistence", () => {
     },
   ];
 
-  const mockRequirements = [
+  const mockRequirements: Requirement[] = [
     {
       id: "r1",
       title: "Test Requirement",
@@ -40,7 +51,7 @@ describe("usePersistence", () => {
     },
   ];
 
-  const mockTestCases = [
+  const mockTestCases: TestCase[] = [
     {
       id: "tc1",
       requirementId: "r1",
@@ -52,7 +63,7 @@ describe("usePersistence", () => {
     },
   ];
 
-  const mockBugs = [
+  const mockBugs: Bug[] = [
     {
       id: "b1",
       title: "Test Bug",
@@ -70,7 +81,7 @@ describe("usePersistence", () => {
     },
   ];
 
-  const mockGoals = [
+  const mockGoals: Goal[] = [
     {
       id: "g1",
       title: "Test Goal",
@@ -88,7 +99,7 @@ describe("usePersistence", () => {
     },
   ];
 
-  const mockMilestones = [
+  const mockMilestones: Milestone[] = [
     {
       id: "m1",
       goalId: "g1",
@@ -99,7 +110,7 @@ describe("usePersistence", () => {
     },
   ];
 
-  const mockKeyResults = [
+  const mockKeyResults: KeyResult[] = [
     {
       id: "kr1",
       goalId: "g1",
@@ -113,7 +124,7 @@ describe("usePersistence", () => {
 
   const mockTagHistory = ["tag1", "tag2"];
 
-  const mockComments = [
+  const mockComments: Comment[] = [
     {
       id: "c1",
       taskId: "t1",
@@ -123,7 +134,7 @@ describe("usePersistence", () => {
     },
   ];
 
-  const mockAuditLogs = [
+  const mockAuditLogs: AuditLogEntry[] = [
     {
       id: "al1",
       timestamp: "2024-01-01T00:00:00Z",
@@ -486,7 +497,7 @@ describe("usePersistence", () => {
 
       const initialCallCount = mockEncryptData.mock.calls.length;
 
-      const newTasks = [
+      const newTasks: Task[] = [
         ...mockTasks,
         {
           id: "t2",
@@ -535,7 +546,7 @@ describe("usePersistence", () => {
 
       const initialCallCount = mockEncryptData.mock.calls.length;
 
-      const newRequirements = [
+      const newRequirements: Requirement[] = [
         ...mockRequirements,
         {
           id: "r2",

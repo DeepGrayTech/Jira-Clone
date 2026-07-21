@@ -268,6 +268,8 @@ export interface Goal {
   updatedAt: string;
   color: string;
   epicId?: string; // Optional reference to related epic
+  milestones?: Milestone[];
+  keyResults?: KeyResult[];
 }
 
 export interface Milestone {
@@ -278,6 +280,7 @@ export interface Milestone {
   dueDate: string;
   completed: boolean;
   completedAt?: string;
+  status?: "TODO" | "PENDING" | "COMPLETED";
 }
 
 export interface KeyResult {

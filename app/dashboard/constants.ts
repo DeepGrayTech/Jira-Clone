@@ -60,6 +60,7 @@ export const STORAGE_KEYS = {
   MILESTONES: "jira-clone-milestones", // Milestones data storage key
   KEY_RESULTS: "jira-clone-key-results", // Key Results data storage key
   AUDIT_LOGS: "jira-clone-audit-logs", // ISO 27001 audit logs storage key
+  OPERATION_LOGS: "jira-clone-operation-logs", // UI operation logs storage key
   NOTIFICATIONS: "jira-clone-notifications", // Notifications data storage key
   SUBAGENT_TASKS: "jira-clone-subagent-tasks", // Subagent tasks storage key
   NOTIFICATION_SETTINGS: "jira-clone-notification-settings", // Notification settings storage key

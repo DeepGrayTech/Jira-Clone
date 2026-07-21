@@ -1,8 +1,10 @@
 "use client";
 
 import { useCallback } from "react";
-import { getAuthState, logoutAndClear, type User } from "@/lib/auth";
-import { exportUserData, importUserData, deleteAllUserData } from "@/lib/privacy";
+import { logoutAndClear } from "@/lib/auth";
+import type { AuthUser } from "./useAuth";
+import { exportUserData, deleteAllUserData } from "@/lib/privacy";
+import { importDataApi } from "../services/api";
 import { validateDataIntegrity, getValidationSummary } from "@/lib/validation";
 import { useTasks } from "../contexts/TaskContext";
 import { useRequirements } from "../contexts/RequirementContext";
@@ -20,6 +22,8 @@ import type {
   Bug,
   Goal,
   Epic,
+  Milestone,
+  KeyResult,
   ModalType,
 } from "../types";
 import {
@@ -31,9 +35,9 @@ import {
 } from "../types";
 
 interface UseDashboardLogicProps {
-  currentUser: User | null;
+  currentUser: AuthUser | null;
   setIsAuthenticated: React.Dispatch<React.SetStateAction<boolean>>;
-  setCurrentUser: React.Dispatch<React.SetStateAction<User | null>>;
+  setCurrentUser: React.Dispatch<React.SetStateAction<AuthUser | null>>;
   setShowModal: React.Dispatch<React.SetStateAction<boolean>>;
   setModalType: React.Dispatch<React.SetStateAction<ModalType>>;
   editingTask: Task | null;
@@ -81,7 +85,7 @@ export const useDashboardLogic = ({
   const { goals, setGoals, addGoal, updateGoal, deleteGoal, milestones, setMilestones, keyResults, setKeyResults } = useGoals();
   const { auditLogs, setAuditLogs, addAuditLog } = useAuditLogs();
   const { testCases, setTestCases, addTestCase, updateTestCase, deleteTestCase } = useTestCases();
-  const { comments, setComments, tagHistory, setTagHistory } = useShared();
+  const { comments, setComments, tagHistory, setTagHistory, addComment, deleteComment } = useShared();
 
   const auditService = new AuditService();
 
@@ -96,7 +100,7 @@ export const useDashboardLogic = ({
       createdAt: new Date().toISOString(),
     };
 
-    setComments((prev) => [...prev, newComment]);
+    addComment(newComment).catch((err) => console.warn("添加评论失败", err));
     setTasks((prev) =>
       prev.map((t) =>
         t.id === taskId
@@ -107,7 +111,7 @@ export const useDashboardLogic = ({
   }, [currentUser, setComments, setTasks]);
 
   const handleDeleteComment = useCallback((commentId: string, taskId: string) => {
-    setComments((prev) => prev.filter((c) => c.id !== commentId));
+    deleteComment(commentId).catch((err) => console.warn("删除评论失败", err));
     setTasks((prev) =>
       prev.map((t) =>
         t.id === taskId
@@ -177,17 +181,17 @@ export const useDashboardLogic = ({
   ]);
 
   const handleLoginSuccess = useCallback(() => {
-    const auth = getAuthState();
+    const username = currentUser?.username || currentUser?.email || "Unknown";
     addAuditLog(
       auditService.logAction(
         "LOGIN",
         "SYSTEM",
         "system",
-        `User "${auth.user?.username || auth.user?.email}" logged in`,
-        auth.user?.username || auth.user?.email || "Unknown"
+        `User "${username}" logged in`,
+        username
       )
     );
-  }, [addAuditLog]);
+  }, [currentUser, addAuditLog]);
 
   const handleLogout = useCallback(() => {
     const username = currentUser?.username || currentUser?.email || "Unknown";
@@ -224,7 +228,19 @@ export const useDashboardLogic = ({
 
     try {
       setImportMessage("Importing...");
-      const importedData = await importUserData(file);
+      const text = await file.text();
+      let parsed;
+      try {
+        parsed = JSON.parse(text);
+      } catch (e) {
+        throw new Error("Invalid JSON file");
+      }
+      const importedData = parsed?.data || parsed;
+      if (!importedData || typeof importedData !== "object") {
+        throw new Error(
+          "Invalid data format. The file does not contain valid Jira Clone export data."
+        );
+      }
 
       const validationResults: string[] = [];
       const validateAndCollect = <T,>(data: T[], type: Parameters<typeof validateDataIntegrity>[1]) => {
@@ -237,38 +253,70 @@ export const useDashboardLogic = ({
         }
       };
 
-      validateAndCollect(importedData.data.tasks as Task[], "Task");
-      validateAndCollect(importedData.data.requirements as Requirement[], "Requirement");
-      validateAndCollect(importedData.data.testCases as TestCase[], "TestCase");
-      validateAndCollect(importedData.data.bugs as Bug[], "Bug");
-      validateAndCollect(importedData.data.goals as Goal[], "Goal");
+      validateAndCollect(importedData.tasks as Task[], "Task");
+      validateAndCollect(importedData.requirements as Requirement[], "Requirement");
+      validateAndCollect(importedData.testCases as TestCase[], "TestCase");
+      validateAndCollect(importedData.bugs as Bug[], "Bug");
+      validateAndCollect(importedData.goals as Goal[], "Goal");
 
       if (validationResults.length > 0) {
         setImportMessage(
-          `Data integrity warnings:\n${validationResults.join("\n")}\nImport aborted. Please fix the data file.`
+          `Data integrity warnings:\\n${validationResults.join("\\n")}\\nImport aborted. Please fix the data file.`
         );
         setTimeout(() => setImportMessage(""), 8000);
         if (fileInputRef.current) fileInputRef.current.value = "";
         return;
       }
 
-      if (Array.isArray(importedData.data.tasks) && importedData.data.tasks.length > 0) {
-        setTasks((prev) => [...prev, ...(importedData.data.tasks as Task[])]);
+      const tasks = Array.isArray(importedData.tasks) ? (importedData.tasks as Task[]) : [];
+      const requirements = Array.isArray(importedData.requirements) ? (importedData.requirements as Requirement[]) : [];
+      const testCases = Array.isArray(importedData.testCases) ? (importedData.testCases as TestCase[]) : [];
+      const bugs = Array.isArray(importedData.bugs) ? (importedData.bugs as Bug[]) : [];
+      const goals = Array.isArray(importedData.goals) ? (importedData.goals as Goal[]) : [];
+      const milestones = Array.isArray(importedData.milestones) ? (importedData.milestones as Milestone[]) : [];
+      const keyResults = Array.isArray(importedData.keyResults) ? (importedData.keyResults as KeyResult[]) : [];
+      const epics = Array.isArray(importedData.epics) ? (importedData.epics as Epic[]) : [];
+
+      // The export file stores milestones/keyResults flat with goalId refs,
+      // while the import API expects them nested inside their goal (Prisma nested create).
+      const goalsWithChildren = goals.map((goal) => ({
+        ...goal,
+        milestones: milestones.filter((m) => m.goalId === goal.id),
+        keyResults: keyResults.filter((kr) => kr.goalId === goal.id),
+      }));
+
+      await importDataApi({
+        epics,
+        tasks,
+        requirements,
+        testCases,
+        bugs,
+        goals: goalsWithChildren,
+      });
+
+      if (tasks.length > 0) {
+        setTasks((prev) => [...prev, ...tasks]);
       }
-      if (Array.isArray(importedData.data.requirements) && importedData.data.requirements.length > 0) {
-        setRequirements((prev) => [...prev, ...(importedData.data.requirements as Requirement[])]);
+      if (requirements.length > 0) {
+        setRequirements((prev) => [...prev, ...requirements]);
       }
-      if (Array.isArray(importedData.data.testCases) && importedData.data.testCases.length > 0) {
-        setTestCases((prev) => [...prev, ...(importedData.data.testCases as TestCase[])]);
+      if (testCases.length > 0) {
+        setTestCases((prev) => [...prev, ...testCases]);
       }
-      if (Array.isArray(importedData.data.bugs) && importedData.data.bugs.length > 0) {
-        setBugs((prev) => [...prev, ...(importedData.data.bugs as Bug[])]);
+      if (bugs.length > 0) {
+        setBugs((prev) => [...prev, ...bugs]);
       }
-      if (Array.isArray(importedData.data.goals) && importedData.data.goals.length > 0) {
-        setGoals((prev) => [...prev, ...(importedData.data.goals as Goal[])]);
+      if (goals.length > 0) {
+        setGoals((prev) => [...prev, ...goals]);
+      }
+      if (milestones.length > 0) {
+        setMilestones((prev) => [...prev, ...milestones]);
+      }
+      if (keyResults.length > 0) {
+        setKeyResults((prev) => [...prev, ...keyResults]);
       }
 
-      addAuditLog(
+      await addAuditLog(
         auditService.logAction(
           "IMPORT",
           "SYSTEM",
@@ -297,6 +345,8 @@ export const useDashboardLogic = ({
     setTestCases,
     setBugs,
     setGoals,
+    setMilestones,
+    setKeyResults,
     addAuditLog,
     currentUser,
   ]);

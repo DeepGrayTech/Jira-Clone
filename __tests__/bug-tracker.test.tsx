@@ -125,7 +125,7 @@ describe("BugTracker Component", () => {
       });
     });
 
-    it("should contain all 16 verifier options including default", async () => {
+    it("should contain all 17 verifier options including default", async () => {
       setup();
 
       await waitFor(() => {
@@ -138,7 +138,7 @@ describe("BugTracker Component", () => {
         const verifierSection = screen.getByText("Assign Verifier (验证人)").parentElement?.parentElement;
         const dropdown = verifierSection?.querySelector("select");
         const options = dropdown?.querySelectorAll("option");
-        expect(options?.length).toBe(16);
+        expect(options?.length).toBe(17);
       });
     });
 
@@ -205,6 +205,7 @@ describe("BugTracker Component", () => {
           "规矩守护者",
           "Bug猎手",
           "文档整理控",
+          "管理员",
         ];
 
         teamMembers.forEach((member) => {

@@ -1,63 +1,68 @@
 import { renderHook, act } from "@testing-library/react";
+import { useSession, signOut } from "next-auth/react";
 import { useAuth } from "../app/dashboard/hooks/useAuth";
-import { register, login, logout, getAuthState } from "../lib/auth";
 
-jest.mock("../lib/auth", () => ({
-  getAuthState: jest.fn(),
-  register: jest.fn(),
-  login: jest.fn(),
-  logout: jest.fn(),
+jest.mock("next-auth/react", () => ({
+  ...jest.requireActual("next-auth/react"),
+  useSession: jest.fn(),
+  signIn: jest.fn(),
+  signOut: jest.fn(),
+  SessionProvider: ({ children }: { children?: import("react").ReactNode }) => children,
 }));
+
+type SessionStatus = "loading" | "authenticated" | "unauthenticated";
+
+let sessionState: { data: { user: Record<string, unknown> } | null; status: SessionStatus };
+
+const setMockSession = (user: Record<string, unknown> | null, status: SessionStatus) => {
+  sessionState = { data: user ? { user } : null, status };
+};
 
 describe("useAuth Hook", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    setMockSession(null, "unauthenticated");
+    (useSession as jest.Mock).mockImplementation(() => sessionState);
   });
 
   it("should initialize with unauthenticated state", () => {
-    (getAuthState as jest.Mock).mockReturnValue({
-      isAuthenticated: false,
-      user: null,
-    });
-
     const { result } = renderHook(() => useAuth());
 
     expect(result.current.isAuthenticated).toBe(false);
     expect(result.current.currentUser).toBe(null);
-    expect(getAuthState).toHaveBeenCalled();
+    expect(useSession).toHaveBeenCalled();
   });
 
   it("should initialize with authenticated state", () => {
     const mockUser = {
       id: "1",
-      username: "testuser",
+      name: "testuser",
       email: "test@example.com",
       role: "ADMIN",
     };
-    (getAuthState as jest.Mock).mockReturnValue({
-      isAuthenticated: true,
-      user: mockUser,
-    });
+    setMockSession(mockUser, "authenticated");
 
     const { result } = renderHook(() => useAuth());
 
     expect(result.current.isAuthenticated).toBe(true);
-    expect(result.current.currentUser).toEqual(mockUser);
+    expect(result.current.currentUser).toEqual({
+      id: "1",
+      email: "test@example.com",
+      name: "testuser",
+      username: "testuser",
+      role: "ADMIN",
+    });
   });
 
   it("should handle login success", () => {
     const mockUser = {
       id: "1",
-      username: "testuser",
+      name: "testuser",
       email: "test@example.com",
       role: "ADMIN",
     };
-    
-    (getAuthState as jest.Mock)
-      .mockReturnValueOnce({ isAuthenticated: false, user: null })
-      .mockReturnValueOnce({ isAuthenticated: true, user: mockUser });
 
-    const { result } = renderHook(() => useAuth());
+    const { result, rerender } = renderHook(() => useAuth());
 
     expect(result.current.isAuthenticated).toBe(false);
 
@@ -65,43 +70,56 @@ describe("useAuth Hook", () => {
       result.current.handleLoginSuccess();
     });
 
+    // NextAuth refreshes the session automatically after signIn;
+    // simulate the refreshed authenticated session.
+    setMockSession(mockUser, "authenticated");
+    rerender();
+
     expect(result.current.isAuthenticated).toBe(true);
-    expect(result.current.currentUser).toEqual(mockUser);
+    expect(result.current.currentUser).toEqual({
+      id: "1",
+      email: "test@example.com",
+      name: "testuser",
+      username: "testuser",
+      role: "ADMIN",
+    });
   });
 
   it("should handle logout", () => {
     const mockUser = {
       id: "1",
-      username: "testuser",
+      name: "testuser",
       email: "test@example.com",
       role: "ADMIN",
     };
-    
-    (getAuthState as jest.Mock).mockReturnValue({
-      isAuthenticated: true,
-      user: mockUser,
-    });
+    setMockSession(mockUser, "authenticated");
 
-    const { result } = renderHook(() => useAuth());
+    const { result, rerender } = renderHook(() => useAuth());
 
     expect(result.current.isAuthenticated).toBe(true);
-    expect(result.current.currentUser).toEqual(mockUser);
+    expect(result.current.currentUser).toEqual({
+      id: "1",
+      email: "test@example.com",
+      name: "testuser",
+      username: "testuser",
+      role: "ADMIN",
+    });
 
     act(() => {
       result.current.handleLogout();
     });
 
-    expect(logout).toHaveBeenCalled();
+    expect(signOut).toHaveBeenCalledWith({ callbackUrl: "/" });
+
+    // NextAuth clears the session after signOut; simulate the cleared session.
+    setMockSession(null, "unauthenticated");
+    rerender();
+
     expect(result.current.isAuthenticated).toBe(false);
     expect(result.current.currentUser).toBe(null);
   });
 
   it("should allow manual state updates via setIsAuthenticated", () => {
-    (getAuthState as jest.Mock).mockReturnValue({
-      isAuthenticated: false,
-      user: null,
-    });
-
     const { result } = renderHook(() => useAuth());
 
     act(() => {
@@ -118,11 +136,6 @@ describe("useAuth Hook", () => {
       email: "another@example.com",
       role: "USER",
     };
-    
-    (getAuthState as jest.Mock).mockReturnValue({
-      isAuthenticated: false,
-      user: null,
-    });
 
     const { result } = renderHook(() => useAuth());
 
@@ -134,18 +147,13 @@ describe("useAuth Hook", () => {
   });
 
   it("should handle null user in logout", () => {
-    (getAuthState as jest.Mock).mockReturnValue({
-      isAuthenticated: false,
-      user: null,
-    });
-
     const { result } = renderHook(() => useAuth());
 
     act(() => {
       result.current.handleLogout();
     });
 
-    expect(logout).toHaveBeenCalled();
+    expect(signOut).toHaveBeenCalledWith({ callbackUrl: "/" });
     expect(result.current.isAuthenticated).toBe(false);
     expect(result.current.currentUser).toBe(null);
   });

@@ -760,19 +760,40 @@ export default function BugTracker({
                   </div>
                 </div>
               </div>
-              <button
-                onClick={() => setSelectedBug(null)}
-                aria-label="Close bug details"
-                style={{
-                  background: "none",
-                  border: "none",
-                  fontSize: "24px",
-                  cursor: "pointer",
-                  color: COLORS.textSecondary,
-                }}
-              >
-                ×
-              </button>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <button
+                  onClick={() => {
+                    onEditBug(selectedBug);
+                    setSelectedBug(null);
+                  }}
+                  aria-label="Edit bug"
+                  style={{
+                    padding: "6px 14px",
+                    background: COLORS.buttonPrimary,
+                    color: "#ffffff",
+                    border: "none",
+                    borderRadius: "8px",
+                    fontWeight: 600,
+                    fontSize: "13px",
+                    cursor: "pointer",
+                  }}
+                >
+                  Edit
+                </button>
+                <button
+                  onClick={() => setSelectedBug(null)}
+                  aria-label="Close bug details"
+                  style={{
+                    background: "none",
+                    border: "none",
+                    fontSize: "24px",
+                    cursor: "pointer",
+                    color: COLORS.textSecondary,
+                  }}
+                >
+                  ×
+                </button>
+              </div>
             </div>
 
             <div style={{ marginBottom: "16px" }}>

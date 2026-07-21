@@ -5,14 +5,74 @@ import {
   waitFor,
   act,
 } from "@testing-library/react";
+import { useSession, signIn, signOut } from "next-auth/react";
 import DashboardLayout from "../app/dashboard/components/DashboardLayout";
-import { register, login } from "../lib/auth";
 import { exportUserData, importUserData } from "../lib/privacy";
 import { AuditService } from "../app/dashboard/services/AuditService";
+
+jest.mock("next-auth/react", () => ({
+  ...jest.requireActual("next-auth/react"),
+  useSession: jest.fn(),
+  signIn: jest.fn(),
+  signOut: jest.fn(),
+  SessionProvider: ({ children }: { children: React.ReactNode }) => children,
+}));
+
+jest.mock("next/navigation", () => ({
+  useRouter: () => ({
+    push: jest.fn(),
+    replace: jest.fn(),
+    prefetch: jest.fn(),
+    back: jest.fn(),
+  }),
+  useSearchParams: () => new URLSearchParams(),
+  usePathname: () => "/dashboard",
+}));
+
+jest.mock("../app/dashboard/services/api", () => ({
+  ...jest.requireActual("../app/dashboard/services/api"),
+  fetchTasks: jest.fn(async () => []),
+  fetchRequirements: jest.fn(async () => []),
+  fetchTestCases: jest.fn(async () => []),
+  fetchBugs: jest.fn(async () => []),
+  fetchGoals: jest.fn(async () => []),
+  fetchEpics: jest.fn(async () => []),
+  fetchAuditLogs: jest.fn(async () => []),
+  fetchComments: jest.fn(async () => []),
+  createTaskApi: jest.fn(async (t) => t),
+  updateTaskApi: jest.fn(async (_id, u) => ({ id: _id, ...u })),
+  deleteTaskApi: jest.fn(async () => undefined),
+  createRequirementApi: jest.fn(async (r) => r),
+  updateRequirementApi: jest.fn(async (_id, u) => ({ id: _id, ...u })),
+  deleteRequirementApi: jest.fn(async () => undefined),
+  createTestCaseApi: jest.fn(async (tc) => tc),
+  updateTestCaseApi: jest.fn(async (_id, u) => ({ id: _id, ...u })),
+  deleteTestCaseApi: jest.fn(async () => undefined),
+  createBugApi: jest.fn(async (b) => b),
+  updateBugApi: jest.fn(async (_id, u) => ({ id: _id, ...u })),
+  deleteBugApi: jest.fn(async () => undefined),
+  createGoalApi: jest.fn(async (g) => g),
+  updateGoalApi: jest.fn(async (_id, u) => ({ id: _id, ...u })),
+  deleteGoalApi: jest.fn(async () => undefined),
+  createMilestoneApi: jest.fn(async (m) => ({ id: "m1", ...m })),
+  updateMilestoneApi: jest.fn(async (_id, u) => ({ id: _id, ...u })),
+  deleteMilestoneApi: jest.fn(async () => undefined),
+  createKeyResultApi: jest.fn(async (kr) => ({ id: "kr1", ...kr })),
+  updateKeyResultApi: jest.fn(async (_id, u) => ({ id: _id, ...u })),
+  deleteKeyResultApi: jest.fn(async () => undefined),
+  createCommentApi: jest.fn(async (c) => c),
+  deleteCommentApi: jest.fn(async () => undefined),
+  createAuditLogApi: jest.fn(async (l) => l),
+  createEpicApi: jest.fn(async (e) => e),
+  updateEpicApi: jest.fn(async (_id, u) => ({ id: _id, ...u })),
+  deleteEpicApi: jest.fn(async () => undefined),
+  importDataApi: jest.fn(async () => ({ success: true, imported: {} })),
+}));
 
 jest.mock("../lib/privacy", () => ({
   exportUserData: jest.fn(),
   importUserData: jest.fn(),
+  deleteAllUserData: jest.fn(),
 }));
 
 jest.mock("../app/dashboard/services/AuditService", () => ({
@@ -29,8 +89,49 @@ jest.mock("../app/dashboard/services/AuditService", () => ({
   })),
 }));
 
+// jsdom's File does not implement Blob.text(), which handleImportData relies
+// on; polyfill it via FileReader for this suite.
+if (typeof File.prototype.text !== "function") {
+  (File.prototype as any).text = function text(this: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = () => reject(reader.error);
+      reader.readAsText(this);
+    });
+  };
+}
+
+type SessionStatus = "loading" | "authenticated" | "unauthenticated";
+
+let sessionState: {
+  data: { user: Record<string, unknown> } | null;
+  status: SessionStatus;
+};
+
+const setMockSession = (
+  user: Record<string, unknown> | null,
+  status: SessionStatus
+) => {
+  sessionState = { data: user ? { user } : null, status };
+};
+
 beforeEach(() => {
   jest.clearAllMocks();
+
+  setMockSession(null, "unauthenticated");
+  (useSession as jest.Mock).mockImplementation(() => sessionState);
+  (signIn as jest.Mock).mockImplementation(async () => {
+    setMockSession(
+      { id: "1", name: "testuser", email: "test@example.com", role: "ADMIN" },
+      "authenticated"
+    );
+    return { ok: true, error: null, status: 200, url: null };
+  });
+  (signOut as jest.Mock).mockImplementation(async () => {
+    setMockSession(null, "unauthenticated");
+    return undefined;
+  });
 
   const localStorageMock = (() => {
     let store: Record<string, string> = {};
@@ -112,8 +213,10 @@ beforeEach(() => {
 });
 
 const setupAuthenticatedUser = async () => {
-  await register("testuser", "test@example.com", "password123", "ADMIN");
-  await login("test@example.com", "password123");
+  setMockSession(
+    { id: "1", name: "testuser", email: "test@example.com", role: "ADMIN" },
+    "authenticated"
+  );
   localStorage.setItem("jira-clone-privacy-consent", "true");
 };
 
@@ -654,6 +757,7 @@ describe("DashboardLayout", () => {
     });
 
     it("should handle import data successfully", async () => {
+      // Standard export shape: { exportDate, version, data: { tasks, ... } }.
       const mockFile = new File(
         [
           '{"data": {"tasks": [], "requirements": [], "testCases": [], "bugs": [], "goals": []}}',
@@ -661,15 +765,6 @@ describe("DashboardLayout", () => {
         "test.json",
         { type: "application/json" }
       );
-      (importUserData as jest.Mock).mockResolvedValue({
-        data: {
-          tasks: [],
-          requirements: [],
-          testCases: [],
-          bugs: [],
-          goals: [],
-        },
-      });
 
       render(<DashboardLayout />);
 
@@ -689,9 +784,6 @@ describe("DashboardLayout", () => {
       const mockFile = new File(["invalid json"], "test.json", {
         type: "application/json",
       });
-      (importUserData as jest.Mock).mockRejectedValue(
-        new Error("Invalid JSON")
-      );
 
       render(<DashboardLayout />);
 
@@ -701,22 +793,13 @@ describe("DashboardLayout", () => {
       });
 
       await waitFor(() => {
-        expect(screen.getByText("Invalid JSON")).toBeInTheDocument();
+        expect(screen.getByText("Invalid JSON file")).toBeInTheDocument();
       });
     });
 
     it("should handle import with partial data correctly", async () => {
-      const mockFile = new File(["{}"], "test.json", {
+      const mockFile = new File(['{"data": {}}'], "test.json", {
         type: "application/json",
-      });
-      (importUserData as jest.Mock).mockResolvedValue({
-        data: {
-          tasks: [],
-          requirements: [],
-          testCases: [],
-          bugs: [],
-          goals: [],
-        },
       });
 
       render(<DashboardLayout />);
@@ -731,6 +814,54 @@ describe("DashboardLayout", () => {
           screen.getByText("Data imported successfully!")
         ).toBeInTheDocument();
       });
+    });
+
+    it("should nest milestones/keyResults into goals and include epics on import", async () => {
+      const { importDataApi } = jest.requireMock(
+        "../app/dashboard/services/api"
+      ) as { importDataApi: jest.Mock };
+      importDataApi.mockClear();
+      const exportData = {
+        data: {
+          tasks: [],
+          requirements: [],
+          testCases: [],
+          bugs: [],
+          goals: [{ id: "g1", title: "Goal 1" }],
+          milestones: [{ id: "m1", goalId: "g1", title: "Milestone 1" }],
+          keyResults: [{ id: "kr1", goalId: "g1", title: "KR 1" }],
+          epics: [{ id: "e1", title: "Epic 1" }],
+        },
+      };
+      const mockFile = new File([JSON.stringify(exportData)], "test.json", {
+        type: "application/json",
+      });
+
+      render(<DashboardLayout />);
+
+      await waitFor(() => {
+        const fileInput = screen.getByLabelText("Import data file");
+        fireEvent.change(fileInput, { target: { files: [mockFile] } });
+      });
+
+      await waitFor(() => {
+        expect(
+          screen.getByText("Data imported successfully!")
+        ).toBeInTheDocument();
+      });
+
+      expect(importDataApi).toHaveBeenCalledWith(
+        expect.objectContaining({
+          epics: [{ id: "e1", title: "Epic 1" }],
+          goals: [
+            expect.objectContaining({
+              id: "g1",
+              milestones: [expect.objectContaining({ id: "m1" })],
+              keyResults: [expect.objectContaining({ id: "kr1" })],
+            }),
+          ],
+        })
+      );
     });
 
     it("should handle empty file input gracefully", async () => {
@@ -809,8 +940,15 @@ describe("DashboardLayout", () => {
 
   describe("Privacy Consent", () => {
     it("should show privacy consent modal when consent not given", async () => {
-      await register("testuser2", "test2@example.com", "password123", "ADMIN");
-      await login("test2@example.com", "password123");
+      setMockSession(
+        {
+          id: "2",
+          name: "testuser2",
+          email: "test2@example.com",
+          role: "ADMIN",
+        },
+        "authenticated"
+      );
 
       render(<DashboardLayout />);
 
@@ -820,8 +958,15 @@ describe("DashboardLayout", () => {
     });
 
     it("should accept privacy consent", async () => {
-      await register("testuser3", "test3@example.com", "password123", "ADMIN");
-      await login("test3@example.com", "password123");
+      setMockSession(
+        {
+          id: "3",
+          name: "testuser3",
+          email: "test3@example.com",
+          role: "ADMIN",
+        },
+        "authenticated"
+      );
 
       render(<DashboardLayout />);
 
@@ -837,8 +982,15 @@ describe("DashboardLayout", () => {
     });
 
     it("should revoke privacy consent", async () => {
-      await register("testuser4", "test4@example.com", "password123", "ADMIN");
-      await login("test4@example.com", "password123");
+      setMockSession(
+        {
+          id: "4",
+          name: "testuser4",
+          email: "test4@example.com",
+          role: "ADMIN",
+        },
+        "authenticated"
+      );
 
       render(<DashboardLayout />);
 
@@ -5417,18 +5569,26 @@ describe("DashboardLayout", () => {
     });
 
     it("should test handleLoginSuccess by logging in", async () => {
-      localStorage.removeItem("jira-clone-auth");
-      render(<DashboardLayout />);
+      setMockSession(null, "unauthenticated");
+      const { rerender } = render(<DashboardLayout />);
 
       await waitFor(() => {
-        fireEvent.change(screen.getByPlaceholderText("Email"), {
+        fireEvent.change(screen.getByPlaceholderText("Enter email"), {
           target: { value: "admin@test.com" },
         });
-        fireEvent.change(screen.getByPlaceholderText("Password"), {
+        fireEvent.change(screen.getByPlaceholderText("Enter password"), {
           target: { value: "password123" },
         });
         fireEvent.click(screen.getByText("Login"));
       });
+
+      await waitFor(() => {
+        expect(signIn).toHaveBeenCalled();
+      });
+
+      // LoginForm navigates to /dashboard on success so the new NextAuth
+      // session is picked up via a full page load; simulate that re-mount.
+      rerender(<DashboardLayout />);
 
       await waitFor(() => {
         expect(screen.getByText("📊 Jira Clone")).toBeInTheDocument();
@@ -5450,6 +5610,12 @@ describe("DashboardLayout", () => {
         fireEvent.change(screen.getByPlaceholderText("Enter title"), {
           target: { value: "Bug to Edit" },
         });
+        fireEvent.change(screen.getByLabelText("Severity"), {
+          target: { value: "MEDIUM" },
+        });
+        fireEvent.change(screen.getByLabelText("Priority"), {
+          target: { value: "MEDIUM" },
+        });
         fireEvent.click(screen.getByText("Create"));
       });
 
@@ -5457,24 +5623,28 @@ describe("DashboardLayout", () => {
         fireEvent.click(screen.getByText("Bugs"));
       });
 
+      // Clicking a bug card opens the bug detail dialog (the edit-form modal
+      // is not wired to any control in the current BugTracker).
       await waitFor(() => {
-        const bugCards = screen.getAllByRole("listitem");
-        if (bugCards.length > 0) {
-          fireEvent.click(bugCards[0]);
-        }
+        fireEvent.click(screen.getByText("Bug to Edit"));
       });
 
       await waitFor(() => {
-        fireEvent.change(screen.getByPlaceholderText("Enter title"), {
-          target: { value: "Bug Edited" },
-        });
-        const buttons = screen.getAllByRole("button");
-        const saveButton = buttons.find((btn) =>
-          btn.textContent?.includes("Save")
-        );
-        if (saveButton) {
-          fireEvent.click(saveButton);
-        }
+        expect(screen.getByRole("dialog")).toBeInTheDocument();
+      });
+
+      await waitFor(() => {
+        fireEvent.click(screen.getByLabelText("Change status to In Progress"));
+      });
+
+      await waitFor(() => {
+        fireEvent.click(screen.getByLabelText("Save bug changes"));
+      });
+
+      await waitFor(() => {
+        expect(
+          screen.getByText(/Bug updated successfully!/)
+        ).toBeInTheDocument();
       });
     });
 
@@ -5536,10 +5706,8 @@ describe("DashboardLayout", () => {
       });
 
       await waitFor(() => {
-        const taskCards = screen.getAllByRole("listitem");
-        if (taskCards.length > 0) {
-          fireEvent.click(taskCards[0]);
-        }
+        const taskCard = screen.getByText("Comment Task");
+        fireEvent.click(taskCard);
       });
 
       await waitFor(() => {
@@ -5572,10 +5740,8 @@ describe("DashboardLayout", () => {
       });
 
       await waitFor(() => {
-        const taskCards = screen.getAllByRole("listitem");
-        if (taskCards.length > 0) {
-          fireEvent.click(taskCards[0]);
-        }
+        const taskCard = screen.getByText("Delete Comment Task");
+        fireEvent.click(taskCard);
       });
 
       await waitFor(() => {

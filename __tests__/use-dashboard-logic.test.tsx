@@ -48,7 +48,7 @@ describe("useDashboardLogic", () => {
       const mockSetTasks = jest.fn();
       
       const { result } = renderHook(() => useDashboardLogic({
-        currentUser: { username: "testuser", email: "test@test.com" },
+        currentUser: { id: "user-1", username: "testuser", email: "test@test.com" },
         setIsAuthenticated: jest.fn(),
         setCurrentUser: jest.fn(),
         setShowModal: jest.fn(),
@@ -88,6 +88,7 @@ describe("useDashboardLogic", () => {
         setPrivacyConsented: jest.fn(),
         setImportMessage: jest.fn(),
         fileInputRef: { current: null },
+        currentEpicId: null,
       }), {
         wrapper: Providers,
       });
@@ -99,7 +100,7 @@ describe("useDashboardLogic", () => {
 
     it("should not add comment when content is empty", () => {
       const { result } = renderHook(() => useDashboardLogic({
-        currentUser: { username: "testuser", email: "test@test.com" },
+        currentUser: { id: "user-1", username: "testuser", email: "test@test.com" },
         setIsAuthenticated: jest.fn(),
         setCurrentUser: jest.fn(),
         setShowModal: jest.fn(),
@@ -139,6 +140,7 @@ describe("useDashboardLogic", () => {
         setPrivacyConsented: jest.fn(),
         setImportMessage: jest.fn(),
         fileInputRef: { current: null },
+        currentEpicId: null,
       }), {
         wrapper: Providers,
       });
@@ -190,6 +192,7 @@ describe("useDashboardLogic", () => {
         setPrivacyConsented: jest.fn(),
         setImportMessage: jest.fn(),
         fileInputRef: { current: null },
+        currentEpicId: null,
       }), {
         wrapper: Providers,
       });
@@ -203,7 +206,7 @@ describe("useDashboardLogic", () => {
   describe("handleDeleteComment", () => {
     it("should delete comment", () => {
       const { result } = renderHook(() => useDashboardLogic({
-        currentUser: { username: "testuser", email: "test@test.com" },
+        currentUser: { id: "user-1", username: "testuser", email: "test@test.com" },
         setIsAuthenticated: jest.fn(),
         setCurrentUser: jest.fn(),
         setShowModal: jest.fn(),
@@ -243,6 +246,7 @@ describe("useDashboardLogic", () => {
         setPrivacyConsented: jest.fn(),
         setImportMessage: jest.fn(),
         fileInputRef: { current: null },
+        currentEpicId: null,
       }), {
         wrapper: Providers,
       });
@@ -259,7 +263,7 @@ describe("useDashboardLogic", () => {
       const mockSetShowPrivacyModal = jest.fn();
 
       const { result } = renderHook(() => useDashboardLogic({
-        currentUser: { username: "testuser", email: "test@test.com" },
+        currentUser: { id: "user-1", username: "testuser", email: "test@test.com" },
         setIsAuthenticated: jest.fn(),
         setCurrentUser: jest.fn(),
         setShowModal: jest.fn(),
@@ -299,6 +303,7 @@ describe("useDashboardLogic", () => {
         setPrivacyConsented: mockSetPrivacyConsented,
         setImportMessage: jest.fn(),
         fileInputRef: { current: null },
+        currentEpicId: null,
       }), {
         wrapper: Providers,
       });
@@ -317,7 +322,7 @@ describe("useDashboardLogic", () => {
       (window as any).confirm = mockConfirm;
 
       const { result } = renderHook(() => useDashboardLogic({
-        currentUser: { username: "testuser", email: "test@test.com" },
+        currentUser: { id: "user-1", username: "testuser", email: "test@test.com" },
         setIsAuthenticated: jest.fn(),
         setCurrentUser: jest.fn(),
         setShowModal: jest.fn(),
@@ -357,6 +362,7 @@ describe("useDashboardLogic", () => {
         setPrivacyConsented: jest.fn(),
         setImportMessage: jest.fn(),
         fileInputRef: { current: null },
+        currentEpicId: null,
       }), {
         wrapper: Providers,
       });
@@ -373,7 +379,7 @@ describe("useDashboardLogic", () => {
       (window as any).confirm = mockConfirm;
 
       const { result } = renderHook(() => useDashboardLogic({
-        currentUser: { username: "testuser", email: "test@test.com" },
+        currentUser: { id: "user-1", username: "testuser", email: "test@test.com" },
         setIsAuthenticated: jest.fn(),
         setCurrentUser: jest.fn(),
         setShowModal: jest.fn(),
@@ -413,6 +419,7 @@ describe("useDashboardLogic", () => {
         setPrivacyConsented: jest.fn(),
         setImportMessage: jest.fn(),
         fileInputRef: { current: null },
+        currentEpicId: null,
       }), {
         wrapper: Providers,
       });
@@ -431,7 +438,7 @@ describe("useDashboardLogic", () => {
       (window as any).confirm = mockConfirm;
 
       const { result } = renderHook(() => useDashboardLogic({
-        currentUser: { username: "testuser", email: "test@test.com" },
+        currentUser: { id: "user-1", username: "testuser", email: "test@test.com" },
         setIsAuthenticated: jest.fn(),
         setCurrentUser: jest.fn(),
         setShowModal: jest.fn(),
@@ -471,6 +478,7 @@ describe("useDashboardLogic", () => {
         setPrivacyConsented: jest.fn(),
         setImportMessage: jest.fn(),
         fileInputRef: { current: null },
+        currentEpicId: null,
       }), {
         wrapper: Providers,
       });
@@ -487,7 +495,7 @@ describe("useDashboardLogic", () => {
       (window as any).confirm = mockConfirm;
 
       const { result } = renderHook(() => useDashboardLogic({
-        currentUser: { username: "testuser", email: "test@test.com" },
+        currentUser: { id: "user-1", username: "testuser", email: "test@test.com" },
         setIsAuthenticated: jest.fn(),
         setCurrentUser: jest.fn(),
         setShowModal: jest.fn(),
@@ -527,6 +535,7 @@ describe("useDashboardLogic", () => {
         setPrivacyConsented: jest.fn(),
         setImportMessage: jest.fn(),
         fileInputRef: { current: null },
+        currentEpicId: null,
       }), {
         wrapper: Providers,
       });
@@ -542,7 +551,7 @@ describe("useDashboardLogic", () => {
   describe("handleSaveTask", () => {
     it("should not save task when title is empty", () => {
       const { result } = renderHook(() => useDashboardLogic({
-        currentUser: { username: "testuser", email: "test@test.com" },
+        currentUser: { id: "user-1", username: "testuser", email: "test@test.com" },
         setIsAuthenticated: jest.fn(),
         setCurrentUser: jest.fn(),
         setShowModal: jest.fn(),
@@ -582,6 +591,7 @@ describe("useDashboardLogic", () => {
         setPrivacyConsented: jest.fn(),
         setImportMessage: jest.fn(),
         fileInputRef: { current: null },
+        currentEpicId: null,
       }), {
         wrapper: Providers,
       });
@@ -593,7 +603,7 @@ describe("useDashboardLogic", () => {
 
     it("should create new task when editingTask is null", () => {
       const { result } = renderHook(() => useDashboardLogic({
-        currentUser: { username: "testuser", email: "test@test.com" },
+        currentUser: { id: "user-1", username: "testuser", email: "test@test.com" },
         setIsAuthenticated: jest.fn(),
         setCurrentUser: jest.fn(),
         setShowModal: jest.fn(),
@@ -633,6 +643,7 @@ describe("useDashboardLogic", () => {
         setPrivacyConsented: jest.fn(),
         setImportMessage: jest.fn(),
         fileInputRef: { current: null },
+        currentEpicId: null,
       }), {
         wrapper: Providers,
       });
@@ -644,7 +655,7 @@ describe("useDashboardLogic", () => {
 
     it("should update task when editingTask is provided", () => {
       const { result } = renderHook(() => useDashboardLogic({
-        currentUser: { username: "testuser", email: "test@test.com" },
+        currentUser: { id: "user-1", username: "testuser", email: "test@test.com" },
         setIsAuthenticated: jest.fn(),
         setCurrentUser: jest.fn(),
         setShowModal: jest.fn(),
@@ -655,6 +666,10 @@ describe("useDashboardLogic", () => {
           description: "Old description",
           status: "TODO",
           priority: "MEDIUM",
+          dueDate: "",
+          tags: [],
+          assignee: "",
+          comments: [],
           createdAt: "2026-01-01T00:00:00.000Z",
         },
         setEditingTask: jest.fn(),
@@ -691,6 +706,7 @@ describe("useDashboardLogic", () => {
         setPrivacyConsented: jest.fn(),
         setImportMessage: jest.fn(),
         fileInputRef: { current: null },
+        currentEpicId: null,
       }), {
         wrapper: Providers,
       });
@@ -704,7 +720,7 @@ describe("useDashboardLogic", () => {
   describe("handleSaveRequirement", () => {
     it("should not save requirement when title is empty", () => {
       const { result } = renderHook(() => useDashboardLogic({
-        currentUser: { username: "testuser", email: "test@test.com" },
+        currentUser: { id: "user-1", username: "testuser", email: "test@test.com" },
         setIsAuthenticated: jest.fn(),
         setCurrentUser: jest.fn(),
         setShowModal: jest.fn(),
@@ -744,6 +760,7 @@ describe("useDashboardLogic", () => {
         setPrivacyConsented: jest.fn(),
         setImportMessage: jest.fn(),
         fileInputRef: { current: null },
+        currentEpicId: null,
       }), {
         wrapper: Providers,
       });
@@ -755,7 +772,7 @@ describe("useDashboardLogic", () => {
 
     it("should create new requirement when editingRequirement is null", () => {
       const { result } = renderHook(() => useDashboardLogic({
-        currentUser: { username: "testuser", email: "test@test.com" },
+        currentUser: { id: "user-1", username: "testuser", email: "test@test.com" },
         setIsAuthenticated: jest.fn(),
         setCurrentUser: jest.fn(),
         setShowModal: jest.fn(),
@@ -795,6 +812,7 @@ describe("useDashboardLogic", () => {
         setPrivacyConsented: jest.fn(),
         setImportMessage: jest.fn(),
         fileInputRef: { current: null },
+        currentEpicId: null,
       }), {
         wrapper: Providers,
       });
@@ -806,7 +824,7 @@ describe("useDashboardLogic", () => {
 
     it("should update requirement when editingRequirement is provided", () => {
       const { result } = renderHook(() => useDashboardLogic({
-        currentUser: { username: "testuser", email: "test@test.com" },
+        currentUser: { id: "user-1", username: "testuser", email: "test@test.com" },
         setIsAuthenticated: jest.fn(),
         setCurrentUser: jest.fn(),
         setShowModal: jest.fn(),
@@ -822,6 +840,8 @@ describe("useDashboardLogic", () => {
           acceptanceCriteria: [],
           createdAt: "2026-01-01T00:00:00.000Z",
           updatedAt: "2026-01-01T00:00:00.000Z",
+          requester: "test@test.com",
+          executor: "dev@test.com",
         },
         setEditingRequirement: jest.fn(),
         editingTestCase: null,
@@ -855,6 +875,7 @@ describe("useDashboardLogic", () => {
         setPrivacyConsented: jest.fn(),
         setImportMessage: jest.fn(),
         fileInputRef: { current: null },
+        currentEpicId: null,
       }), {
         wrapper: Providers,
       });
@@ -868,7 +889,7 @@ describe("useDashboardLogic", () => {
   describe("handleSaveTestCase", () => {
     it("should not save test case when title is empty", () => {
       const { result } = renderHook(() => useDashboardLogic({
-        currentUser: { username: "testuser", email: "test@test.com" },
+        currentUser: { id: "user-1", username: "testuser", email: "test@test.com" },
         setIsAuthenticated: jest.fn(),
         setCurrentUser: jest.fn(),
         setShowModal: jest.fn(),
@@ -908,6 +929,7 @@ describe("useDashboardLogic", () => {
         setPrivacyConsented: jest.fn(),
         setImportMessage: jest.fn(),
         fileInputRef: { current: null },
+        currentEpicId: null,
       }), {
         wrapper: Providers,
       });
@@ -919,7 +941,7 @@ describe("useDashboardLogic", () => {
 
     it("should create new test case when editingTestCase is null", () => {
       const { result } = renderHook(() => useDashboardLogic({
-        currentUser: { username: "testuser", email: "test@test.com" },
+        currentUser: { id: "user-1", username: "testuser", email: "test@test.com" },
         setIsAuthenticated: jest.fn(),
         setCurrentUser: jest.fn(),
         setShowModal: jest.fn(),
@@ -959,6 +981,7 @@ describe("useDashboardLogic", () => {
         setPrivacyConsented: jest.fn(),
         setImportMessage: jest.fn(),
         fileInputRef: { current: null },
+        currentEpicId: null,
       }), {
         wrapper: Providers,
       });
@@ -970,7 +993,7 @@ describe("useDashboardLogic", () => {
 
     it("should update test case when editingTestCase is provided", () => {
       const { result } = renderHook(() => useDashboardLogic({
-        currentUser: { username: "testuser", email: "test@test.com" },
+        currentUser: { id: "user-1", username: "testuser", email: "test@test.com" },
         setIsAuthenticated: jest.fn(),
         setCurrentUser: jest.fn(),
         setShowModal: jest.fn(),
@@ -1018,6 +1041,7 @@ describe("useDashboardLogic", () => {
         setPrivacyConsented: jest.fn(),
         setImportMessage: jest.fn(),
         fileInputRef: { current: null },
+        currentEpicId: null,
       }), {
         wrapper: Providers,
       });
@@ -1031,7 +1055,7 @@ describe("useDashboardLogic", () => {
   describe("handleSaveBug", () => {
     it("should not save bug when title is empty", () => {
       const { result } = renderHook(() => useDashboardLogic({
-        currentUser: { username: "testuser", email: "test@test.com" },
+        currentUser: { id: "user-1", username: "testuser", email: "test@test.com" },
         setIsAuthenticated: jest.fn(),
         setCurrentUser: jest.fn(),
         setShowModal: jest.fn(),
@@ -1071,6 +1095,7 @@ describe("useDashboardLogic", () => {
         setPrivacyConsented: jest.fn(),
         setImportMessage: jest.fn(),
         fileInputRef: { current: null },
+        currentEpicId: null,
       }), {
         wrapper: Providers,
       });
@@ -1082,7 +1107,7 @@ describe("useDashboardLogic", () => {
 
     it("should create new bug when editingBug is null", () => {
       const { result } = renderHook(() => useDashboardLogic({
-        currentUser: { username: "testuser", email: "test@test.com" },
+        currentUser: { id: "user-1", username: "testuser", email: "test@test.com" },
         setIsAuthenticated: jest.fn(),
         setCurrentUser: jest.fn(),
         setShowModal: jest.fn(),
@@ -1122,6 +1147,7 @@ describe("useDashboardLogic", () => {
         setPrivacyConsented: jest.fn(),
         setImportMessage: jest.fn(),
         fileInputRef: { current: null },
+        currentEpicId: null,
       }), {
         wrapper: Providers,
       });
@@ -1133,7 +1159,7 @@ describe("useDashboardLogic", () => {
 
     it("should update bug when editingBug is provided", () => {
       const { result } = renderHook(() => useDashboardLogic({
-        currentUser: { username: "testuser", email: "test@test.com" },
+        currentUser: { id: "user-1", username: "testuser", email: "test@test.com" },
         setIsAuthenticated: jest.fn(),
         setCurrentUser: jest.fn(),
         setShowModal: jest.fn(),
@@ -1187,6 +1213,7 @@ describe("useDashboardLogic", () => {
         setPrivacyConsented: jest.fn(),
         setImportMessage: jest.fn(),
         fileInputRef: { current: null },
+        currentEpicId: null,
       }), {
         wrapper: Providers,
       });
@@ -1200,7 +1227,7 @@ describe("useDashboardLogic", () => {
   describe("handleCreateGoal", () => {
     it("should not create goal when title is empty", () => {
       const { result } = renderHook(() => useDashboardLogic({
-        currentUser: { username: "testuser", email: "test@test.com" },
+        currentUser: { id: "user-1", username: "testuser", email: "test@test.com" },
         setIsAuthenticated: jest.fn(),
         setCurrentUser: jest.fn(),
         setShowModal: jest.fn(),
@@ -1240,6 +1267,7 @@ describe("useDashboardLogic", () => {
         setPrivacyConsented: jest.fn(),
         setImportMessage: jest.fn(),
         fileInputRef: { current: null },
+        currentEpicId: null,
       }), {
         wrapper: Providers,
       });
@@ -1247,18 +1275,22 @@ describe("useDashboardLogic", () => {
       act(() => {
         result.current.handleCreateGoal({
           title: "",
+          description: "",
           type: "OKR",
           status: "IN_PROGRESS",
+          target: "",
           currentProgress: 50,
           startDate: "2026-07-01",
           endDate: "2026-12-31",
+          owner: "",
+          color: "",
         });
       });
     });
 
     it("should not create goal when startDate is missing", () => {
       const { result } = renderHook(() => useDashboardLogic({
-        currentUser: { username: "testuser", email: "test@test.com" },
+        currentUser: { id: "user-1", username: "testuser", email: "test@test.com" },
         setIsAuthenticated: jest.fn(),
         setCurrentUser: jest.fn(),
         setShowModal: jest.fn(),
@@ -1298,6 +1330,7 @@ describe("useDashboardLogic", () => {
         setPrivacyConsented: jest.fn(),
         setImportMessage: jest.fn(),
         fileInputRef: { current: null },
+        currentEpicId: null,
       }), {
         wrapper: Providers,
       });
@@ -1305,18 +1338,22 @@ describe("useDashboardLogic", () => {
       act(() => {
         result.current.handleCreateGoal({
           title: "Test Goal",
+          description: "",
           type: "OKR",
           status: "IN_PROGRESS",
+          target: "",
           currentProgress: 50,
           startDate: "",
           endDate: "2026-12-31",
+          owner: "",
+          color: "",
         });
       });
     });
 
     it("should not create goal when endDate is missing", () => {
       const { result } = renderHook(() => useDashboardLogic({
-        currentUser: { username: "testuser", email: "test@test.com" },
+        currentUser: { id: "user-1", username: "testuser", email: "test@test.com" },
         setIsAuthenticated: jest.fn(),
         setCurrentUser: jest.fn(),
         setShowModal: jest.fn(),
@@ -1356,6 +1393,7 @@ describe("useDashboardLogic", () => {
         setPrivacyConsented: jest.fn(),
         setImportMessage: jest.fn(),
         fileInputRef: { current: null },
+        currentEpicId: null,
       }), {
         wrapper: Providers,
       });
@@ -1363,18 +1401,22 @@ describe("useDashboardLogic", () => {
       act(() => {
         result.current.handleCreateGoal({
           title: "Test Goal",
+          description: "",
           type: "OKR",
           status: "IN_PROGRESS",
+          target: "",
           currentProgress: 50,
           startDate: "2026-07-01",
           endDate: "",
+          owner: "",
+          color: "",
         });
       });
     });
 
     it("should create goal when all required fields are provided", () => {
       const { result } = renderHook(() => useDashboardLogic({
-        currentUser: { username: "testuser", email: "test@test.com" },
+        currentUser: { id: "user-1", username: "testuser", email: "test@test.com" },
         setIsAuthenticated: jest.fn(),
         setCurrentUser: jest.fn(),
         setShowModal: jest.fn(),
@@ -1414,6 +1456,7 @@ describe("useDashboardLogic", () => {
         setPrivacyConsented: jest.fn(),
         setImportMessage: jest.fn(),
         fileInputRef: { current: null },
+        currentEpicId: null,
       }), {
         wrapper: Providers,
       });
@@ -1421,11 +1464,15 @@ describe("useDashboardLogic", () => {
       act(() => {
         result.current.handleCreateGoal({
           title: "Test Goal",
+          description: "",
           type: "OKR",
           status: "IN_PROGRESS",
+          target: "",
           currentProgress: 50,
           startDate: "2026-07-01",
           endDate: "2026-12-31",
+          owner: "",
+          color: "",
         });
       });
     });
@@ -1434,7 +1481,7 @@ describe("useDashboardLogic", () => {
   describe("handleUpdateGoal", () => {
     it("should not update goal when title is empty", () => {
       const { result } = renderHook(() => useDashboardLogic({
-        currentUser: { username: "testuser", email: "test@test.com" },
+        currentUser: { id: "user-1", username: "testuser", email: "test@test.com" },
         setIsAuthenticated: jest.fn(),
         setCurrentUser: jest.fn(),
         setShowModal: jest.fn(),
@@ -1474,6 +1521,7 @@ describe("useDashboardLogic", () => {
         setPrivacyConsented: jest.fn(),
         setImportMessage: jest.fn(),
         fileInputRef: { current: null },
+        currentEpicId: null,
       }), {
         wrapper: Providers,
       });
@@ -1482,11 +1530,15 @@ describe("useDashboardLogic", () => {
         result.current.handleUpdateGoal({
           id: "goal-1",
           title: "",
+          description: "",
           type: "OKR",
           status: "IN_PROGRESS",
+          target: "",
           currentProgress: 50,
           startDate: "2026-07-01",
           endDate: "2026-12-31",
+          owner: "",
+          color: "",
           createdAt: "2026-01-01T00:00:00.000Z",
           updatedAt: "2026-01-01T00:00:00.000Z",
         });
@@ -1495,7 +1547,7 @@ describe("useDashboardLogic", () => {
 
     it("should update goal when title is provided", () => {
       const { result } = renderHook(() => useDashboardLogic({
-        currentUser: { username: "testuser", email: "test@test.com" },
+        currentUser: { id: "user-1", username: "testuser", email: "test@test.com" },
         setIsAuthenticated: jest.fn(),
         setCurrentUser: jest.fn(),
         setShowModal: jest.fn(),
@@ -1535,6 +1587,7 @@ describe("useDashboardLogic", () => {
         setPrivacyConsented: jest.fn(),
         setImportMessage: jest.fn(),
         fileInputRef: { current: null },
+        currentEpicId: null,
       }), {
         wrapper: Providers,
       });
@@ -1543,11 +1596,15 @@ describe("useDashboardLogic", () => {
         result.current.handleUpdateGoal({
           id: "goal-1",
           title: "Updated Goal",
+          description: "",
           type: "OKR",
-          status: "COMPLETED",
+          status: "ACHIEVED",
+          target: "",
           currentProgress: 100,
           startDate: "2026-07-01",
           endDate: "2026-12-31",
+          owner: "",
+          color: "",
           createdAt: "2026-01-01T00:00:00.000Z",
           updatedAt: "2026-01-01T00:00:00.000Z",
         });
@@ -1558,7 +1615,7 @@ describe("useDashboardLogic", () => {
   describe("handleDeleteGoal", () => {
     it("should delete goal and update related tasks and requirements", () => {
       const { result } = renderHook(() => useDashboardLogic({
-        currentUser: { username: "testuser", email: "test@test.com" },
+        currentUser: { id: "user-1", username: "testuser", email: "test@test.com" },
         setIsAuthenticated: jest.fn(),
         setCurrentUser: jest.fn(),
         setShowModal: jest.fn(),
@@ -1598,6 +1655,7 @@ describe("useDashboardLogic", () => {
         setPrivacyConsented: jest.fn(),
         setImportMessage: jest.fn(),
         fileInputRef: { current: null },
+        currentEpicId: null,
       }), {
         wrapper: Providers,
       });
@@ -1614,7 +1672,7 @@ describe("useDashboardLogic", () => {
       const mockSetCurrentUser = jest.fn();
 
       const { result } = renderHook(() => useDashboardLogic({
-        currentUser: { username: "testuser", email: "test@test.com" },
+        currentUser: { id: "user-1", username: "testuser", email: "test@test.com" },
         setIsAuthenticated: mockSetIsAuthenticated,
         setCurrentUser: mockSetCurrentUser,
         setShowModal: jest.fn(),
@@ -1654,6 +1712,7 @@ describe("useDashboardLogic", () => {
         setPrivacyConsented: jest.fn(),
         setImportMessage: jest.fn(),
         fileInputRef: { current: null },
+        currentEpicId: null,
       }), {
         wrapper: Providers,
       });
@@ -1672,7 +1731,7 @@ describe("useDashboardLogic", () => {
       (URL as any).revokeObjectURL = mockRevokeObjectURL;
 
       const { result } = renderHook(() => useDashboardLogic({
-        currentUser: { username: "testuser", email: "test@test.com" },
+        currentUser: { id: "user-1", username: "testuser", email: "test@test.com" },
         setIsAuthenticated: jest.fn(),
         setCurrentUser: jest.fn(),
         setShowModal: jest.fn(),
@@ -1712,6 +1771,7 @@ describe("useDashboardLogic", () => {
         setPrivacyConsented: jest.fn(),
         setImportMessage: jest.fn(),
         fileInputRef: { current: null },
+        currentEpicId: null,
       }), {
         wrapper: Providers,
       });
@@ -1725,7 +1785,7 @@ describe("useDashboardLogic", () => {
   describe("handleLoginSuccess", () => {
     it("should log login success", () => {
       const { result } = renderHook(() => useDashboardLogic({
-        currentUser: { username: "testuser", email: "test@test.com" },
+        currentUser: { id: "user-1", username: "testuser", email: "test@test.com" },
         setIsAuthenticated: jest.fn(),
         setCurrentUser: jest.fn(),
         setShowModal: jest.fn(),
@@ -1765,6 +1825,7 @@ describe("useDashboardLogic", () => {
         setPrivacyConsented: jest.fn(),
         setImportMessage: jest.fn(),
         fileInputRef: { current: null },
+        currentEpicId: null,
       }), {
         wrapper: Providers,
       });
@@ -1783,7 +1844,7 @@ describe("useDashboardLogic", () => {
       const mockSetShowModal = jest.fn();
 
       const { result } = renderHook(() => useDashboardLogic({
-        currentUser: { username: "testuser", email: "test@test.com" },
+        currentUser: { id: "user-1", username: "testuser", email: "test@test.com" },
         setIsAuthenticated: jest.fn(),
         setCurrentUser: jest.fn(),
         setShowModal: mockSetShowModal,
@@ -1823,6 +1884,7 @@ describe("useDashboardLogic", () => {
         setPrivacyConsented: jest.fn(),
         setImportMessage: jest.fn(),
         fileInputRef: { current: null },
+        currentEpicId: null,
       }), {
         wrapper: Providers,
       });
@@ -1845,7 +1907,7 @@ describe("useDashboardLogic", () => {
       const mockSetShowModal = jest.fn();
 
       const { result } = renderHook(() => useDashboardLogic({
-        currentUser: { username: "testuser", email: "test@test.com" },
+        currentUser: { id: "user-1", username: "testuser", email: "test@test.com" },
         setIsAuthenticated: jest.fn(),
         setCurrentUser: jest.fn(),
         setShowModal: mockSetShowModal,
@@ -1885,6 +1947,7 @@ describe("useDashboardLogic", () => {
         setPrivacyConsented: jest.fn(),
         setImportMessage: jest.fn(),
         fileInputRef: { current: null },
+        currentEpicId: null,
       }), {
         wrapper: Providers,
       });
@@ -1907,7 +1970,7 @@ describe("useDashboardLogic", () => {
       const mockSetShowModal = jest.fn();
 
       const { result } = renderHook(() => useDashboardLogic({
-        currentUser: { username: "testuser", email: "test@test.com" },
+        currentUser: { id: "user-1", username: "testuser", email: "test@test.com" },
         setIsAuthenticated: jest.fn(),
         setCurrentUser: jest.fn(),
         setShowModal: mockSetShowModal,
@@ -1947,6 +2010,7 @@ describe("useDashboardLogic", () => {
         setPrivacyConsented: jest.fn(),
         setImportMessage: jest.fn(),
         fileInputRef: { current: null },
+        currentEpicId: null,
       }), {
         wrapper: Providers,
       });
@@ -1969,7 +2033,7 @@ describe("useDashboardLogic", () => {
       const mockSetShowModal = jest.fn();
 
       const { result } = renderHook(() => useDashboardLogic({
-        currentUser: { username: "testuser", email: "test@test.com" },
+        currentUser: { id: "user-1", username: "testuser", email: "test@test.com" },
         setIsAuthenticated: jest.fn(),
         setCurrentUser: jest.fn(),
         setShowModal: mockSetShowModal,
@@ -2009,6 +2073,7 @@ describe("useDashboardLogic", () => {
         setPrivacyConsented: jest.fn(),
         setImportMessage: jest.fn(),
         fileInputRef: { current: null },
+        currentEpicId: null,
       }), {
         wrapper: Providers,
       });
@@ -2028,7 +2093,7 @@ describe("useDashboardLogic", () => {
       const mockSetImportMessage = jest.fn();
 
       const { result } = renderHook(() => useDashboardLogic({
-        currentUser: { username: "testuser", email: "test@test.com" },
+        currentUser: { id: "user-1", username: "testuser", email: "test@test.com" },
         setIsAuthenticated: jest.fn(),
         setCurrentUser: jest.fn(),
         setShowModal: jest.fn(),
@@ -2068,6 +2133,7 @@ describe("useDashboardLogic", () => {
         setPrivacyConsented: jest.fn(),
         setImportMessage: mockSetImportMessage,
         fileInputRef: { current: null },
+        currentEpicId: null,
       }), {
         wrapper: Providers,
       });
@@ -2097,7 +2163,7 @@ describe("useDashboardLogic", () => {
       })], "import.json", { type: "application/json" });
 
       const { result } = renderHook(() => useDashboardLogic({
-        currentUser: { username: "testuser", email: "test@test.com" },
+        currentUser: { id: "user-1", username: "testuser", email: "test@test.com" },
         setIsAuthenticated: jest.fn(),
         setCurrentUser: jest.fn(),
         setShowModal: jest.fn(),
@@ -2136,7 +2202,8 @@ describe("useDashboardLogic", () => {
         setShowPrivacyModal: jest.fn(),
         setPrivacyConsented: jest.fn(),
         setImportMessage: mockSetImportMessage,
-        fileInputRef: { current: { value: "test" } },
+        fileInputRef: { current: { value: "test" } as any },
+        currentEpicId: null,
       }), {
         wrapper: Providers,
       });
@@ -2158,7 +2225,7 @@ describe("useDashboardLogic", () => {
       const mockFile = new File(["invalid json"], "import.json", { type: "application/json" });
 
       const { result } = renderHook(() => useDashboardLogic({
-        currentUser: { username: "testuser", email: "test@test.com" },
+        currentUser: { id: "user-1", username: "testuser", email: "test@test.com" },
         setIsAuthenticated: jest.fn(),
         setCurrentUser: jest.fn(),
         setShowModal: jest.fn(),
@@ -2197,7 +2264,8 @@ describe("useDashboardLogic", () => {
         setShowPrivacyModal: jest.fn(),
         setPrivacyConsented: jest.fn(),
         setImportMessage: mockSetImportMessage,
-        fileInputRef: { current: { value: "test" } },
+        fileInputRef: { current: { value: "test" } as any },
+        currentEpicId: null,
       }), {
         wrapper: Providers,
       });
@@ -2227,7 +2295,7 @@ describe("useDashboardLogic", () => {
       })], "import.json", { type: "application/json" });
 
       const { result } = renderHook(() => useDashboardLogic({
-        currentUser: { username: "testuser", email: "test@test.com" },
+        currentUser: { id: "user-1", username: "testuser", email: "test@test.com" },
         setIsAuthenticated: jest.fn(),
         setCurrentUser: jest.fn(),
         setShowModal: jest.fn(),
@@ -2266,7 +2334,8 @@ describe("useDashboardLogic", () => {
         setShowPrivacyModal: jest.fn(),
         setPrivacyConsented: jest.fn(),
         setImportMessage: mockSetImportMessage,
-        fileInputRef: { current: { value: "test" } },
+        fileInputRef: { current: { value: "test" } as any },
+        currentEpicId: null,
       }), {
         wrapper: Providers,
       });
@@ -2284,7 +2353,7 @@ describe("useDashboardLogic", () => {
   describe("handleDeleteGoal", () => {
     it("should update related tasks when goal is deleted", () => {
       const { result } = renderHook(() => useDashboardLogic({
-        currentUser: { username: "testuser", email: "test@test.com" },
+        currentUser: { id: "user-1", username: "testuser", email: "test@test.com" },
         setIsAuthenticated: jest.fn(),
         setCurrentUser: jest.fn(),
         setShowModal: jest.fn(),
@@ -2324,6 +2393,7 @@ describe("useDashboardLogic", () => {
         setPrivacyConsented: jest.fn(),
         setImportMessage: jest.fn(),
         fileInputRef: { current: null },
+        currentEpicId: null,
       }), {
         wrapper: Providers,
       });

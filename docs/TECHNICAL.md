@@ -74,13 +74,14 @@ Jira Clone 是一个 **AI 驱动的项目管理工具**，旨在提供完整的�
 
 ### 2.6 认证
 
-- **本地密码哈希**: 使用 Web Crypto API 进行 SHA-256 哈希，不依赖外部加密库。
-- **Token 管理**: 使用 `crypto.getRandomValues` 生成安全令牌，存储在 localStorage。
-- **角色管理**: 支持 ADMIN 和 USER 两种角色，ADMIN 拥有所有权限。
+- **NextAuth.js CredentialsProvider**: 邮箱/密码登录，JWT session（30 天有效期），配置见 `lib/auth-config.ts`。
+- **密码哈希**: 使用 bcryptjs（cost factor 10）哈希后存储于数据库 `User.passwordHash`。
+- **角色管理**: 支持 ADMIN 和 USER 两种角色（`UserRole` 类型定义于 `lib/auth.ts`），ADMIN 拥有所有权限。
+- **历史说明**: v1.4.0 前的本地 SHA-256 哈希 + localStorage token 认证已随 `lib/auth.ts` 重构删除。
 
 ### 2.7 单元测试
 
-- **Jest + React Testing Library**: 对核心模块进行单元测试，覆盖 auth、encryption、dashboard、bug-tracker 等功能。
+- **Jest + React Testing Library**: 对核心模块进行单元测试，覆盖 encryption、privacy、dashboard、bug-tracker 等功能（39 个套件 / 952 个测试全部通过）。
 
 ---
 
@@ -224,21 +225,20 @@ Jira Clone 是一个 **AI 驱动的项目管理工具**，旨在提供完整的�
 
 ### 5.2 密码哈希
 
-- **算法**: SHA-256，通过 Web Crypto API (`crypto.subtle.digest`) 实现。
-- **格式**: 对密码进行 UTF-8 编码后哈希，输出为十六进制字符串。
+- **算法**: bcryptjs（cost factor 10），在 `/api/auth/register` 与 `prisma/seed.ts` 中生成，登录时通过 `bcryptjs.compare` 校验。
+- **历史说明**: v1.4.0 前的 SHA-256（Web Crypto API）本地哈希已随 `lib/auth.ts` 重构删除。
 
-### 5.3 Token 生成
+### 5.3 会话管理
 
-- **方法**: `crypto.getRandomValues(new Uint8Array(16))` 生成 16 字节随机数，转换为十六进制字符串，拼接时间戳。
-- **格式**: `{timestamp}-{random_hex}`，存储在 `jira-clone-auth-token` 键中，同时保存 userId 用于精确查找用户。
+- **方式**: NextAuth JWT session（`strategy: "jwt"`，`maxAge` 30 天），令牌存储于浏览器 cookie。
+- **历史说明**: 旧版由 `crypto.getRandomValues` 生成、存于 `jira-clone-auth-token` 的本地 token 已废弃；`logoutAndClear()` 会在登出时清除该遗留键。
 
 ### 5.4 用户认证与角色管理
 
-- **注册校验**: 检查 email 格式（含 @）、密码长度（>=6 字符）、用户名/邮箱唯一性。
-- **登录**: 递归深度限制（最大 2 层），防止无限递归。首次使用自动创建默认 admin 账号。
-- **角色**: ADMIN（拥有所有权限）和 USER（受限权限）。
-- **权限控制**: `hasPermission` 函数，ADMIN 角色自动通过所有权限检查。
-- **getAuthState**: 按 userId 精确查找用户，避免返回错误用户。
+- **注册校验**: `/api/auth/register` 检查 email 格式（含 @）、密码长度（>=6 字符）、用户名/邮箱唯一性。
+- **登录**: NextAuth `authorize` 回调查询数据库并用 bcryptjs 校验；数据库无任何用户时自动创建默认 admin 账号；`prisma/seed.ts` 也会幂等创建 admin@example.com（ADMIN）。
+- **角色**: ADMIN（拥有所有权限）和 USER（受限权限），角色通过 JWT/session 传递。
+- **鉴权**: API 路由统一通过 `getServerSession` + `userId` 过滤隔离数据；旧版 `hasPermission` / `getAuthState` 本地权限函数已删除。
 
 ### 5.5 隐私保护
 
@@ -405,16 +405,17 @@ demo01/
 │   ├── layout.tsx
 │   └── page.tsx
 ├── lib/
+│   ├── api-mappers.ts
 │   ├── auth.ts
+│   ├── auth-config.ts
 │   ├── encoding.ts
 │   ├── encryption.ts
+│   ├── prisma.ts
 │   ├── privacy.ts
 │   └── validation.ts
 ├── __tests__/
 │   ├── additional.test.tsx
-│   ├── admin-preservation.test.tsx
 │   ├── api-validation.test.ts
-│   ├── auth.test.ts
 │   ├── bug-tracker.test.tsx
 │   ├── components.test.tsx
 │   ├── dashboard-layout.test.tsx

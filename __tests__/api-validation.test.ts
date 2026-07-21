@@ -276,7 +276,7 @@ describe("API Validation Tests", () => {
 
       const invalidResult = validationService.validateTaskData({
         title: "",
-        status: "INVALID",
+        status: "INVALID" as Task["status"],
       });
       expect(invalidResult.isValid).toBe(false);
       expect(invalidResult.errors.length).toBeGreaterThan(0);
@@ -325,7 +325,7 @@ describe("API Validation Tests", () => {
           validCount: 1,
           totalCount: 1,
         }),
-      } as ValidationService;
+      } as unknown as ValidationService;
 
       taskService = new TaskService(
         mockAuditService as AuditService,
@@ -383,7 +383,7 @@ describe("API Validation Tests", () => {
           validCount: 1,
           totalCount: 1,
         }),
-      } as ValidationService;
+      } as unknown as ValidationService;
 
       requirementService = new RequirementService(
         mockAuditService as AuditService,
@@ -435,7 +435,7 @@ describe("API Validation Tests", () => {
           validCount: 1,
           totalCount: 1,
         }),
-      } as ValidationService;
+      } as unknown as ValidationService;
 
       testCaseService = new TestCaseService(
         mockAuditService as AuditService,

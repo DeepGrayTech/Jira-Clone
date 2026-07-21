@@ -1,8 +1,8 @@
 # 项目变更归档记录
 
 > **项目名称**: Jira Clone - 任务管理系统
-> **归档日期**: 2026-07-20
-> **归档版本**: v1.3.0
+> **归档日期**: 2026-07-21
+> **归档版本**: v1.4.0
 
 ---
 
@@ -49,6 +49,30 @@
 | Tasks | 修复 | 任务卡片编辑功能（assignee无法添加） | ✅ 完成 |
 | Validation | 优化 | 数据完整性验证错误日志增强 | ✅ 完成 |
 | Tasks | 新增 | 管理员用户添加到assignee选项 | ✅ 完成 |
+
+### v1.4.0 (2026-07-21)
+
+|| 模块 | 变更类型 | 变更数量 | 状态 |
+|------|----------|----------|------|
+|| Backend | 重构 | 所有业务 Context 切换为 API 优先 + localStorage 回退 | ✅ 完成 |
+|| Backend | 新增 | Prisma + SQLite 后端 API 与数据模型 | ✅ 完成 |
+|| Auth | 修复 | NextAuth 登录失败，清理构建缓存后恢复 | ✅ 完成 |
+|| Data | 决定 | 放弃从 localStorage 恢复旧数据，保持数据库现状 | ✅ 完成 |
+|| Tests | 修复 | 8 个 Context 测试套件改为 async act + API mock | ✅ 通过 |
+|| Tests | 修复 | useDataLoader 日志期望修复、EpicService 占位测试 | ✅ 通过 |
+|| Docs | 新增 | README、架构、API、Context、Hooks、Services、视图、Lib、Database、Scripts 文档 | ✅ 完成 |
+|| Docs | 更新 | CHANGE_LOG 归档版本更新为 v1.4.0 | ✅ 完成 |
+|| Docs | 新增 | docs/index.md 文档总览地图、docs/module-readme-template.md 模块模板 | ✅ 完成 |
+|| Docs | 补充 | 全模块文档统一加入输入-过程-输出（IPO）和流程图 | ✅ 完成 |
+|| Tests | 修复 | 6 个 UI/认证测试套件适配 NextAuth Session 与 API mock（39 套件 / 952 用例全通过） | ✅ 通过 |
+|| Import | 修复 | useDashboardLogic 导入数据嵌套读取错误，正常导出文件可导入 | ✅ 完成 |
+|| Import/Export | 补齐 | 导出新增 epics；导入时 milestones/keyResults 按 goalId 归巢进 goals，/api/import 兼容 target/current 与 targetValue/currentValue | ✅ 完成 |
+|| Auth | 清理 | 删除 lib/auth.ts 旧 localStorage 认证（register/login/getAuthState 等），仅保留 UserRole 与 logoutAndClear | ✅ 完成 |
+|| Tests | 删除 | 移除 2 个过期认证测试套件（auth.test.ts、admin-preservation.test.tsx） | ✅ 完成 |
+|| Tests | 修复 | 22 个测试文件 TypeScript 类型错误清零，npx tsc --noEmit 通过 | ✅ 完成 |
+|| Bugs | 修复 | Bug 详情弹窗新增 Edit 按钮，接通 onEditBug 编辑入口 | ✅ 完成 |
+|| Auth | 新增 | seed 创建 Admin 账号 admin@example.com（role: ADMIN） | ✅ 完成 |
+|| Security | 修复 | 删除 hashPassword 明文密码日志；登录页默认账号提示改为 demo | ✅ 完成 |
 
 ### v1.2.0 (2026-07-17)
 
@@ -513,6 +537,28 @@
 ---
 
 ## 📁 文件变更清单
+
+### v1.4.0 (2026-07-21)
+
+| 文件路径 | 变更类型 | 变更描述 |
+|----------|----------|----------|
+| `docs/prisma.md` | 新增 | Prisma 与数据库客户端说明 |
+| `docs/database.md` | 新增 | 数据库 schema、数据模型与 seed 脚本说明 |
+| `docs/api-mappers.md` | 新增 | API 数据映射器（JSON/枚举/别名转换）说明 |
+| `docs/lib-detail.md` | 新增 | 工具库 lib 各文件详细说明 |
+| `docs/hooks-detail.md` | 新增 | 7 个自定义 Hooks 详细说明 |
+| `docs/contexts-detail.md` | 新增 | 10 个 Context 详细说明 |
+| `docs/views-and-components-detail.md` | 新增 | Dashboard 视图与组件结构说明 |
+| `docs/tests-detail.md` | 新增 | 测试文件清单与失败套件说明 |
+| `docs/scripts-detail.md` | 新增 | 脚本工具（覆盖率、诊断）说明 |
+| `docs/api.md` | 更新 | 补充所有 API 路由的输入-过程-输出（IPO）说明 |
+| `docs/services.md` | 更新 | 补充所有 Services 的输入-过程-输出（IPO）说明 |
+| `docs/types.md` | 更新 | 补充类型守卫流程图 |
+| `docs/constants.md` | 更新 | 补充数据版本检查与状态标签使用流程 |
+| `docs/hooks.md` | 更新 | 补充所有 Hooks 的输入-过程-输出（IPO）说明 |
+| `docs/contexts.md` | 更新 | 补充通用 Context 模式和各 Context 的输入-过程-输出 |
+| `docs/index.md` | 更新 | 更新文档总览地图，链接新文档 |
+| `CHANGE_LOG.md` | 更新 | 归档 v1.4.0 文档补充变更 |
 
 ### v1.3.0 (2026-07-20)
 

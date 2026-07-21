@@ -5,6 +5,12 @@ import React from "react";
 import { EpicProvider, useEpics } from "./EpicContext";
 import type { Epic } from "../types";
 
+jest.mock("../services/api", () => ({
+  createEpicApi: jest.fn(async (epic: Epic) => epic),
+  updateEpicApi: jest.fn(async (_id: string, updates: Partial<Epic>) => ({ id: _id, ...updates })),
+  deleteEpicApi: jest.fn(async () => undefined),
+}));
+
 const initialEpics: Epic[] = [
   {
     id: "epic1",
@@ -83,6 +89,12 @@ function Wrapper({ children }: { children: React.ReactNode }) {
   return <EpicProvider initialEpics={initialEpics}>{children}</EpicProvider>;
 }
 
+async function click(testId: string) {
+  await act(async () => {
+    screen.getByTestId(testId).click();
+  });
+}
+
 describe("EpicContext", () => {
   it("should provide initial epics", () => {
     render(<TestComponent />, { wrapper: Wrapper });
@@ -94,34 +106,34 @@ describe("EpicContext", () => {
     render(<TestComponent />, { wrapper: Wrapper });
     expect(screen.getByTestId("epics-count").textContent).toBe("2");
     
-    act(() => {
-      screen.getByTestId("add-epic").click();
-    });
+    await click("add-epic");
     
-    expect(screen.getByTestId("epics-count").textContent).toBe("3");
+    await waitFor(() => {
+      expect(screen.getByTestId("epics-count").textContent).toBe("3");
+    });
   });
 
   it("should update an existing epic", async () => {
     render(<TestComponent />, { wrapper: Wrapper });
     expect(screen.getByTestId("get-epic-1").textContent).toBe("Test Epic 1");
     
-    act(() => {
-      screen.getByTestId("update-epic").click();
-    });
+    await click("update-epic");
     
-    expect(screen.getByTestId("get-epic-1").textContent).toBe("Updated Epic 1");
+    await waitFor(() => {
+      expect(screen.getByTestId("get-epic-1").textContent).toBe("Updated Epic 1");
+    });
   });
 
   it("should delete an epic", async () => {
     render(<TestComponent />, { wrapper: Wrapper });
     expect(screen.getByTestId("epics-count").textContent).toBe("2");
     
-    act(() => {
-      screen.getByTestId("delete-epic").click();
-    });
+    await click("delete-epic");
     
-    expect(screen.getByTestId("epics-count").textContent).toBe("1");
-    expect(screen.getByTestId("get-epic-1").textContent).toBe("not found");
+    await waitFor(() => {
+      expect(screen.getByTestId("epics-count").textContent).toBe("1");
+      expect(screen.getByTestId("get-epic-1").textContent).toBe("not found");
+    });
   });
 
   it("should get epic by id", () => {
@@ -134,15 +146,11 @@ describe("EpicContext", () => {
     render(<TestComponent />, { wrapper: Wrapper });
     expect(screen.getByTestId("current-epic-id").textContent).toBe("null");
     
-    act(() => {
-      screen.getByTestId("set-current-epic").click();
-    });
+    await click("set-current-epic");
     
     expect(screen.getByTestId("current-epic-id").textContent).toBe("epic2");
     
-    act(() => {
-      screen.getByTestId("clear-current-epic").click();
-    });
+    await click("clear-current-epic");
     
     expect(screen.getByTestId("current-epic-id").textContent).toBe("null");
   });
@@ -174,18 +182,16 @@ describe("EpicContext", () => {
     
     render(<TestComponentWithDeleteCurrent />, { wrapper: Wrapper });
     
-    act(() => {
-      screen.getByTestId("set-current-epic-1").click();
-    });
+    await click("set-current-epic-1");
     
     expect(screen.getByTestId("current-epic-id").textContent).toBe("epic1");
     
-    act(() => {
-      screen.getByTestId("delete-current-epic").click();
-    });
+    await click("delete-current-epic");
     
-    expect(screen.getByTestId("current-epic-id").textContent).toBe("null");
-    expect(screen.getByTestId("get-epic-1").textContent).toBe("not found");
+    await waitFor(() => {
+      expect(screen.getByTestId("current-epic-id").textContent).toBe("null");
+      expect(screen.getByTestId("get-epic-1").textContent).toBe("not found");
+    });
   });
 
   it("should work with empty initial epics", () => {
