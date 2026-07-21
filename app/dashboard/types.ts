@@ -169,6 +169,7 @@ export interface FormFields {
   stepsToReproduce: string; // Steps to reproduce (for bugs)
   expectedBehavior: string; // Expected behavior (for bugs)
   actualBehavior: string; // Actual behavior (for bugs)
+  epicId: string; // Epic assignment (empty string = no epic)
 }
 
 /**

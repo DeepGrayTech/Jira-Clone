@@ -81,7 +81,7 @@ Jira Clone 是一个 **AI 驱动的项目管理工具**，旨在提供完整的�
 
 ### 2.7 单元测试
 
-- **Jest + React Testing Library**: 对核心模块进行单元测试，覆盖 encryption、privacy、dashboard、bug-tracker 等功能（39 个套件 / 952 个测试全部通过）。
+- **Jest + React Testing Library**: 对核心模块进行单元测试，覆盖 encryption、privacy、dashboard、bug-tracker 等功能（40 个套件 / 957 个测试全部通过）。
 
 ---
 

@@ -161,6 +161,13 @@ API 失败时保留本地状态。
 | `updateEpic(id, updates)` | id, 部分字段 | 乐观更新 → API 更新 | 更新后的 Epic |
 | `deleteEpic(id)` | id | 乐观删除 → API 删除 | 删除后的 epics |
 
+### Hooks
+
+| Hook | 行为 |
+|------|------|
+| `useEpics()` | 读取 EpicContext；在 EpicProvider 外使用时抛错 |
+| `useEpicsOptional()` | 非抛出式变体（v1.4.0 新增），无 Provider 时返回 `undefined`，供 EpicBadge 等可能在无 Provider 环境渲染的展示型组件使用 |
+
 ---
 
 ## 9. AuditContext

@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import RequirementCard from "../components/RequirementCard";
-import { COLORS, REQUIREMENT_STATUS_LABELS } from "../constants";
+import { COLORS, REQUIREMENT_STATUS_LABELS, matchesEpicFilter } from "../constants";
 import { useRequirements } from "../contexts/RequirementContext";
 import { useEpics } from "../contexts/EpicContext";
 import type { Requirement, FormFields } from "../types";
@@ -51,8 +51,7 @@ export default function RequirementsView({
       const matchesPriority =
         filterPriority === "" || req.priority === filterPriority;
 
-      const matchesEpic =
-        currentEpicId === null || req.epicId === currentEpicId;
+      const matchesEpic = matchesEpicFilter(req.epicId, currentEpicId);
 
       return matchesSearch && matchesStatus && matchesPriority && matchesEpic;
     });
@@ -86,6 +85,7 @@ export default function RequirementsView({
       stepsToReproduce: "",
       expectedBehavior: "",
       actualBehavior: "",
+      epicId: req.epicId || "",
     });
     setShowModal(true);
   };

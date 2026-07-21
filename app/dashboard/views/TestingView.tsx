@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import TestCaseCard from "../components/TestCaseCard";
-import { COLORS, TEST_CASE_STATUS_LABELS } from "../constants";
+import { COLORS, TEST_CASE_STATUS_LABELS, matchesEpicFilter } from "../constants";
 import { useTestCases } from "../contexts/TestCaseContext";
 import { useRequirements } from "../contexts/RequirementContext";
 import { useEpics } from "../contexts/EpicContext";
@@ -52,8 +52,7 @@ export default function TestingView({
       const matchesRequirement =
         filterRequirement === "" || tc.requirementId === filterRequirement;
 
-      const matchesEpic =
-        currentEpicId === null || tc.epicId === currentEpicId;
+      const matchesEpic = matchesEpicFilter(tc.epicId, currentEpicId);
 
       return matchesSearch && matchesStatus && matchesRequirement && matchesEpic;
     });
@@ -87,6 +86,7 @@ export default function TestingView({
       stepsToReproduce: "",
       expectedBehavior: "",
       actualBehavior: "",
+      epicId: tc.epicId || "",
     });
     setShowModal(true);
   };

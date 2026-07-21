@@ -35,9 +35,21 @@ export async function PUT(request: Request, { params }: Params) {
     description?: string;
     severity?: string;
     priority?: string;
+    status?: string;
     stepsToReproduce?: string[];
     expectedBehavior?: string;
     actualBehavior?: string;
+    reporter?: string;
+    assignee?: string;
+    verifier?: string;
+    relatedTaskId?: string;
+    relatedRequirementId?: string;
+    resolution?: string;
+    resolvedAt?: string;
+    verifiedAt?: string;
+    comments?: unknown[];
+    attachments?: string[];
+    epicId?: string | null;
   };
 
   const bug = await prisma.bug.update({
@@ -47,9 +59,21 @@ export async function PUT(request: Request, { params }: Params) {
       description: body.description,
       severity: body.severity,
       priority: body.priority,
+      status: body.status,
       stepsToReproduce: body.stepsToReproduce !== undefined ? JSON.stringify(body.stepsToReproduce) : undefined,
       expectedBehavior: body.expectedBehavior,
       actualBehavior: body.actualBehavior,
+      reporter: body.reporter,
+      assignee: body.assignee,
+      verifier: body.verifier,
+      relatedTaskId: body.relatedTaskId,
+      relatedRequirementId: body.relatedRequirementId,
+      resolution: body.resolution,
+      resolvedAt: body.resolvedAt,
+      verifiedAt: body.verifiedAt,
+      comments: body.comments !== undefined ? JSON.stringify(body.comments) : undefined,
+      attachments: body.attachments !== undefined ? JSON.stringify(body.attachments) : undefined,
+      epicId: body.epicId,
     },
   });
 

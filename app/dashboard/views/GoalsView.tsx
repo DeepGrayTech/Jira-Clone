@@ -4,6 +4,7 @@ import GoalTracker from "../components/GoalTracker";
 import { useGoals } from "../contexts/GoalContext";
 import { useTasks } from "../contexts/TaskContext";
 import { useRequirements } from "../contexts/RequirementContext";
+import { matchesEpicFilter } from "../constants";
 import type { Goal } from "../types";
 
 interface GoalsViewProps {
@@ -23,8 +24,8 @@ export default function GoalsView({
   const { tasks } = useTasks();
   const { requirements } = useRequirements();
 
-  const filteredGoals = goals.filter((goal) => 
-    currentEpicId === null || goal.epicId === currentEpicId
+  const filteredGoals = goals.filter((goal) =>
+    matchesEpicFilter(goal.epicId, currentEpicId)
   );
 
   return (

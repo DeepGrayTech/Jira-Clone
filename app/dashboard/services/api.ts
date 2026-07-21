@@ -443,7 +443,7 @@ export function serializeTask(task: Partial<Task>): Record<string, unknown> {
     body.relatedRequirementId = task.relatedRequirementId;
   if (task.relatedGoalId !== undefined) body.relatedGoalId = task.relatedGoalId;
   if (task.figmaUrl !== undefined) body.figmaUrl = task.figmaUrl;
-  if (task.epicId !== undefined) body.epicId = task.epicId;
+  if (task.epicId !== undefined) body.epicId = task.epicId || null;
   return body;
 }
 
@@ -479,7 +479,7 @@ export function serializeRequirement(
   if (req.requester !== undefined) body.requester = req.requester;
   if (req.executor !== undefined) body.executor = req.executor;
   if (req.relatedGoalId !== undefined) body.relatedGoalId = req.relatedGoalId;
-  if (req.epicId !== undefined) body.epicId = req.epicId;
+  if (req.epicId !== undefined) body.epicId = req.epicId || null;
   return body;
 }
 
@@ -512,7 +512,7 @@ export function serializeTestCase(
   if (tc.expectedResult !== undefined) body.expectedResult = tc.expectedResult;
   if (tc.requirementId !== undefined)
     body.relatedRequirementId = tc.requirementId;
-  if (tc.epicId !== undefined) body.epicId = tc.epicId;
+  if (tc.epicId !== undefined) body.epicId = tc.epicId || null;
   return body;
 }
 
@@ -558,6 +558,18 @@ export function serializeBug(bug: Partial<Bug>): Record<string, unknown> {
     body.expectedBehavior = bug.expectedBehavior;
   if (bug.actualBehavior !== undefined)
     body.actualBehavior = bug.actualBehavior;
+  if (bug.reporter !== undefined) body.reporter = bug.reporter;
+  if (bug.assignee !== undefined) body.assignee = bug.assignee;
+  if (bug.verifier !== undefined) body.verifier = bug.verifier;
+  if (bug.relatedTaskId !== undefined) body.relatedTaskId = bug.relatedTaskId;
+  if (bug.relatedRequirementId !== undefined)
+    body.relatedRequirementId = bug.relatedRequirementId;
+  if (bug.resolution !== undefined) body.resolution = bug.resolution;
+  if (bug.resolvedAt !== undefined) body.resolvedAt = bug.resolvedAt;
+  if (bug.verifiedAt !== undefined) body.verifiedAt = bug.verifiedAt;
+  if (bug.comments !== undefined) body.comments = bug.comments;
+  if (bug.attachments !== undefined) body.attachments = bug.attachments;
+  if (bug.epicId !== undefined) body.epicId = bug.epicId || null;
   return body;
 }
 

@@ -163,5 +163,38 @@
 
 ---
 
+## 5. Epic 过滤常量与助手函数
+
+自 v1.4.0 起，`constants.ts` 提供 Epic 作用边界（"No Epic" 过滤器）相关的常量与纯函数。
+
+| 导出 | 类型 | 说明 |
+|------|------|------|
+| `NO_EPIC_FILTER` | `string` | Epic 过滤器哨兵值 `"__no_epic__"`，表示"只显示无 Epic 的卡片"；不是真实 Epic id，不会写入数据 |
+| `matchesEpicFilter(itemEpicId, currentEpicId)` | 函数 | 判断卡片是否匹配当前 Epic 过滤器，五个业务视图统一使用 |
+| `epicIdForCreate(currentEpicId)` | 函数 | 计算新建卡片应携带的 epicId |
+
+### matchesEpicFilter 判断流程
+
+```
+输入：itemEpicId（卡片的 epicId）、currentEpicId（当前过滤器）
+  │
+  ▼
+[1] currentEpicId === null（All Epics） → 全部匹配
+[2] currentEpicId === NO_EPIC_FILTER → 仅匹配无 epicId 的卡片
+[3] 其他 → itemEpicId === currentEpicId
+  │
+  ▼
+输出：boolean
+```
+
+### epicIdForCreate
+
+- 输入：当前 Epic 过滤器（`string | null`）。
+- 输出：过滤器为具体 Epic 时返回该 id；All Epics（`null`）或 No Epic（哨兵）时返回 `undefined`，保证哨兵值不会写入存储数据。
+
+**epicId 语义约定**: 空串 `""`、`undefined`、`null` 统一视为"无 Epic"。
+
+---
+
 *文档维护者: 文档管理员*
 *最后更新: 2026-07-21*

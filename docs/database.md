@@ -84,6 +84,7 @@
 | steps | String | JSON 数组字符串 |
 | expectedResult | String? | 预期结果 |
 | relatedRequirementId | String? | 关联需求 |
+| epicId | String? | 所属 Epic（v1.4.0 新增，迁移 `add_testcase_epicid`） |
 | userId | String | 所属用户 |
 
 ### 2.6 Bug
@@ -95,9 +96,21 @@
 | description | String? | 描述 |
 | severity | String | 严重程度 |
 | priority | String | 优先级 |
+| status | String @default("REPORTED") | 状态（REPORTED/ASSIGNED/IN_PROGRESS/RESOLVED/VERIFIED/CLOSED/REOPENED） |
 | stepsToReproduce | String | JSON 数组字符串 |
 | expectedBehavior | String? | 预期行为 |
 | actualBehavior | String? | 实际行为 |
+| reporter | String? | 报告人 |
+| assignee | String? | 指派给 |
+| verifier | String? | 验证人 |
+| relatedTaskId | String? | 关联任务 ID |
+| relatedRequirementId | String? | 关联需求 ID |
+| resolution | String? | 解决方案 |
+| resolvedAt | String? | 解决时间（ISO 字符串） |
+| verifiedAt | String? | 验证时间（ISO 字符串） |
+| comments | String @default("[]") | 评论（JSON 数组字符串） |
+| attachments | String @default("[]") | 附件 URL（JSON 数组字符串） |
+| epicId | String? | 关联 Epic ID |
 | userId | String | 所属用户 |
 
 ### 2.7 Goal

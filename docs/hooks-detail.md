@@ -135,6 +135,12 @@ useLayoutEffect 触发 loadData
 | `handleSaveBug` | 无 | 创建/更新 Bug | 无 |
 | `handleDeleteBug` | id | 删除 Bug | 无 |
 
+### Epic 归属处理（v1.4.0）
+
+- `handleNewTask` / `handleNewRequirement` / `handleNewTestCase` / `handleNewBug` 重置表单时将 `formData.epicId` 预填为 `epicIdForCreate(currentEpicId) || ""`（All Epics / No Epic 过滤器下为空串）。
+- `handleSaveTask` / `handleSaveRequirement` / `handleSaveTestCase` / `handleSaveBug` 的更新分支透传 `formData.epicId`（支持改派或清空 Epic）；创建分支以 `formData.epicId || undefined` 写入。
+- `handleSaveGoal` 新建分支使用 `epicIdForCreate(currentEpicId)` 写入 epicId，保证 `NO_EPIC_FILTER` 哨兵不会进入数据。
+
 ### 保存任务流程
 
 ```

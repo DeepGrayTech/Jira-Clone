@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { COLORS } from "../constants";
 import type { Bug, Task, Requirement } from "../types";
+import EpicBadge from "./EpicBadge";
 
 const BUG_STATUS_LABELS: Record<string, string> = {
   REPORTED: "Reported",
@@ -179,6 +180,7 @@ function BugCard({
         >
           {bug.priority}
         </span>
+        {bug.epicId && <EpicBadge epicId={bug.epicId} />}
       </div>
 
       {relatedTask && (

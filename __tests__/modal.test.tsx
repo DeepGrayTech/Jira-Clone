@@ -20,6 +20,7 @@ describe("Modal", () => {
     stepsToReproduce: "",
     expectedBehavior: "",
     actualBehavior: "",
+    epicId: "",
     acceptanceCriteria: "",
     requester: "",
     executor: "",

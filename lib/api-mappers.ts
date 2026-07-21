@@ -87,7 +87,10 @@ export function mapTestCase(
 export function mapBug(raw: Record<string, unknown>): Record<string, unknown> {
   return {
     ...raw,
+    status: typeof raw.status === "string" && raw.status ? raw.status : "REPORTED",
     stepsToReproduce: parseJsonArray(raw.stepsToReproduce),
+    comments: parseJsonArray(raw.comments),
+    attachments: parseJsonArray(raw.attachments),
     createdAt: parseIsoTimestamp(raw.createdAt) ?? raw.createdAt,
     updatedAt: parseIsoTimestamp(raw.updatedAt) ?? raw.updatedAt,
   };

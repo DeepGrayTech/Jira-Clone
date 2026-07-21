@@ -56,7 +56,8 @@
 **文件**: `app/dashboard/components/EpicSelector.tsx`
 
 **职责**: 顶部 Epic 选择器，允许用户：
-- 切换当前 Epic
+- 切换当前 Epic（下拉列出 All Epics、No Epic 与各 ACTIVE Epic）
+- 选择 "No Epic" 过滤器（`NO_EPIC_FILTER` 哨兵，虚线空心圆图标），五个业务视图只显示无 Epic 的卡片
 - 新建 Epic
 - 编辑/删除 Epic
 
@@ -86,6 +87,7 @@
 | `TestCaseCard` | `app/dashboard/components/TestCaseCard.tsx` | 测试用例卡片 |
 | `BugTracker` | `app/dashboard/components/BugTracker.tsx` | Bug 列表/表单 |
 | `GoalTracker` | `app/dashboard/components/GoalTracker.tsx` | 目标跟踪器 |
+| `EpicBadge` | `app/dashboard/components/EpicBadge.tsx` | 卡片 Epic 归属徽标（色点 + Epic 名；无 Epic、Epic 不存在或无 EpicProvider 时不渲染），已接入 TaskCard、RequirementCard、BugCard |
 
 ---
 
@@ -93,7 +95,7 @@
 
 | 组件 | 文件 | 职责 |
 |------|------|------|
-| `Modal` | `app/dashboard/components/Modal.tsx` | 通用弹窗容器 |
+| `Modal` | `app/dashboard/components/Modal.tsx` | 通用弹窗容器（task/requirement/test/bug 四种弹窗在 Description 下方含 Epic 归属下拉，选项为 ACTIVE Epics + No Epic；可选 prop `epics?: Epic[]`，默认 `[]`） |
 | `TaskFormFields` | `app/dashboard/components/modals/TaskFormFields.tsx` | 任务表单字段 |
 | `RequirementFormFields` | `app/dashboard/components/modals/RequirementFormFields.tsx` | 需求表单字段 |
 | `TestCaseFormFields` | `app/dashboard/components/modals/TestCaseFormFields.tsx` | 测试用例表单字段 |

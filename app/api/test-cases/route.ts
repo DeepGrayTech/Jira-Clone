@@ -31,6 +31,7 @@ export async function POST(request: Request) {
     steps?: string[];
     expectedResult?: string;
     relatedRequirementId?: string;
+    epicId?: string;
   };
 
   const testCase = await prisma.testCase.create({
@@ -41,6 +42,7 @@ export async function POST(request: Request) {
       steps: JSON.stringify(body.steps || []),
       expectedResult: body.expectedResult,
       relatedRequirementId: body.relatedRequirementId,
+      epicId: body.epicId || null,
       userId: session.user.id,
     },
   });

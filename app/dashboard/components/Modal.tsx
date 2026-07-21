@@ -6,6 +6,7 @@ import type {
   Requirement,
   TestCase,
   Bug,
+  Epic,
   FormFields,
   ModalType,
 } from "../types";
@@ -27,6 +28,7 @@ interface ModalProps {
   setFormData: React.Dispatch<React.SetStateAction<FormFields>>;
   requirements: Requirement[];
   goals: import("../types").Goal[];
+  epics?: Epic[];
   tagHistory: string[];
   onSave: () => void;
   onClose: () => void;
@@ -48,6 +50,7 @@ export default function Modal({
   setFormData,
   requirements,
   goals,
+  epics = [],
   tagHistory,
   onSave,
   onClose,
@@ -370,6 +373,46 @@ export default function Modal({
               }}
               placeholder="Enter description"
             />
+          </div>
+
+          <div style={{ marginBottom: "16px" }}>
+            <label
+              htmlFor="modal-epic"
+              style={{
+                display: "block",
+                marginBottom: "6px",
+                fontSize: "14px",
+                fontWeight: 600,
+                color: COLORS.text,
+              }}
+            >
+              Epic
+            </label>
+            <select
+              id="modal-epic"
+              value={formData.epicId}
+              onChange={(e) =>
+                setFormData({ ...formData, epicId: e.target.value })
+              }
+              style={{
+                width: "100%",
+                padding: "10px 12px",
+                border: `1px solid ${COLORS.border}`,
+                borderRadius: "6px",
+                fontSize: "14px",
+                boxSizing: "border-box",
+                background: "#ffffff",
+              }}
+            >
+              <option value="">No Epic</option>
+              {epics
+                .filter((epic) => epic.status === "ACTIVE")
+                .map((epic) => (
+                  <option key={epic.id} value={epic.id}>
+                    {epic.title}
+                  </option>
+                ))}
+            </select>
           </div>
 
           {renderFormFields()}

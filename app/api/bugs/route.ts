@@ -29,9 +29,18 @@ export async function POST(request: Request) {
     description?: string;
     severity?: string;
     priority?: string;
+    status?: string;
     stepsToReproduce?: string[];
     expectedBehavior?: string;
     actualBehavior?: string;
+    reporter?: string;
+    assignee?: string;
+    verifier?: string;
+    relatedTaskId?: string;
+    relatedRequirementId?: string;
+    comments?: unknown[];
+    attachments?: string[];
+    epicId?: string;
   };
 
   const bug = await prisma.bug.create({
@@ -40,9 +49,18 @@ export async function POST(request: Request) {
       description: body.description,
       severity: body.severity || "MEDIUM",
       priority: body.priority || "MEDIUM",
+      status: body.status || "REPORTED",
       stepsToReproduce: JSON.stringify(body.stepsToReproduce || []),
       expectedBehavior: body.expectedBehavior,
       actualBehavior: body.actualBehavior,
+      reporter: body.reporter || null,
+      assignee: body.assignee || null,
+      verifier: body.verifier || null,
+      relatedTaskId: body.relatedTaskId || null,
+      relatedRequirementId: body.relatedRequirementId || null,
+      comments: JSON.stringify(body.comments || []),
+      attachments: JSON.stringify(body.attachments || []),
+      epicId: body.epicId || null,
       userId: session.user.id,
     },
   });

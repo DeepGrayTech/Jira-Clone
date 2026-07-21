@@ -2,6 +2,7 @@
 
 import type { Requirement } from "../types";
 import { COLORS, REQUIREMENT_STATUS_LABELS } from "../constants";
+import EpicBadge from "./EpicBadge";
 
 interface RequirementCardProps {
   requirement: Requirement;
@@ -114,6 +115,12 @@ export default function RequirementCard({
         >
           {requirement.description}
         </p>
+      )}
+
+      {requirement.epicId && (
+        <div style={{ marginBottom: "8px" }}>
+          <EpicBadge epicId={requirement.epicId} fontSizeScale={fontSizeScale} />
+        </div>
       )}
 
       <div

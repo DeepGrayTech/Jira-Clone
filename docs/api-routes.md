@@ -87,7 +87,8 @@
 | DELETE | `/api/bugs/[id]` | id | 删除 bug | `{success: true}` |
 
 **特殊处理**:
-- `stepsToReproduce` 是 JSON 字符串数组，通过 `mapBug()` 转换。
+- `stepsToReproduce`、`comments`、`attachments` 是 JSON 字符串数组，通过 `mapBug()` 转换。
+- `status` 缺省时回退为 `REPORTED`；POST/PUT 均支持 status、reporter、assignee、verifier、关联 ID、resolution、resolvedAt/verifiedAt、epicId 等完整字段。
 
 ---
 
@@ -105,6 +106,7 @@
 **特殊处理**:
 - `steps` 是 JSON 字符串数组，通过 `mapTestCase()` 转换。
 - `status` 兼容 `TODO` → `PENDING` 等旧别名。
+- POST/PUT 接受 `epicId`（String?，`null` 表示无 Epic；自 v1.4.0 迁移 `add_testcase_epicid` 起支持）。
 
 ---
 

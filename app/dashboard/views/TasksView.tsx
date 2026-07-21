@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react";
 import { DragDropContext, DropResult } from "@hello-pangea/dnd";
 import TaskColumn from "../components/TaskColumn";
-import { COLORS, STATUS_LABELS } from "../constants";
+import { COLORS, STATUS_LABELS, matchesEpicFilter } from "../constants";
 import { useTasks } from "../contexts/TaskContext";
 import { useRequirements } from "../contexts/RequirementContext";
 import { useEpics } from "../contexts/EpicContext";
@@ -69,8 +69,7 @@ export default function TasksView({
         filterAssignee === "" ||
         task.assignee.toLowerCase().includes(filterAssignee.toLowerCase());
 
-      const matchesEpic =
-        currentEpicId === null || task.epicId === currentEpicId;
+      const matchesEpic = matchesEpicFilter(task.epicId, currentEpicId);
 
       return matchesSearch && matchesPriority && matchesAssignee && matchesEpic;
     });
@@ -105,6 +104,7 @@ export default function TasksView({
       stepsToReproduce: "",
       expectedBehavior: "",
       actualBehavior: "",
+      epicId: task.epicId || "",
     });
   };
 

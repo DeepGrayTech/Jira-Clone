@@ -1,4 +1,4 @@
-﻿﻿﻿﻿import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+﻿﻿﻿import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import Modal from "../app/dashboard/components/Modal";
 import GoalTracker from "../app/dashboard/components/GoalTracker";
 import { useWindow } from "../app/dashboard/hooks/useWindow";
@@ -21,6 +21,7 @@ describe("Additional Component Tests", () => {
       stepsToReproduce: "",
       expectedBehavior: "",
       actualBehavior: "",
+      epicId: "",
       acceptanceCriteria: "",
       requester: "",
       executor: "",

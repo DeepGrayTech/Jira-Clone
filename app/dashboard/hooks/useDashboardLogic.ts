@@ -14,6 +14,7 @@ import { useAuditLogs } from "../contexts/AuditContext";
 import { useTestCases } from "../contexts/TestCaseContext";
 import { useShared } from "../contexts/SharedContext";
 import { AuditService } from "../services/AuditService";
+import { epicIdForCreate } from "../constants";
 import type {
   Task,
   Requirement,
@@ -417,9 +418,10 @@ export const useDashboardLogic = ({
       stepsToReproduce: "",
       expectedBehavior: "",
       actualBehavior: "",
+      epicId: epicIdForCreate(currentEpicId) || "",
     });
     setShowModal(true);
-  }, [setEditingTask, setModalType, setFormData, setShowModal]);
+  }, [setEditingTask, setModalType, setFormData, setShowModal, currentEpicId]);
 
   const handleSaveTask = useCallback(() => {
     if (!formData.title.trim()) {
@@ -438,6 +440,7 @@ export const useDashboardLogic = ({
         assignee: formData.assignee,
         relatedRequirementId: formData.relatedRequirementId || undefined,
         figmaUrl: formData.figmaUrl || undefined,
+        epicId: formData.epicId,
       };
 
       console.log("[handleSaveTask] === 开始更新任务 ===");
@@ -481,7 +484,7 @@ export const useDashboardLogic = ({
         figmaUrl: formData.figmaUrl || undefined,
         comments: [],
         createdAt: new Date().toISOString(),
-        epicId: currentEpicId || undefined,
+        epicId: formData.epicId || undefined,
       };
 
       console.log("[handleSaveTask] === 开始创建任务 ===");
@@ -538,9 +541,10 @@ export const useDashboardLogic = ({
       stepsToReproduce: "",
       expectedBehavior: "",
       actualBehavior: "",
+      epicId: epicIdForCreate(currentEpicId) || "",
     });
     setShowModal(true);
-  }, [setEditingRequirement, setModalType, setFormData, setShowModal]);
+  }, [setEditingRequirement, setModalType, setFormData, setShowModal, currentEpicId]);
 
   const handleSaveRequirement = useCallback(() => {
     if (!formData.title.trim()) return;
@@ -559,6 +563,7 @@ export const useDashboardLogic = ({
         acceptanceCriteria: acceptanceCriteriaArray,
         requester: formData.requester,
         executor: formData.executor,
+        epicId: formData.epicId,
       });
       addAuditLog(
         auditService.logAction(
@@ -580,7 +585,7 @@ export const useDashboardLogic = ({
         updatedAt: new Date().toISOString(),
         requester: formData.requester,
         executor: formData.executor,
-        epicId: currentEpicId || undefined,
+        epicId: formData.epicId || undefined,
       };
       addRequirement(newReq);
       addAuditLog(
@@ -629,9 +634,10 @@ export const useDashboardLogic = ({
       stepsToReproduce: "",
       expectedBehavior: "",
       actualBehavior: "",
+      epicId: epicIdForCreate(currentEpicId) || "",
     });
     setShowModal(true);
-  }, [setEditingTestCase, setModalType, setFormData, setShowModal]);
+  }, [setEditingTestCase, setModalType, setFormData, setShowModal, currentEpicId]);
 
   const handleSaveTestCase = useCallback(() => {
     if (!formData.title.trim()) return;
@@ -648,6 +654,7 @@ export const useDashboardLogic = ({
         expectedResult: formData.expectedResult,
         status: isValidTestCaseStatus(formData.status) ? formData.status : "PENDING",
         executor: formData.assignee || undefined,
+        epicId: formData.epicId,
       });
       addAuditLog(
         auditService.logAction(
@@ -667,7 +674,7 @@ export const useDashboardLogic = ({
         steps: stepsArray,
         expectedResult: formData.expectedResult,
         status: isValidTestCaseStatus(formData.status) ? formData.status : "PENDING",
-        epicId: currentEpicId || undefined,
+        epicId: formData.epicId || undefined,
       };
       addTestCase(newTestCase);
       addAuditLog(
@@ -716,9 +723,10 @@ export const useDashboardLogic = ({
       stepsToReproduce: "",
       expectedBehavior: "",
       actualBehavior: "",
+      epicId: epicIdForCreate(currentEpicId) || "",
     });
     setShowModal(true);
-  }, [setEditingBug, setModalType, setFormData, setShowModal]);
+  }, [setEditingBug, setModalType, setFormData, setShowModal, currentEpicId]);
 
   const handleSaveBug = useCallback(() => {
     if (!formData.title.trim()) return;
@@ -738,6 +746,7 @@ export const useDashboardLogic = ({
         stepsToReproduce: stepsToReproduceArray,
         expectedBehavior: formData.expectedBehavior,
         actualBehavior: formData.actualBehavior,
+        epicId: formData.epicId,
       });
       addAuditLog(
         auditService.logAction(
@@ -763,7 +772,7 @@ export const useDashboardLogic = ({
         comments: [],
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        epicId: currentEpicId || undefined,
+        epicId: formData.epicId || undefined,
       };
       addBug(newBug);
       addAuditLog(
@@ -798,7 +807,7 @@ export const useDashboardLogic = ({
       id: Date.now().toString(),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      epicId: currentEpicId || undefined,
+      epicId: epicIdForCreate(currentEpicId),
     };
     addGoal(newGoal);
     addAuditLog(

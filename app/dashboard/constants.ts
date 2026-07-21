@@ -101,3 +101,34 @@ export const TEST_CASE_STATUS_LABELS = {
   FAILED: "Failed", // Display label for FAILED status
   BLOCKED: "Blocked", // Display label for BLOCKED status
 };
+
+/**
+ * Sentinel epic filter value: when currentEpicId equals this, only cards
+ * without an epic assignment are shown. Not a real epic id.
+ */
+export const NO_EPIC_FILTER = "__no_epic__";
+
+/**
+ * Returns true if an item's epicId matches the current epic filter.
+ * - null filter: everything matches (All Epics).
+ * - NO_EPIC_FILTER: only items with no epicId.
+ * - otherwise: items belonging to that epic.
+ */
+export const matchesEpicFilter = (
+  itemEpicId: string | null | undefined,
+  currentEpicId: string | null
+): boolean => {
+  if (currentEpicId === null) return true;
+  if (currentEpicId === NO_EPIC_FILTER) return !itemEpicId;
+  return itemEpicId === currentEpicId;
+};
+
+/**
+ * Resolves the epicId to assign to a newly created card.
+ * Returns undefined for the All Epics and No Epic filters so the sentinel
+ * never leaks into stored data.
+ */
+export const epicIdForCreate = (
+  currentEpicId: string | null
+): string | undefined =>
+  currentEpicId && currentEpicId !== NO_EPIC_FILTER ? currentEpicId : undefined;

@@ -148,3 +148,10 @@ export const useEpics = () => {
   }
   return context;
 };
+
+/**
+ * Non-throwing variant of useEpics: returns undefined outside an EpicProvider.
+ * Used by presentational components (e.g. EpicBadge) that may render
+ * provider-less in tests.
+ */
+export const useEpicsOptional = () => useContext(EpicContext);

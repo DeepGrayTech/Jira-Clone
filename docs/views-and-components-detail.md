@@ -216,6 +216,10 @@ app/dashboard/views/
 | AuditView | `views/AuditView.tsx` | 审计日志列表 |
 | NotificationsView | `views/NotificationsView.tsx` | 通知列表 |
 
+### Epic 过滤
+
+五个业务视图（Tasks / Requirements / Bugs / Goals / Testing）按当前 Epic 过滤器筛选卡片，统一使用 `matchesEpicFilter()`（见 constants.md）：All Epics（`null`）显示全部，No Epic（`NO_EPIC_FILTER`）只显示无 Epic 的卡片，具体 Epic 只显示其名下卡片。
+
 ### 视图渲染模式
 
 ```
@@ -239,7 +243,7 @@ app/dashboard/views/
 
 **输入**: task, onEdit, onDelete
 
-**处理**: 渲染任务标题、状态、优先级、标签、负责人、截止日期、评论数
+**处理**: 渲染任务标题、状态、优先级、标签、负责人、截止日期、评论数、Epic 徽标（EpicBadge）
 
 **输出**: 任务卡片 UI
 
@@ -255,7 +259,7 @@ app/dashboard/views/
 
 **输入**: requirement, onEdit, onDelete
 
-**处理**: 渲染需求标题、状态、优先级、验收标准
+**处理**: 渲染需求标题、状态、优先级、验收标准、Epic 徽标（EpicBadge）
 
 **输出**: 需求卡片 UI
 
@@ -266,6 +270,14 @@ app/dashboard/views/
 **处理**: 渲染测试用例标题、状态、步骤、预期结果
 
 **输出**: 测试用例卡片 UI
+
+### EpicBadge
+
+**输入**: epicId, fontSizeScale?（默认 1）
+
+**处理**: 通过 `useEpicsOptional()` 在 EpicContext 中查找 Epic，渲染色点 + Epic 名徽标；无 epicId、Epic 不存在或无 EpicProvider 时返回 null（不渲染）。已接入 TaskCard、RequirementCard、BugCard（BugTracker 内）
+
+**输出**: Epic 归属徽标 UI 或 null
 
 ---
 
@@ -286,9 +298,9 @@ app/dashboard/views/
 
 ### EpicSelector
 
-**输入**: epics, currentEpicId, onSelect, onCreate, onEdit, onDelete
+**输入**: epics, currentEpicId, onEpicChange, onNewEpic, onEditEpic, onDeleteEpic, fontSizeScale
 
-**处理**: 渲染 Epic 下拉选择器和管理按钮
+**处理**: 渲染 Epic 下拉选择器和管理按钮。下拉选项含 All Epics（`null`）、No Epic（`NO_EPIC_FILTER` 哨兵，虚线空心圆图标，选中后只显示无 Epic 的卡片）和各 ACTIVE Epic
 
 **输出**: Epic 选择 UI
 

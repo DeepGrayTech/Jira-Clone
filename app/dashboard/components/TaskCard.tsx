@@ -4,6 +4,7 @@ import { Draggable } from "@hello-pangea/dnd";
 import { useEffect, useRef } from "react";
 import type { Task, Requirement } from "../types";
 import { COLORS } from "../constants";
+import EpicBadge from "./EpicBadge";
 
 interface TaskCardProps {
   task: Task;
@@ -159,6 +160,12 @@ export default function TaskCard({
               }}
             >
               Req: {relatedRequirement.title}
+            </div>
+          )}
+
+          {task.epicId && (
+            <div style={{ marginBottom: "8px" }}>
+              <EpicBadge epicId={task.epicId} fontSizeScale={fontSizeScale} />
             </div>
           )}
 

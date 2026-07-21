@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback, useMemo, memo } from "react";
-import { COLORS } from "../constants";
+import { COLORS, NO_EPIC_FILTER } from "../constants";
 import type { Epic } from "../types";
 
 interface EpicSelectorProps {
@@ -190,6 +190,20 @@ function EpicSelector({
     gap: `${8 * fontSizeScale}px`,
   }), [fontSizeScale, currentEpicId]);
 
+  const noEpicButtonStyle = useMemo(() => ({
+    width: "100%",
+    padding: `${10 * fontSizeScale}px ${16 * fontSizeScale}px`,
+    textAlign: "left" as const,
+    background: currentEpicId === NO_EPIC_FILTER ? COLORS.buttonPrimary : "transparent",
+    color: currentEpicId === NO_EPIC_FILTER ? "#ffffff" : COLORS.text,
+    border: "none",
+    cursor: "pointer" as const,
+    fontSize: `${14 * fontSizeScale}px`,
+    display: "flex" as const,
+    alignItems: "center" as const,
+    gap: `${8 * fontSizeScale}px`,
+  }), [fontSizeScale, currentEpicId]);
+
   const newEpicButtonStyle = useMemo(() => ({
     width: "100%",
     padding: `${10 * fontSizeScale}px ${16 * fontSizeScale}px`,
@@ -210,6 +224,11 @@ function EpicSelector({
     setIsOpen(false);
   }, [onEpicChange]);
 
+  const handleNoEpicClick = useCallback(() => {
+    onEpicChange(NO_EPIC_FILTER);
+    setIsOpen(false);
+  }, [onEpicChange]);
+
   const handleNewEpicClick = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
     onNewEpic();
@@ -225,7 +244,21 @@ function EpicSelector({
         aria-expanded={isOpen}
         style={toggleButtonStyle}
       >
-        {currentEpic ? (
+        {currentEpicId === NO_EPIC_FILTER ? (
+          <>
+            <span
+              style={{
+                width: `${12 * fontSizeScale}px`,
+                height: `${12 * fontSizeScale}px`,
+                borderRadius: "50%",
+                border: "1px dashed #9ca3af",
+                display: "inline-block",
+                boxSizing: "border-box",
+              }}
+            />
+            <span style={{ flex: 1, textAlign: "left" }}>No Epic</span>
+          </>
+        ) : currentEpic ? (
           <>
             <span
               style={{
@@ -257,6 +290,20 @@ function EpicSelector({
               }}
             />
             All Epics
+          </button>
+
+          <button onClick={handleNoEpicClick} style={noEpicButtonStyle}>
+            <span
+              style={{
+                width: `${10 * fontSizeScale}px`,
+                height: `${10 * fontSizeScale}px`,
+                borderRadius: "50%",
+                border: "1px dashed #9ca3af",
+                display: "inline-block",
+                boxSizing: "border-box",
+              }}
+            />
+            No Epic
           </button>
 
           <div style={{ borderTop: `1px solid ${COLORS.border}` }} />

@@ -37,6 +37,7 @@ export async function PUT(request: Request, { params }: Params) {
     steps?: string[];
     expectedResult?: string;
     relatedRequirementId?: string;
+    epicId?: string | null;
   };
 
   const testCase = await prisma.testCase.update({
@@ -48,6 +49,7 @@ export async function PUT(request: Request, { params }: Params) {
       steps: body.steps !== undefined ? JSON.stringify(body.steps) : undefined,
       expectedResult: body.expectedResult,
       relatedRequirementId: body.relatedRequirementId,
+      epicId: body.epicId,
     },
   });
 

@@ -118,12 +118,14 @@ async function main() {
       description: "在 1366x768 分辨率下，登录按钮超出卡片边界。",
       severity: "MEDIUM",
       priority: "MEDIUM",
+      status: "REPORTED",
       stepsToReproduce: JSON.stringify([
         "打开登录页",
         "将浏览器窗口调整为 1366x768",
       ]),
       expectedBehavior: "按钮保持在卡片内部",
       actualBehavior: "按钮右侧超出卡片",
+      reporter: "demo",
       userId,
     },
   });

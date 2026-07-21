@@ -70,9 +70,15 @@
 || Auth | 清理 | 删除 lib/auth.ts 旧 localStorage 认证（register/login/getAuthState 等），仅保留 UserRole 与 logoutAndClear | ✅ 完成 |
 || Tests | 删除 | 移除 2 个过期认证测试套件（auth.test.ts、admin-preservation.test.tsx） | ✅ 完成 |
 || Tests | 修复 | 22 个测试文件 TypeScript 类型错误清零，npx tsc --noEmit 通过 | ✅ 完成 |
+|| Bugs | 修复 | Prisma Bug 模型补齐 status/reporter/verifier/comments 等 12 个字段（新迁移 add_bug_fields），修复卡片状态无法变更：POST/PUT/import 路由与 mapBug 全链路支持 | ✅ 完成 |
 || Bugs | 修复 | Bug 详情弹窗新增 Edit 按钮，接通 onEditBug 编辑入口 | ✅ 完成 |
 || Auth | 新增 | seed 创建 Admin 账号 admin@example.com（role: ADMIN） | ✅ 完成 |
 || Security | 修复 | 删除 hashPassword 明文密码日志；登录页默认账号提示改为 demo | ✅ 完成 |
+|| Epic | 新增 | EpicSelector 新增 "No Epic" 过滤器（NO_EPIC_FILTER 哨兵 + matchesEpicFilter/epicIdForCreate，五个视图统一过滤逻辑） | ✅ 完成 |
+|| Modal | 新增 | 创建/编辑弹窗新增 Epic 归属下拉（FormFields.epicId；新建默认跟随过滤器，编辑支持改派/清空） | ✅ 完成 |
+|| Components | 新增 | EpicBadge 卡片 Epic 徽标（接入 TaskCard/RequirementCard/BugCard）；EpicContext 新增 useEpicsOptional | ✅ 完成 |
+|| Backend | 新增 | TestCase 模型新增 epicId（迁移 add_testcase_epicid），test-cases 路由接受 epicId；serializeBug 转发全部字段，epicId 空串转 null | ✅ 完成 |
+|| Tests | 新增 | __tests__/epic-filter.test.ts（5 用例），40 套件 / 957 用例全通过 | ✅ 通过 |
 
 ### v1.2.0 (2026-07-17)
 

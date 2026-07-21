@@ -106,6 +106,7 @@ export default function DashboardShell() {
     stepsToReproduce: "",
     expectedBehavior: "",
     actualBehavior: "",
+    epicId: "",
   });
 
   const [showPrivacySettings, setShowPrivacySettings] = useState(false);
@@ -1111,6 +1112,7 @@ function DashboardContent({
                 stepsToReproduce: bug.stepsToReproduce.join("\n"),
                 expectedBehavior: bug.expectedBehavior,
                 actualBehavior: bug.actualBehavior,
+                epicId: bug.epicId || "",
               });
               setShowModal(true);
             }}
@@ -1158,6 +1160,7 @@ function DashboardContent({
         setFormData={setFormData}
         requirements={requirements}
         goals={goals}
+        epics={epics}
         tagHistory={tagHistory}
         onSave={
           modalType === "task"

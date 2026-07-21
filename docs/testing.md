@@ -93,7 +93,7 @@ app/dashboard/services/
 
 截至 2026-07-21：
 
-- **完整 `npx jest`**: 39 个测试套件、952 个测试全部通过 ✅
+- **完整 `npx jest`**: 40 个测试套件、957 个测试全部通过 ✅
 - **`npx tsc --noEmit`**: 退出码 0，无类型错误（此前 22 个测试文件的约 230 个类型错误已全部修复，仅修改测试文件）
 - **已删除的过期套件**: `__tests__/auth.test.ts`、`__tests__/admin-preservation.test.tsx`（测试对象为已移除的 localStorage 认证）
 - **UI/认证套件适配方式**: 此前失败的 6 个 UI/认证套件（dashboard、login-form、tasks-view、bug-tracker、useAuth、dashboard-layout 等）已统一 mock `next-auth/react`（`useSession` / `signIn` / `signOut` / `SessionProvider` 透传）与 `app/dashboard/services/api`，现全部通过。

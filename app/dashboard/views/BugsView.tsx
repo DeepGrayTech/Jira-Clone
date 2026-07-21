@@ -4,6 +4,7 @@ import BugTracker from "../components/BugTracker";
 import { useBugs } from "../contexts/BugContext";
 import { useTasks } from "../contexts/TaskContext";
 import { useRequirements } from "../contexts/RequirementContext";
+import { matchesEpicFilter } from "../constants";
 import type { Bug } from "../types";
 
 interface BugsViewProps {
@@ -17,8 +18,8 @@ export default function BugsView({ onCreateBug, onEditBug, currentEpicId }: Bugs
   const { tasks } = useTasks();
   const { requirements } = useRequirements();
 
-  const filteredBugs = bugs.filter((bug) => 
-    currentEpicId === null || bug.epicId === currentEpicId
+  const filteredBugs = bugs.filter((bug) =>
+    matchesEpicFilter(bug.epicId, currentEpicId)
   );
 
   const handleUpdateBug = (bug: Bug) => {

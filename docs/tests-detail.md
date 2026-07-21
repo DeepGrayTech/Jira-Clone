@@ -7,7 +7,7 @@
 
 ## 1. 概述
 
-`__tests__/` 目录包含大量测试文件，覆盖认证、Context、Service、Hooks、组件、工具库等。截至 2026-07-21，`npx jest` 共 39 个测试套件、952 个测试全部通过，`npx tsc --noEmit` 无类型错误。此前未适配 NextAuth + Provider 结构而失败的 UI/认证套件已全部修复（统一 mock `next-auth/react` 与 `app/dashboard/services/api`）。
+`__tests__/` 目录包含大量测试文件，覆盖认证、Context、Service、Hooks、组件、工具库等。截至 2026-07-21，`npx jest` 共 40 个测试套件、957 个测试全部通过，`npx tsc --noEmit` 无类型错误。此前未适配 NextAuth + Provider 结构而失败的 UI/认证套件已全部修复（统一 mock `next-auth/react` 与 `app/dashboard/services/api`）。
 
 ---
 
@@ -86,6 +86,7 @@
 |------|------|------|
 | `additional.test.tsx` | 附加测试 | ✅ 通过 |
 | `api-validation.test.ts` | API 校验测试 | ✅ 通过 |
+| `epic-filter.test.ts` | Epic 过滤助手函数测试（matchesEpicFilter / epicIdForCreate，5 用例） | ✅ 通过 |
 | `use-window.test.ts` | useWindow 测试 | 不存在（已确认） |
 
 ---

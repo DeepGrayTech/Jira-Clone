@@ -234,7 +234,7 @@ SessionProvider (app/providers.tsx)
 ## 9. 已知限制与 TODO
 
 - ~~`npx tsc --noEmit` 仍被部分测试文件类型错误阻塞~~（已解决，2026-07-21）：22 个测试文件的类型错误已全部修复，`npx tsc --noEmit` 退出码 0。
-- ~~完整 `npm test` 仍有部分 pre-existing UI/认证测试失败~~（已解决，2026-07-21）：6 个 UI/认证套件已适配 NextAuth 与 API mock，`npx jest` 39 个套件 / 952 个测试全部通过。
+- ~~完整 `npm test` 仍有部分 pre-existing UI/认证测试失败~~（已解决，2026-07-21）：6 个 UI/认证套件已适配 NextAuth 与 API mock，`npx jest` 40 个套件 / 957 个测试全部通过。
 - 通知/智能体模块仍主要依赖 localStorage，尚未完全迁移到数据库。
 - ~~部分旧的 `lib/auth.ts` 本地认证逻辑仍可运行~~（已解决，2026-07-21）：旧 localStorage 认证已删除，`lib/auth.ts` 仅保留 `UserRole` 类型与 `logoutAndClear()`。
 
