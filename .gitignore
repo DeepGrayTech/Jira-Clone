@@ -23,6 +23,13 @@
 /playwright-report/
 /playwright/.cache/
 
+# Test/coverage report artifacts (should never be committed)
+/coverage_*.txt
+/final_*.txt
+/full_*.txt
+/test_result*.txt
+/test_failures.txt
+
 # Production
 *.log
 *.pid
